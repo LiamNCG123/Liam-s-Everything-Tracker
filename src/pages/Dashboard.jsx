@@ -36,6 +36,7 @@ const MODULES = [
   { to: '/goals',     emoji: '🎯', label: 'Goals',     desc: 'Track what matters' },
   { to: '/training',  emoji: '💪', label: 'Training',  desc: 'Log workouts & progress' },
   { to: '/education', emoji: '📚', label: 'Education', desc: 'Books, courses & learning' },
+  { to: '/finance',   emoji: '💰', label: 'Finance',   desc: 'Income, expenses & budgets' },
 ]
 
 export default function Dashboard() {

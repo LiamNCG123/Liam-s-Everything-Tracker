@@ -6,6 +6,7 @@ const NAV = [
   { to: '/goals',     label: 'Goals',     emoji: '🎯' },
   { to: '/training',  label: 'Training',  emoji: '💪' },
   { to: '/education', label: 'Education', emoji: '📚' },
+  { to: '/finance',   label: 'Finance',   emoji: '💰' },
 ]
 
 export default function Layout({ children }) {
