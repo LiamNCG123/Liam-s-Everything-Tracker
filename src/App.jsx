@@ -5,8 +5,6 @@ import Habits from './pages/Habits'
 import Goals from './pages/Goals'
 import Training from './pages/Training'
 import Education from './pages/Education'
-import Business from './pages/Business'
-
 export default function App() {
   return (
     <BrowserRouter>
@@ -17,7 +15,6 @@ export default function App() {
           <Route path="/goals"     element={<Goals />} />
           <Route path="/training"  element={<Training />} />
           <Route path="/education" element={<Education />} />
-          <Route path="/business"  element={<Business />} />
         </Routes>
       </Layout>
     </BrowserRouter>

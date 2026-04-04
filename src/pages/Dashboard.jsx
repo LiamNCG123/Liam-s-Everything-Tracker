@@ -7,8 +7,6 @@ function loadStats() {
   const goals     = load('goals') ?? []
   const training  = load('training') ?? []
   const education = load('education') ?? []
-  const business  = load('business') ?? []
-
   const todayStr = today()
 
   // Habits: how many completed today (support both old {date,done} and new string[] format)
@@ -30,13 +28,7 @@ function loadStats() {
   // Education: in-progress items
   const reading = education.filter(e => e.status === 'In Progress').length
 
-  // Business: this month income/expense
-  const monthStr = todayStr.slice(0, 7)
-  const thisMonth = business.filter(b => b.date?.startsWith(monthStr))
-  const income  = thisMonth.filter(b => b.type === 'Income').reduce((s, b) => s + Number(b.amount || 0), 0)
-  const expense = thisMonth.filter(b => b.type === 'Expense').reduce((s, b) => s + Number(b.amount || 0), 0)
-
-  return { habitsToday, totalHabits: habits.length, activeGoals, trainingSessions, reading, income, expense }
+  return { habitsToday, totalHabits: habits.length, activeGoals, trainingSessions, reading }
 }
 
 const MODULES = [
@@ -44,7 +36,6 @@ const MODULES = [
   { to: '/goals',     emoji: '🎯', label: 'Goals',     desc: 'Track what matters' },
   { to: '/training',  emoji: '💪', label: 'Training',  desc: 'Log workouts & progress' },
   { to: '/education', emoji: '📚', label: 'Education', desc: 'Books, courses & learning' },
-  { to: '/business',  emoji: '💼', label: 'Business',  desc: 'Income, expenses & tasks' },
 ]
 
 export default function Dashboard() {
@@ -65,8 +56,6 @@ export default function Dashboard() {
         <StatCard icon="🎯" label="Active goals" value={s.activeGoals} />
         <StatCard icon="💪" label="Sessions (7d)" value={s.trainingSessions} />
         <StatCard icon="📚" label="In progress" value={s.reading} sub="learning items" />
-        <StatCard icon="💰" label="Income (mo.)" value={`$${s.income.toLocaleString()}`} />
-        <StatCard icon="📉" label="Expenses (mo.)" value={`$${s.expense.toLocaleString()}`} />
       </div>
 
       {/* Module cards */}
