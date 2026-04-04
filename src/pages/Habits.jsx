@@ -1,73 +1,238 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
 import { today } from '../utils/storage'
-import {
-  PageHeader, Button, Card, Badge, Modal,
-  Input, Textarea, Select, EmptyState, StatCard,
-} from '../components/ui'
+import { PageHeader, Button, Modal, Input, EmptyState } from '../components/ui'
 
-const CATEGORIES = ['Health', 'Fitness', 'Mind', 'Work', 'Social', 'Finance', 'Other']
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-function calcStreak(completions) {
-  if (!completions?.length) return 0
-  const sorted = [...completions]
-    .filter(c => c.done)
-    .map(c => c.date)
-    .sort()
-    .reverse()
-  if (!sorted.length) return 0
+const PALETTE = [
+  '#6366f1', '#ec4899', '#10b981', '#f59e0b',
+  '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6',
+  '#f97316', '#84cc16', '#06b6d4', '#a855f7',
+]
+
+const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function toStr(date) {
+  return date.toISOString().slice(0, 10)
+}
+
+// Migrate old format [{date, done}] → string[]
+function migrateCompletions(completions) {
+  if (!completions?.length) return []
+  if (typeof completions[0] === 'string') return completions
+  return completions.filter(c => c.done).map(c => c.date)
+}
+
+function calcCurrentStreak(completions) {
+  const set = new Set(completions)
+  const d = new Date()
+  // If today isn't done yet, start counting from yesterday
+  if (!set.has(toStr(d))) d.setDate(d.getDate() - 1)
   let streak = 0
-  let cursor = new Date(today())
-  for (const dateStr of sorted) {
-    const d = new Date(dateStr)
-    const diff = Math.round((cursor - d) / 86400000)
-    if (diff <= 1) {
-      streak++
-      cursor = d
-    } else {
-      break
-    }
+  while (set.has(toStr(d))) {
+    streak++
+    d.setDate(d.getDate() - 1)
   }
   return streak
 }
 
-function isDoneToday(completions) {
-  return (completions ?? []).some(c => c.date === today() && c.done)
+function calcLongestStreak(completions) {
+  const sorted = [...new Set(completions)].sort()
+  if (!sorted.length) return 0
+  let longest = 1, current = 1
+  for (let i = 1; i < sorted.length; i++) {
+    const diff = (new Date(sorted[i]) - new Date(sorted[i - 1])) / 86400000
+    if (diff === 1) { current++; if (current > longest) longest = current }
+    else if (diff > 1) current = 1
+  }
+  return longest
 }
 
-const EMPTY_FORM = { name: '', category: 'Health', notes: '' }
+function getMonthDays(year, month) {
+  const count = new Date(year, month + 1, 0).getDate()
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(year, month, i + 1)
+    return { day: i + 1, dateStr: toStr(d), dow: d.getDay() }
+  })
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function Cell({ dateStr, color, done, isToday, isFuture, onToggle }) {
+  return (
+    <td className="p-0.5">
+      <button
+        onClick={() => !isFuture && onToggle(dateStr)}
+        disabled={isFuture}
+        title={dateStr}
+        className={`
+          w-7 h-7 rounded-md transition-all duration-100
+          ${isFuture
+            ? 'opacity-0 cursor-default'
+            : done
+              ? 'opacity-100 hover:opacity-80 active:scale-90 shadow-sm'
+              : 'bg-gray-100 hover:bg-gray-200 active:scale-90'
+          }
+          ${isToday && !done ? 'ring-2 ring-offset-1' : ''}
+        `}
+        style={{
+          backgroundColor: done ? color : undefined,
+          ringColor: isToday && !done ? color : undefined,
+          outline: isToday && !done ? `2px solid ${color}` : undefined,
+        }}
+        aria-label={`${done ? 'Unmark' : 'Mark'} ${dateStr}`}
+      />
+    </td>
+  )
+}
+
+function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
+  const completions = migrateCompletions(habit.completions)
+  const set = new Set(completions)
+  const current = calcCurrentStreak(completions)
+  const longest = calcLongestStreak(completions)
+  const doneThisMonth = days.filter(d => set.has(d.dateStr)).length
+
+  return (
+    <tr className="group">
+      {/* Habit name — sticky left */}
+      <td className="sticky left-0 z-10 bg-white pr-3 py-1.5 min-w-[120px] max-w-[160px]">
+        <div className="flex items-center gap-2">
+          <span
+            className="w-3 h-3 rounded-full shrink-0 shadow-sm"
+            style={{ backgroundColor: habit.color }}
+          />
+          <span className="text-sm font-medium text-gray-800 truncate leading-tight">
+            {habit.name}
+          </span>
+        </div>
+      </td>
+
+      {/* Day cells */}
+      {days.map(({ dateStr, dow }) => (
+        <Cell
+          key={dateStr}
+          dateStr={dateStr}
+          color={habit.color}
+          done={set.has(dateStr)}
+          isToday={dateStr === todayStr}
+          isFuture={dateStr > todayStr}
+          onToggle={(ds) => onToggle(habit.id, ds, completions)}
+        />
+      ))}
+
+      {/* Streak stats — sticky right */}
+      <td className="sticky right-0 z-10 bg-white pl-3 py-1.5 whitespace-nowrap">
+        <div className="flex flex-col gap-0.5 items-end">
+          <div className="flex items-center gap-1">
+            <span className="text-sm">🔥</span>
+            <span className="text-sm font-bold text-gray-900">{current}</span>
+          </div>
+          <div className="text-[10px] text-gray-400 leading-none">
+            best {longest} · {doneThisMonth}d mo.
+          </div>
+        </div>
+      </td>
+
+      {/* Edit/Delete — appears on hover, after stats */}
+      <td className="pl-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1">
+          <button
+            onClick={() => onEdit(habit)}
+            className="text-xs text-gray-400 hover:text-gray-700 px-1 py-0.5 rounded hover:bg-gray-100"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(habit.id)}
+            className="text-xs text-red-300 hover:text-red-600 px-1 py-0.5 rounded hover:bg-red-50"
+          >
+            Del
+          </button>
+        </div>
+      </td>
+    </tr>
+  )
+}
+
+function ColorPicker({ value, onChange }) {
+  return (
+    <div>
+      <span className="text-sm font-medium text-gray-700 block mb-2">Color</span>
+      <div className="flex flex-wrap gap-2">
+        {PALETTE.map(c => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => onChange(c)}
+            className={`w-7 h-7 rounded-full transition-transform hover:scale-110 ${
+              value === c ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''
+            }`}
+            style={{ backgroundColor: c }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
+const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '' }
 
 export default function Habits() {
   const { items: habits, add, update, remove } = useStore('habits')
-  const [modal, setModal] = useState(null) // null | 'add' | { id, ...habit }
+  const [modal, setModal] = useState(null)       // null | 'add' | habit object
   const [form, setForm] = useState(EMPTY_FORM)
-  const todayStr = today()
 
-  const openAdd = () => { setForm(EMPTY_FORM); setModal('add') }
-  const openEdit = (h) => { setForm({ name: h.name, category: h.category, notes: h.notes || '' }); setModal(h) }
-  const closeModal = () => setModal(null)
+  // Month navigation
+  const now = new Date()
+  const [viewYear, setViewYear]   = useState(now.getFullYear())
+  const [viewMonth, setViewMonth] = useState(now.getMonth())
+
+  const todayStr = today()
+  const days = getMonthDays(viewYear, viewMonth)
+
+  const monthLabel = new Date(viewYear, viewMonth, 1)
+    .toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
+    else setViewMonth(m => m - 1)
+  }
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
+    else setViewMonth(m => m + 1)
+  }
+
+  // Toggle a day for a habit
+  const handleToggle = (id, dateStr, currentCompletions) => {
+    const next = currentCompletions.includes(dateStr)
+      ? currentCompletions.filter(d => d !== dateStr)
+      : [...currentCompletions, dateStr]
+    update(id, { completions: next })
+  }
+
+  const openAdd  = () => { setForm({ ...EMPTY_FORM, color: PALETTE[habits.length % PALETTE.length] }); setModal('add') }
+  const openEdit = (h) => { setForm({ name: h.name, color: h.color, notes: h.notes || '' }); setModal(h) }
 
   const handleSave = () => {
     if (!form.name.trim()) return
     if (modal === 'add') {
-      add({ ...form, completions: [] })
+      add({ name: form.name, color: form.color, notes: form.notes, completions: [] })
     } else {
-      update(modal.id, form)
+      update(modal.id, { name: form.name, color: form.color, notes: form.notes })
     }
-    closeModal()
+    setModal(null)
   }
 
-  const toggleToday = (habit) => {
-    const completions = habit.completions ?? []
-    const existing = completions.find(c => c.date === todayStr)
-    const next = existing
-      ? completions.map(c => c.date === todayStr ? { ...c, done: !c.done } : c)
-      : [...completions, { date: todayStr, done: true }]
-    update(habit.id, { completions: next })
-  }
-
-  const doneToday = habits.filter(h => isDoneToday(h.completions)).length
-  const totalStreak = habits.reduce((sum, h) => sum + calcStreak(h.completions), 0)
+  // Summary stats
+  const allCurrentStreaks = habits.map(h => calcCurrentStreak(migrateCompletions(h.completions)))
+  const doneToday = habits.filter(h => migrateCompletions(h.completions).includes(todayStr)).length
+  const topStreak = allCurrentStreaks.length ? Math.max(...allCurrentStreaks) : 0
 
   return (
     <div>
@@ -76,71 +241,111 @@ export default function Habits() {
         action={<Button onClick={openAdd}>+ Add habit</Button>}
       />
 
-      {/* Summary */}
-      {habits.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          <StatCard icon="✅" label="Done today" value={`${doneToday}/${habits.length}`} />
-          <StatCard icon="🔥" label="Total streaks" value={totalStreak} />
-          <StatCard icon="📋" label="Total habits" value={habits.length} />
-        </div>
-      )}
-
       {habits.length === 0 ? (
         <EmptyState
           icon="✅"
           title="No habits yet"
-          description="Add your first habit and start tracking your daily wins."
+          description="Add your first habit and start building your streak."
           action={<Button onClick={openAdd}>Add your first habit</Button>}
         />
       ) : (
-        <div className="flex flex-col gap-3">
-          {habits.map(habit => {
-            const done = isDoneToday(habit.completions)
-            const streak = calcStreak(habit.completions)
-            const totalDone = (habit.completions ?? []).filter(c => c.done).length
-            return (
-              <Card key={habit.id} className="p-4">
-                <div className="flex items-start gap-3">
-                  <button
-                    onClick={() => toggleToday(habit)}
-                    className={`mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
-                      done
-                        ? 'bg-brand-500 border-brand-500 text-white'
-                        : 'border-gray-300 text-transparent hover:border-brand-400'
-                    }`}
-                    aria-label={done ? 'Mark incomplete' : 'Mark complete'}
-                  >
-                    ✓
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`font-semibold ${done ? 'line-through text-gray-400' : 'text-gray-900'}`}>
-                        {habit.name}
-                      </span>
-                      <Badge color="indigo">{habit.category}</Badge>
-                      {streak > 0 && (
-                        <span className="text-xs text-orange-500 font-medium">🔥 {streak}d streak</span>
-                      )}
+        <>
+          {/* Summary bar */}
+          <div className="flex items-center gap-4 mb-4 px-1">
+            <div className="text-sm text-gray-500">
+              <span className="font-semibold text-gray-900">{doneToday}</span>
+              <span>/{habits.length} done today</span>
+            </div>
+            {topStreak > 0 && (
+              <div className="text-sm text-gray-500">
+                🔥 <span className="font-semibold text-gray-900">{topStreak}</span> day top streak
+              </div>
+            )}
+          </div>
+
+          {/* Month navigation */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <button
+              onClick={prevMonth}
+              className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg"
+            >
+              ‹
+            </button>
+            <span className="text-sm font-semibold text-gray-700">{monthLabel}</span>
+            <button
+              onClick={nextMonth}
+              className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg"
+              disabled={viewYear === now.getFullYear() && viewMonth === now.getMonth()}
+            >
+              ›
+            </button>
+          </div>
+
+          {/* Calendar grid */}
+          <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
+            <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
+              <thead>
+                {/* Day numbers */}
+                <tr>
+                  <th className="sticky left-0 z-20 bg-white min-w-[120px] max-w-[160px]" />
+                  {days.map(({ day, dateStr }) => (
+                    <th
+                      key={dateStr}
+                      className={`p-0.5 text-center ${dateStr === todayStr ? 'relative' : ''}`}
+                    >
+                      <div className={`text-[10px] font-semibold w-7 mx-auto leading-none pt-2 pb-0.5 ${
+                        dateStr === todayStr ? 'text-brand-600' : 'text-gray-400'
+                      }`}>
+                        {day}
+                      </div>
+                      <div className={`text-[9px] w-7 mx-auto leading-none pb-2 ${
+                        dateStr === todayStr ? 'text-brand-400' : 'text-gray-300'
+                      }`}>
+                        {DAY_LABELS[new Date(viewYear, viewMonth, day).getDay()]}
+                      </div>
+                    </th>
+                  ))}
+                  <th className="sticky right-0 z-20 bg-white min-w-[64px]">
+                    <div className="text-[10px] font-semibold text-gray-400 text-right pr-3 pt-2 pb-2">
+                      Streak
                     </div>
-                    {habit.notes && (
-                      <p className="text-xs text-gray-400 mt-0.5 truncate">{habit.notes}</p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-1">{totalDone} completions total</p>
-                  </div>
-                  <div className="flex gap-1 ml-2">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(habit)}>Edit</Button>
-                    <Button variant="danger" size="sm" onClick={() => remove(habit.id)}>Del</Button>
-                  </div>
-                </div>
-              </Card>
-            )
-          })}
-        </div>
+                  </th>
+                  <th className="min-w-[60px]" />
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-gray-50">
+                {habits.map((habit, i) => (
+                  <HabitRow
+                    key={habit.id}
+                    habit={{ ...habit, completions: migrateCompletions(habit.completions) }}
+                    days={days}
+                    todayStr={todayStr}
+                    onToggle={handleToggle}
+                    onEdit={openEdit}
+                    onDelete={remove}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-3 mt-3 px-1">
+            <span className="text-xs text-gray-400">Less</span>
+            {[0.15, 0.4, 0.65, 0.85, 1].map(o => (
+              <div key={o} className="w-3 h-3 rounded-sm" style={{ backgroundColor: `rgba(99,102,241,${o})` }} />
+            ))}
+            <span className="text-xs text-gray-400">More</span>
+            <span className="text-xs text-gray-300 ml-2">· Click any cell to toggle</span>
+          </div>
+        </>
       )}
 
+      {/* Add / Edit modal */}
       <Modal
         open={!!modal}
-        onClose={closeModal}
+        onClose={() => setModal(null)}
         title={modal === 'add' ? 'Add Habit' : 'Edit Habit'}
       >
         <div className="flex flex-col gap-4">
@@ -149,22 +354,39 @@ export default function Habits() {
             placeholder="e.g. Morning run, Read 20 mins…"
             value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+            autoFocus
           />
-          <Select
-            label="Category"
-            value={form.category}
-            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-          >
-            {CATEGORIES.map(c => <option key={c}>{c}</option>)}
-          </Select>
-          <Textarea
+          <ColorPicker
+            value={form.color}
+            onChange={c => setForm(f => ({ ...f, color: c }))}
+          />
+          <Input
             label="Notes (optional)"
             placeholder="Any context or motivation…"
             value={form.notes}
             onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           />
+          {/* Preview */}
+          {form.name && (
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: form.color }} />
+              <span className="text-sm font-medium text-gray-800">{form.name}</span>
+              <div className="ml-auto flex gap-1">
+                {[...Array(7)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-5 h-5 rounded"
+                    style={{
+                      backgroundColor: i < 4 ? form.color : '#e5e7eb',
+                      opacity: i < 4 ? [0.3, 0.6, 0.85, 1][i] : 1,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex gap-2 justify-end pt-2">
-            <Button variant="secondary" onClick={closeModal}>Cancel</Button>
+            <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
             <Button onClick={handleSave} disabled={!form.name.trim()}>Save</Button>
           </div>
         </div>

@@ -11,10 +11,13 @@ function loadStats() {
 
   const todayStr = today()
 
-  // Habits: how many completed today
-  const habitsToday = habits.filter(h =>
-    (h.completions ?? []).some(c => c.date === todayStr && c.done)
-  ).length
+  // Habits: how many completed today (support both old {date,done} and new string[] format)
+  const habitsToday = habits.filter(h => {
+    const c = h.completions ?? []
+    if (!c.length) return false
+    if (typeof c[0] === 'string') return c.includes(todayStr)
+    return c.some(e => e.date === todayStr && e.done)
+  }).length
 
   // Goals: active count
   const activeGoals = goals.filter(g => g.status === 'In Progress').length
