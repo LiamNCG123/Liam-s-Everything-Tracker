@@ -27,14 +27,15 @@ const ALL_INCOME_CATEGORIES = [
 const ALL_CATEGORIES = [...new Set([...ALL_EXPENSE_CATEGORIES, ...ALL_INCOME_CATEGORIES])]
 
 const MAPPABLE_FIELDS = [
-  { key: 'date',        label: 'Date',              required: true },
-  { key: 'description', label: 'Description',       required: true },
-  { key: 'amount',      label: 'Amount (single col)',required: false },
-  { key: 'debit',       label: 'Debit / Money Out',  required: false },
-  { key: 'credit',      label: 'Credit / Money In',  required: false },
-  { key: 'balance',     label: 'Balance',             required: false },
-  { key: 'account',     label: 'Account',             required: false },
-  { key: 'currency',    label: 'Currency',            required: false },
+  { key: 'date',        label: 'Date',               required: true  },
+  { key: 'description', label: 'Description',        required: true  },
+  { key: 'amount',      label: 'Amount (single col)', required: false },
+  { key: 'debit',       label: 'Debit / Money Out',   required: false },
+  { key: 'credit',      label: 'Credit / Money In',   required: false },
+  { key: 'balance',     label: 'Balance',              required: false },
+  { key: 'account',     label: 'Account',              required: false },
+  { key: 'currency',    label: 'Currency',             required: false },
+  { key: 'reference',   label: 'Reference / Ref No',   required: false },
 ]
 
 const SIGN_OPTIONS = [
@@ -190,9 +191,6 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
     onConfirm({ mapping, signConvention })
   }
 
-  // Preview first 3 rows
-  const preview = rows.slice(0, 3)
-
   return (
     <div>
       <h2 className="text-lg font-bold text-gray-900 mb-1">Map columns</h2>
@@ -247,18 +245,22 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
 
       {/* CSV preview */}
       <div className="mb-4">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Preview (first 3 rows)</p>
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+          Preview (first {Math.min(rows.length, 8)} of {rows.length} rows)
+        </p>
+        <div className="overflow-auto rounded-xl border border-gray-100 max-h-52">
           <table className="text-xs w-full">
-            <thead>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-100">
                 {headers.map(h => (
-                  <th key={h} className="px-3 py-2 text-left font-semibold text-gray-500 whitespace-nowrap">{h}</th>
+                  <th key={h} className={`px-3 py-2 text-left font-semibold whitespace-nowrap ${
+                    Object.values(mapping).includes(h) ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500'
+                  }`}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {preview.map((row, i) => (
+              {rows.slice(0, 8).map((row, i) => (
                 <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
                   {headers.map(h => (
                     <td key={h} className="px-3 py-2 text-gray-700 whitespace-nowrap max-w-[180px] truncate">{row[h]}</td>
@@ -268,6 +270,7 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
             </tbody>
           </table>
         </div>
+        <p className="text-[10px] text-gray-400 mt-1">Mapped columns are highlighted in purple.</p>
       </div>
 
       {error && (
@@ -344,8 +347,11 @@ function ReviewRow({ row, index, onUpdate, onToggleExclude, categories }) {
     <tr className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${row._excluded ? 'opacity-40' : ''} ${row._isDuplicate ? 'bg-yellow-50/50' : ''}`}>
       <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">{row.date}</td>
       <td className="px-3 py-2 text-xs text-gray-800 max-w-[200px]">
-        <div className="truncate">{row.description}</div>
-        {row._isDuplicate && <span className="text-[10px] text-yellow-600 font-semibold">⚠ likely duplicate</span>}
+        <div className="truncate">{row.description || <span className="text-gray-400 italic">no description</span>}</div>
+        {row._isDuplicate && <div className="text-[10px] text-yellow-600 font-semibold">⚠ likely duplicate</div>}
+        {row._parseWarns?.length > 0 && (
+          <div className="text-[10px] text-orange-500">⚠ {row._parseWarns[0]}</div>
+        )}
       </td>
       <td className="px-3 py-2 text-xs font-semibold text-right whitespace-nowrap">
         <span className={row.type === 'income' ? 'text-green-600' : 'text-gray-800'}>
@@ -381,12 +387,13 @@ function ReviewRow({ row, index, onUpdate, onToggleExclude, categories }) {
   )
 }
 
-function ReviewStep({ rows: initialRows, existingTransactions, customRules, onConfirm, onBack }) {
-  const [rows, setRows]             = useState(() => detectDuplicates(initialRows, existingTransactions))
-  const [filter, setFilter]         = useState('all')   // all | uncategorized | income | expense | duplicates
-  const [aiKey, setAiKey]           = useState('')
-  const [aiRunning, setAiRunning]   = useState(false)
-  const [aiDone, setAiDone]         = useState(false)
+function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions, customRules, onConfirm, onBack }) {
+  const [rows, setRows]               = useState(() => detectDuplicates(initialRows, existingTransactions))
+  const [filter, setFilter]           = useState('all')
+  const [showSkipped, setShowSkipped] = useState(false)
+  const [aiKey, setAiKey]             = useState('')
+  const [aiRunning, setAiRunning]     = useState(false)
+  const [aiDone, setAiDone]           = useState(false)
   const [showAiPanel, setShowAiPanel] = useState(false)
 
   const update = (index, patch) => {
@@ -402,12 +409,14 @@ function ReviewStep({ rows: initialRows, existingTransactions, customRules, onCo
     if (filter === 'income')        return r.type === 'income' && !r._excluded
     if (filter === 'expense')       return r.type === 'expense' && !r._excluded
     if (filter === 'duplicates')    return r._isDuplicate
+    if (filter === 'warnings')      return r._parseWarns?.length > 0
     return true
   })
 
-  const toImport       = rows.filter(r => !r._excluded)
-  const uncategorized  = rows.filter(r => r.category === 'Uncategorized' && !r._excluded)
-  const duplicateCount = rows.filter(r => r._isDuplicate && !r._excluded).length
+  const toImport        = rows.filter(r => !r._excluded)
+  const uncategorized   = rows.filter(r => r.category === 'Uncategorized' && !r._excluded)
+  const duplicateCount  = rows.filter(r => r._isDuplicate && !r._excluded).length
+  const warnedCount     = rows.filter(r => r._parseWarns?.length > 0 && !r._excluded).length
 
   // AI categorization for uncategorized rows
   const runAI = async () => {
@@ -473,6 +482,7 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
     { key: 'income',        label: `Income (${rows.filter(r => r.type === 'income').length})` },
     { key: 'expense',       label: `Expense (${rows.filter(r => r.type === 'expense').length})` },
     ...(duplicateCount ? [{ key: 'duplicates', label: `Duplicates (${duplicateCount})` }] : []),
+    ...(warnedCount    ? [{ key: 'warnings',   label: `Warnings (${warnedCount})` }]     : []),
   ]
 
   return (
@@ -482,6 +492,40 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
         {toImport.length} of {rows.length} rows will be imported.
         Edit or skip rows as needed, then confirm.
       </p>
+
+      {/* Skipped rows panel */}
+      {skippedRows.length > 0 && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-red-700">
+              {skippedRows.length} row{skippedRows.length > 1 ? 's' : ''} could not be parsed and were skipped
+            </span>
+            <button
+              onClick={() => setShowSkipped(s => !s)}
+              className="text-xs text-red-500 hover:underline ml-3 shrink-0"
+            >
+              {showSkipped ? 'Hide' : 'Show details'}
+            </button>
+          </div>
+          {showSkipped && (
+            <div className="mt-3 flex flex-col gap-2">
+              {skippedRows.map((row, i) => (
+                <div key={i} className="bg-white border border-red-100 rounded-lg px-3 py-2 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-gray-400">Row {row._rowIndex}</span>
+                    <span className="text-gray-600 truncate flex-1">{row.description || Object.values(row.rawRowData || {}).filter(Boolean).join(' · ').slice(0, 60)}</span>
+                  </div>
+                  <ul className="mt-1 space-y-0.5">
+                    {row._parseErrors?.map((e, j) => (
+                      <li key={j} className="text-red-600">✗ {e}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Duplicate warning */}
       {duplicateCount > 0 && (
@@ -667,10 +711,11 @@ export default function ImportCSV() {
 
   const customRules = deserializeRules(storedRules)
 
-  const [step, setStep]         = useState(1)
-  const [csvData, setCsvData]   = useState(null)   // { headers, rows, filename }
-  const [mapping, setMapping]   = useState(null)
+  const [step, setStep]          = useState(1)
+  const [csvData, setCsvData]    = useState(null)
+  const [mapping, setMapping]    = useState(null)
   const [importedRows, setImportedRows] = useState([])
+  const [skippedRows, setSkippedRows]   = useState([])
   const [doneStats, setDoneStats]       = useState(null)
 
   // Step 1 → 2
@@ -683,9 +728,10 @@ export default function ImportCSV() {
   const handleMappingConfirm = ({ mapping: m, signConvention }) => {
     setMapping(m)
     const batchId = uid()
-    const normalized = normalizeRows(csvData.rows, m, { signConvention, importBatchId: batchId })
+    const { normalized, skipped } = normalizeRows(csvData.rows, m, { signConvention, importBatchId: batchId })
     const categorized = categorizeAll(normalized, customRules)
     setImportedRows(categorized)
+    setSkippedRows(skipped)
     setStep(3)
   }
 
@@ -742,7 +788,7 @@ export default function ImportCSV() {
 
   const reset = () => {
     setStep(1); setCsvData(null); setMapping(null)
-    setImportedRows([]); setDoneStats(null)
+    setImportedRows([]); setSkippedRows([]); setDoneStats(null)
   }
 
   return (
@@ -770,6 +816,7 @@ export default function ImportCSV() {
       {step === 3 && (
         <ReviewStep
           rows={importedRows}
+          skippedRows={skippedRows}
           existingTransactions={existingTx}
           customRules={customRules}
           onConfirm={handleConfirmImport}

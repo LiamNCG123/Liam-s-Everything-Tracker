@@ -178,6 +178,11 @@ const COLUMN_HINTS = {
   currency: [
     /^currency$/i, /^ccy$/i, /^cur$/i,
   ],
+  reference: [
+    /^ref(?:erence)?(?:\.?no)?$/i, /^ref\.?id$/i, /^transaction.?ref$/i,
+    /^trans(?:action)?.?id$/i, /^cheque.?no$/i, /^check.?no$/i, /^receipt.?no$/i,
+    /^order.?(?:id|no)$/i, /^external.?id$/i,
+  ],
 }
 
 export function autoDetectMapping(headers) {
@@ -200,21 +205,27 @@ export function autoDetectMapping(headers) {
 
 // ─── Date parsing ─────────────────────────────────────────────────────────────
 
+/**
+ * Returns { value: 'YYYY-MM-DD', warned: bool }
+ * warned=true means we fell back to today() and should flag the row.
+ */
 function parseDate(raw) {
-  if (!raw) return today()
+  if (!raw || String(raw).trim() === '') return { value: today(), warned: true }
   const s = String(raw).trim()
 
   // ISO: YYYY-MM-DD or YYYY/MM/DD
   let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/)
-  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`
+  if (m) return { value: `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`, warned: false }
 
   // DD/MM/YYYY or DD-MM-YYYY (Australian/UK)
   m = s.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/)
   if (m) {
-    const day = parseInt(m[1]), mon = parseInt(m[2])
-    // Heuristic: if month > 12 it must be day/mon, else assume DD/MM
-    if (mon > 12) return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`
-    return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+    const mon = parseInt(m[2])
+    if (mon > 12) {
+      // Looks like MM/DD — swap
+      return { value: `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`, warned: false }
+    }
+    return { value: `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`, warned: false }
   }
 
   // DD MMM YYYY or DD-MMM-YYYY
@@ -224,15 +235,16 @@ function parseDate(raw) {
     const mon = months[m[2].toLowerCase().slice(0, 3)]
     if (mon) {
       const yr = m[3].length === 2 ? '20' + m[3] : m[3]
-      return `${yr}-${String(mon).padStart(2, '0')}-${m[1].padStart(2, '0')}`
+      return { value: `${yr}-${String(mon).padStart(2, '0')}-${m[1].padStart(2, '0')}`, warned: false }
     }
   }
 
   // Try native Date parse as fallback
   const d = new Date(s)
-  if (!isNaN(d)) return d.toISOString().slice(0, 10)
+  if (!isNaN(d)) return { value: d.toISOString().slice(0, 10), warned: false }
 
-  return today()
+  // Could not parse — fall back to today and warn
+  return { value: today(), warned: true }
 }
 
 // ─── Amount parsing ───────────────────────────────────────────────────────────
@@ -250,68 +262,136 @@ function parseAmount(raw) {
 
 /**
  * @param {object[]} rows      - raw CSV row objects (header: value)
- * @param {object}   mapping   - { date, description, amount, debit, credit, ... }
+ * @param {object}   mapping   - { date, description, amount, debit, credit, reference, ... }
  * @param {object}   options   - { signConvention: 'positive_is_income'|'positive_is_expense', importBatchId }
- * @returns {object[]} normalized transaction drafts
+ * @returns {{ normalized: object[], skipped: object[] }}
+ *   normalized — valid rows ready for review
+ *   skipped    — rows that could not be parsed, each with a _parseErrors string[]
  */
 export function normalizeRows(rows, mapping, options = {}) {
   const { signConvention = 'positive_is_income', importBatchId = uid() } = options
   const normalized = []
+  const skipped    = []
 
-  for (const row of rows) {
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+    const row    = rows[rowIndex]
+    const errors = []   // validation messages for this row
+    const warns  = []   // non-fatal warnings
+
+    // ── Description ───────────────────────────────────────────────────────────
+    const descRaw   = mapping.description ? row[mapping.description] : ''
+    const description = String(descRaw || '').trim()
+
+    // ── Date ──────────────────────────────────────────────────────────────────
     const dateRaw = mapping.date ? row[mapping.date] : ''
-    const descRaw = mapping.description ? row[mapping.description] : ''
-
-    // Amount logic
-    let amount = 0
-    let type = 'expense'
-
-    if (mapping.debit && mapping.credit) {
-      const debit  = parseAmount(row[mapping.debit])
-      const credit = parseAmount(row[mapping.credit])
-      if (credit && !debit) { amount = Math.abs(credit); type = 'income' }
-      else if (debit && !credit) { amount = Math.abs(debit); type = 'expense' }
-      else if (credit > debit) { amount = credit - debit; type = 'income' }
-      else { amount = debit - credit; type = 'expense' }
-    } else if (mapping.amount) {
-      const raw = parseAmount(row[mapping.amount])
-      amount = Math.abs(raw)
-      if (signConvention === 'positive_is_income') {
-        type = raw >= 0 ? 'income' : 'expense'
+    const { value: date, warned: dateWarned } = parseDate(dateRaw)
+    if (dateWarned) {
+      if (!dateRaw || String(dateRaw).trim() === '') {
+        warns.push('Date is empty — defaulted to today')
       } else {
-        type = raw <= 0 ? 'income' : 'expense'
+        warns.push(`Date "${dateRaw}" could not be parsed — defaulted to today`)
       }
     }
 
-    if (!amount && amount !== 0) continue  // skip empty rows
-    if (amount === 0 && !descRaw) continue // skip completely empty rows
+    // ── Amount ────────────────────────────────────────────────────────────────
+    let amount = null
+    let type   = 'expense'
 
-    const description = String(descRaw || '').trim()
-    if (!description && amount === 0) continue
+    if (mapping.debit && mapping.credit) {
+      const debitRaw  = row[mapping.debit]
+      const creditRaw = row[mapping.credit]
+      const debit     = parseAmount(debitRaw)
+      const credit    = parseAmount(creditRaw)
+
+      if (!debitRaw && !creditRaw) {
+        errors.push('Both debit and credit columns are empty')
+      } else if (credit && !debit) {
+        amount = Math.abs(credit); type = 'income'
+      } else if (debit && !credit) {
+        amount = Math.abs(debit); type = 'expense'
+      } else if (credit > debit) {
+        amount = credit - debit; type = 'income'
+      } else {
+        amount = debit - credit; type = 'expense'
+      }
+    } else if (mapping.amount) {
+      const rawVal = row[mapping.amount]
+      if (!rawVal || String(rawVal).trim() === '') {
+        errors.push('Amount column is empty')
+      } else {
+        const parsed = parseAmount(rawVal)
+        if (isNaN(parsed)) {
+          errors.push(`Amount "${rawVal}" is not a valid number`)
+        } else {
+          amount = Math.abs(parsed)
+          if (signConvention === 'positive_is_income') {
+            type = parsed >= 0 ? 'income' : 'expense'
+          } else {
+            type = parsed <= 0 ? 'income' : 'expense'
+          }
+        }
+      }
+    } else {
+      // No amount mapping at all — only valid if both debit+credit were set
+      errors.push('No amount column mapped')
+    }
+
+    // ── Empty row check ───────────────────────────────────────────────────────
+    const allEmpty = Object.values(row).every(v => !v || String(v).trim() === '')
+    if (allEmpty) {
+      // Silently drop fully empty rows (common at end of CSV)
+      continue
+    }
+
+    // ── Zero-amount check ─────────────────────────────────────────────────────
+    if (amount === 0 && !description) {
+      // Nothing useful — skip silently
+      continue
+    }
+
+    // ── Route to skipped or normalized ───────────────────────────────────────
+    if (errors.length > 0) {
+      skipped.push({
+        _importId:    uid(),
+        _rowIndex:    rowIndex + 1,
+        _parseErrors: errors,
+        _parseWarns:  warns,
+        rawRowData:   row,
+        date,
+        description,
+        amount: amount ?? 0,
+        type,
+        _excluded: true,  // skipped rows start excluded
+      })
+      continue
+    }
 
     normalized.push({
-      _importId:    uid(),  // local draft ID (not saved)
-      date:         parseDate(dateRaw),
+      _importId:    uid(),
+      _rowIndex:    rowIndex + 1,
+      _parseWarns:  warns,   // non-fatal — row included but flagged
+      date,
       description,
       rawDescription: description,
-      amount,
+      amount:       amount ?? 0,
       type,
       category:     'Uncategorized',
       subcategory:  '',
-      account:      mapping.account ? String(row[mapping.account] || '').trim() : '',
-      currency:     mapping.currency ? String(row[mapping.currency] || '').trim() : '',
+      account:      mapping.account   ? String(row[mapping.account]   || '').trim() : '',
+      currency:     mapping.currency  ? String(row[mapping.currency]  || '').trim() : '',
+      reference:    mapping.reference ? String(row[mapping.reference] || '').trim() : '',
       source:       'csv_import',
       notes:        '',
       importBatchId,
       rawRowData:   row,
-      confidenceScore:       0,
-      categorizationSource:  'unknown',
+      confidenceScore:      0,
+      categorizationSource: 'unknown',
       _excluded:    false,
       _isDuplicate: false,
     })
   }
 
-  return normalized
+  return { normalized, skipped }
 }
 
 // ─── Rules-based categorization ───────────────────────────────────────────────
