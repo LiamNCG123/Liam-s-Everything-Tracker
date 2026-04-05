@@ -3,146 +3,14 @@
  * - CSV parsing (via PapaParse)
  * - Column auto-detection
  * - Row normalization
- * - Rules-based categorization
  * - Duplicate detection
+ *
+ * Categorization is handled by src/utils/categorization.js
  */
 
 import Papa from 'papaparse'
 import { uid, today } from './storage'
-
-// ─── Categorization rules ─────────────────────────────────────────────────────
-
-/**
- * Each rule: { pattern: RegExp, category: string, type: 'income'|'expense', confidence: 0-1 }
- * Rules are checked in order; first match wins.
- */
-export const DEFAULT_RULES = [
-  // ── Income ──────────────────────────────────────────────────────────────────
-  { pattern: /\b(salary|payroll|wages?|pay slip|payg|direct credit|employer pay)\b/i,
-    category: 'Salary', type: 'income', confidence: 0.95 },
-  { pattern: /\b(freelance|consulting fee|contractor pay|invoice payment|client pay)\b/i,
-    category: 'Freelance', type: 'income', confidence: 0.9 },
-  { pattern: /\b(dividend|interest earned|interest income|term deposit maturity)\b/i,
-    category: 'Investment Income', type: 'income', confidence: 0.9 },
-  { pattern: /\b(refund|return credit|cashback|rebate|reversal|reimbursement)\b/i,
-    category: 'Refund', type: 'income', confidence: 0.85 },
-  { pattern: /\b(business income|business pay|pty ltd pay|client transfer)\b/i,
-    category: 'Business Income', type: 'income', confidence: 0.85 },
-
-  // ── Rent / Housing ───────────────────────────────────────────────────────────
-  { pattern: /\b(rent|lease payment|landlord|real estate|property management|strata levy|body corporate|hoa)\b/i,
-    category: 'Rent/Housing', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(mortgage|home loan|repayment to|loan repay)\b/i,
-    category: 'Rent/Housing', type: 'expense', confidence: 0.9 },
-
-  // ── Utilities ────────────────────────────────────────────────────────────────
-  { pattern: /\b(electricity|electric bill|gas bill|water bill|sewerage|origin energy|agl|energy australia|eon|vattenfall|fortum|nrg)\b/i,
-    category: 'Utilities', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(internet|broadband|nbn|telstra|optus|vodafone|tpg|aussie broadband|comcast|at&t|verizon|bt internet|sky broadband)\b/i,
-    category: 'Utilities', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(mobile plan|phone bill|sim plan|prepaid recharge)\b/i,
-    category: 'Utilities', type: 'expense', confidence: 0.85 },
-
-  // ── Groceries ────────────────────────────────────────────────────────────────
-  { pattern: /\b(ica |coop |lidl|willys|aldi|woolworths|coles|harris farm|tesco|sainsbury|waitrose|whole foods|trader joe|kroger|safeway|publix|countdown|new world|pak'n save)\b/i,
-    category: 'Groceries', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(supermarket|grocery|fresh produce|fruit.?veg|greengrocer|butcher|fishmonger|deli)\b/i,
-    category: 'Groceries', type: 'expense', confidence: 0.85 },
-
-  // ── Eating Out ───────────────────────────────────────────────────────────────
-  { pattern: /\b(mcdonald|kfc|subway|domino|pizza hut|hungry jacks|burger king|nandos|guzman|grill'd|oporto|lord of the fries|grill)\b/i,
-    category: 'Eating Out', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(uber eats|doordash|deliveroo|menulog|zomato|grubhub|foodpanda|just eat|getir)\b/i,
-    category: 'Eating Out', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(restaurant|cafe|coffee|bakery|sushi|ramen|pho|thai|chinese|indian|italian|mexican|tapas|bistro|brasserie|diner|eatery|takeaway|takeout)\b/i,
-    category: 'Eating Out', type: 'expense', confidence: 0.8 },
-
-  // ── Transport ────────────────────────────────────────────────────────────────
-  { pattern: /\b(uber(?! eats)|lyft|bolt(?! food)|ola cab|taxi|cabcharge|13cabs|silver top|ingogo)\b/i,
-    category: 'Transport', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(opal|myki|translink|go card|metro card|oyster card|commuterclub|sl kort|ruter|vy )\b/i,
-    category: 'Transport', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(train|bus fare|tram|ferry|metro|tube|subway fare|public transport|transit)\b/i,
-    category: 'Transport', type: 'expense', confidence: 0.85 },
-  { pattern: /\b(petrol|fuel|shell|bp |caltex|ampol|viva energy|7-eleven fuel|mobil)\b/i,
-    category: 'Transport', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(parking|wilson parking|secure parking|care park|city parking)\b/i,
-    category: 'Transport', type: 'expense', confidence: 0.85 },
-
-  // ── Health ───────────────────────────────────────────────────────────────────
-  { pattern: /\b(pharmacy|chemist|chemist warehouse|priceline|dischem|boots pharmacy|walgreens|cvs|rite aid)\b/i,
-    category: 'Health', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(doctor|gp |medical centre|hospital|clinic|specialist|pathology|radiology|ultrasound|blood test|xray)\b/i,
-    category: 'Health', type: 'expense', confidence: 0.85 },
-  { pattern: /\b(dental|dentist|orthodontist|physio|physiotherapy|chiro|chiropractor|osteo|podiatry|occupational therapy|allied health)\b/i,
-    category: 'Health', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(medicare|bulk billing|health fund|bupa|medibank|ahm|nib |hcf |cbhs|private health)\b/i,
-    category: 'Health', type: 'expense', confidence: 0.9 },
-
-  // ── Fitness ──────────────────────────────────────────────────────────────────
-  { pattern: /\b(gym|sats|fitness first|planet fitness|anytime fitness|f45|orangetheory|crossfit|yoga|pilates|aqua|swimming pool|les mills)\b/i,
-    category: 'Fitness', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(running shoes|gym gear|sports equipment|sportswear|nike run club|strava premium|garmin connect)\b/i,
-    category: 'Fitness', type: 'expense', confidence: 0.75 },
-
-  // ── Insurance ────────────────────────────────────────────────────────────────
-  { pattern: /\b(insurance|nrma|racv|racq|ract|nrg insurance|allianz|aami|suncorp|youi|budget direct|cgu|zurich|axa|aviva|admiral)\b/i,
-    category: 'Insurance', type: 'expense', confidence: 0.9 },
-
-  // ── Subscriptions ────────────────────────────────────────────────────────────
-  { pattern: /\b(netflix|spotify|apple\.com\/bill|apple subscription|amazon prime|disney\+|disney plus|hbo|hulu|stan |paramount\+|binge |foxtel|kayo sports)\b/i,
-    category: 'Subscriptions', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(youtube premium|microsoft 365|office 365|adobe|dropbox|github|notion|slack|zoom|1password|lastpass|canva|figma|loom)\b/i,
-    category: 'Subscriptions', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(icloud|google storage|google one|onedrive|patreon|substack)\b/i,
-    category: 'Subscriptions', type: 'expense', confidence: 0.9 },
-
-  // ── Taxes ────────────────────────────────────────────────────────────────────
-  { pattern: /\b(skatteverket|ato |australian tax|income tax|bas payment|gst payment|tax office|hm revenue|inland revenue|irs payment)\b/i,
-    category: 'Taxes', type: 'expense', confidence: 0.95 },
-
-  // ── Savings / Investing ──────────────────────────────────────────────────────
-  { pattern: /\b(savings transfer|transfer to savings|savings account|vanguard|commsec|stake|pearler|superhero|spaceship|raiz|acorns|betashares|etf purchase|share purchase)\b/i,
-    category: 'Savings/Investing', type: 'expense', confidence: 0.85 },
-  { pattern: /\b(super contribution|superannuation|super fund|rest super|hostplus|australian super)\b/i,
-    category: 'Savings/Investing', type: 'expense', confidence: 0.9 },
-
-  // ── Shopping ─────────────────────────────────────────────────────────────────
-  { pattern: /\b(amazon(?! prime)|ebay|etsy|kmart|target(?! petrol)|big w|david jones|myer|cotton on|h&m|zara|uniqlo|asos|the iconic|shein|temu|catch\.com)\b/i,
-    category: 'Shopping', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(jb hi-fi|harvey norman|the good guys|officeworks|apple store|samsung store|best buy|currys|harvey norm)\b/i,
-    category: 'Shopping', type: 'expense', confidence: 0.9 },
-
-  // ── Travel ───────────────────────────────────────────────────────────────────
-  { pattern: /\b(qantas|virgin australia|jetstar|singapore airlines|emirates|cathay|united airlines|delta|american airlines|british airways|lufthansa|ryanair|easyjet)\b/i,
-    category: 'Travel', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(airbnb|booking\.com|hotels\.com|expedia|agoda|trivago|hilton|marriott|accor|ihg|holiday inn)\b/i,
-    category: 'Travel', type: 'expense', confidence: 0.9 },
-
-  // ── Entertainment ────────────────────────────────────────────────────────────
-  { pattern: /\b(cinema|event cinema|village cinemas|reading cinemas|hoyts|odeon|vue cinema|cineworld)\b/i,
-    category: 'Entertainment', type: 'expense', confidence: 0.95 },
-  { pattern: /\b(ticketek|ticketmaster|moshtix|eventbrite|ticketfly|dice\.fm)\b/i,
-    category: 'Entertainment', type: 'expense', confidence: 0.9 },
-  { pattern: /\b(steam|playstation|psn|xbox|nintendo|epic games|battle\.net|ea play)\b/i,
-    category: 'Entertainment', type: 'expense', confidence: 0.9 },
-
-  // ── Personal Care ────────────────────────────────────────────────────────────
-  { pattern: /\b(salon|hairdresser|barber|barbershop|beauty therapist|nail salon|waxing|tanning|spa treatment|massage)\b/i,
-    category: 'Personal Care', type: 'expense', confidence: 0.85 },
-
-  // ── Household Items ──────────────────────────────────────────────────────────
-  { pattern: /\b(bunnings|ikea|clark rubber|spotlight|lincraft|bed bath|pillow talk|adairs|pottery barn|kikki\.k|smiggle)\b/i,
-    category: 'Household Items', type: 'expense', confidence: 0.9 },
-
-  // ── Gifts / Social ───────────────────────────────────────────────────────────
-  { pattern: /\b(gift card|gift voucher|flowers|florist|birthday present|wedding gift|charity donation|gofundme)\b/i,
-    category: 'Gifts/Social', type: 'expense', confidence: 0.75 },
-
-  // ── Business Expenses ────────────────────────────────────────────────────────
-  { pattern: /\b(business expense|client entertainment|work expense|office supply|coworking|wework|regus)\b/i,
-    category: 'Business Expenses', type: 'expense', confidence: 0.85 },
-]
+export { categorize, categorizeAll } from './categorization'
 
 // ─── Column name detection ────────────────────────────────────────────────────
 
@@ -392,38 +260,6 @@ export function normalizeRows(rows, mapping, options = {}) {
   }
 
   return { normalized, skipped }
-}
-
-// ─── Rules-based categorization ───────────────────────────────────────────────
-
-/**
- * Apply categorization rules to a single normalized transaction.
- * Checks custom (learned) rules first, then defaults.
- */
-export function categorize(tx, customRules = []) {
-  const allRules = [...customRules, ...DEFAULT_RULES]
-  const text = `${tx.description} ${tx.rawDescription || ''}`.toLowerCase()
-
-  for (const rule of allRules) {
-    if (rule.pattern.test(text)) {
-      return {
-        ...tx,
-        category:            rule.category,
-        type:                rule.forceType ? rule.type : tx.type,  // custom rules may override type
-        confidenceScore:     rule.confidence ?? 0.85,
-        categorizationSource: 'rule',
-      }
-    }
-  }
-
-  return { ...tx, confidenceScore: 0, categorizationSource: 'unknown' }
-}
-
-/**
- * Categorize all rows in a batch.
- */
-export function categorizeAll(rows, customRules = []) {
-  return rows.map(tx => categorize(tx, customRules))
 }
 
 // ─── Duplicate detection ──────────────────────────────────────────────────────
