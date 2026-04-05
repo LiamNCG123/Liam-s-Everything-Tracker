@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { today, uid, fmtDate } from '../utils/storage'
 import {
@@ -972,6 +973,7 @@ function InsightRow({ icon, label, value, color }) {
 // ─── Main Finance page ────────────────────────────────────────────────────────
 
 export default function Finance() {
+  const navigate = useNavigate()
   const { items: transactions, add: addTx, update: updateTx, remove: removeTx } = useStore('financeTransactions')
   const { items: budgets, add: addBudget, update: updateBudget } = useStore('monthlyBudgets')
 
@@ -1026,12 +1028,20 @@ export default function Finance() {
       {/* Header with month nav */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Finance</h1>
-        <div className="flex items-center gap-1">
-          <button onClick={prevMonth}
-            className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg">‹</button>
-          <span className="text-sm font-semibold text-gray-700 w-28 text-center">{monthLabel(month)}</span>
-          <button onClick={nextMonth} disabled={isCurrentMonth}
-            className="text-gray-400 hover:text-gray-700 disabled:opacity-30 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg">›</button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/finance/import')}
+            className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+          >
+            <span>📥</span> Import CSV
+          </button>
+          <div className="flex items-center gap-1">
+            <button onClick={prevMonth}
+              className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg">‹</button>
+            <span className="text-sm font-semibold text-gray-700 w-28 text-center">{monthLabel(month)}</span>
+            <button onClick={nextMonth} disabled={isCurrentMonth}
+              className="text-gray-400 hover:text-gray-700 disabled:opacity-30 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg">›</button>
+          </div>
         </div>
       </div>
 
