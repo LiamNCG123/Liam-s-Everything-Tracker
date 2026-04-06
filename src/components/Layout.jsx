@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import QuickAdd from './QuickAdd'
 
 const NAV = [
   { to: '/',          label: 'Today',     emoji: '☀️' },
@@ -40,6 +41,8 @@ export default function Layout({ children }) {
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-5 pb-24 sm:pb-8">
         {children}
       </main>
+
+      <QuickAdd />
 
       {/* Bottom tab bar — mobile only */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 flex z-30 safe-area-pb">
