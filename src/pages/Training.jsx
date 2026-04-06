@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import { useStore } from '../hooks/useStore'
 import { today, uid, fmtDate } from '../utils/storage'
+import { useFlash } from '../utils/microReward'
 import {
-  Button, Card, Badge, Input, Textarea, EmptyState, StatCard,
+  Button, Card, Badge, Input, Textarea, EmptyState, StatCard, Toast,
 } from '../components/ui'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -721,6 +722,7 @@ export default function Training() {
   const [view, setView] = useState('main')       // 'main' | 'editor' | 'logger' | 'adhoc'
   const [editTarget, setEditTarget] = useState(null)
   const [logTarget, setLogTarget] = useState(null)
+  const [sessionToast, triggerSessionToast] = useFlash(2000)
 
   // Programme operations
   const saveProg = (form) => {
@@ -759,6 +761,7 @@ export default function Training() {
     setLogTarget(null)
     setView('main')
     setTab('history')
+    triggerSessionToast()
   }
 
   // Stats
@@ -791,7 +794,7 @@ export default function Training() {
 
   if (view === 'adhoc') return (
     <AdHocLogger
-      onSave={(s) => { addSession(s); setView('main'); setTab('history') }}
+      onSave={(s) => { addSession(s); setView('main'); setTab('history'); triggerSessionToast() }}
       onCancel={() => setView('main')}
     />
   )
@@ -799,6 +802,8 @@ export default function Training() {
   // ── Main view ──────────────────────────────────────────────────────────────
 
   return (
+    <>
+    <Toast message="Session logged." visible={sessionToast} />
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Training</h1>
@@ -867,5 +872,6 @@ export default function Training() {
         )
       )}
     </div>
+    </>
   )
 }

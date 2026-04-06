@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
 import { fmtDate } from '../utils/storage'
+import { useFlash } from '../utils/microReward'
 import {
   PageHeader, Button, Card, Badge, Modal,
-  Input, Textarea, Select, EmptyState, ProgressBar, StatCard,
+  Input, Textarea, Select, EmptyState, ProgressBar, StatCard, Toast,
 } from '../components/ui'
 
 const STATUSES = ['Not Started', 'In Progress', 'Completed', 'On Hold', 'Dropped']
@@ -38,6 +39,13 @@ export default function Goals() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [filter, setFilter]       = useState('All')
   const [catFilter, setCatFilter] = useState('All')
+  const [flashGoalId, setFlashGoalId] = useState(null)
+  const [goalToast, triggerGoalToast] = useFlash(2000)
+
+  const flashGoal = (id) => {
+    setFlashGoalId(id)
+    setTimeout(() => setFlashGoalId(null), 900)
+  }
 
   const openAdd = () => { setForm(EMPTY_FORM); setModal('add') }
   const openEdit = (g) => {
@@ -66,6 +74,7 @@ export default function Goals() {
 
   return (
     <div>
+      <Toast message="Goal complete." visible={goalToast} />
       <PageHeader
         title="Goals"
         action={<Button onClick={openAdd}>+ Add goal</Button>}
@@ -138,7 +147,8 @@ export default function Goals() {
       ) : (
         <div className="flex flex-col gap-3">
           {visible.map(goal => (
-            <Card key={goal.id} className="p-4">
+            <div key={goal.id} className={`transition-all duration-300 ${flashGoalId === goal.id ? 'scale-[1.005]' : ''}`}>
+            <Card className={`p-4 transition-all duration-300 ${flashGoalId === goal.id ? 'ring-2 ring-green-300 ring-offset-1 shadow-md' : ''}`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -173,7 +183,7 @@ export default function Goals() {
                     )}
                     {goal.status === 'In Progress' && (goal.progress ?? 0) >= 100 && (
                       <button
-                        onClick={e => { e.stopPropagation(); update(goal.id, { status: 'Completed' }) }}
+                        onClick={e => { e.stopPropagation(); update(goal.id, { status: 'Completed' }); flashGoal(goal.id); triggerGoalToast() }}
                         className="text-[10px] font-semibold text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 leading-none transition-colors"
                       >✓ Mark complete</button>
                     )}
@@ -187,6 +197,7 @@ export default function Goals() {
                 {goal.notes && <span className="truncate">📝 {goal.notes}</span>}
               </div>
             </Card>
+            </div>
           ))}
         </div>
       )}

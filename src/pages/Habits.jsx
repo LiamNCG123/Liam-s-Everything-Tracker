@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
 import { today } from '../utils/storage'
-import { PageHeader, Button, Modal, Input, EmptyState } from '../components/ui'
+import { PageHeader, Button, Modal, Input, EmptyState, CompletionBanner } from '../components/ui'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -62,25 +62,34 @@ function getMonthDays(year, month) {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Cell({ dateStr, color, done, isToday, isFuture, onToggle }) {
+  const [justDone, setJustDone] = useState(false)
+
+  const handleClick = () => {
+    if (isFuture) return
+    if (!done) {
+      setJustDone(true)
+      setTimeout(() => setJustDone(false), 380)
+    }
+    onToggle(dateStr)
+  }
+
   return (
     <td className="p-0.5">
       <button
-        onClick={() => !isFuture && onToggle(dateStr)}
+        onClick={handleClick}
         disabled={isFuture}
         title={dateStr}
-        className={`
-          w-7 h-7 rounded-md transition-all duration-100
-          ${isFuture
+        className={[
+          'w-7 h-7 rounded-md transition-colors duration-150',
+          isFuture
             ? 'opacity-0 cursor-default'
             : done
-              ? 'opacity-100 hover:opacity-80 active:scale-90 shadow-sm'
-              : 'bg-gray-100 hover:bg-gray-200 active:scale-90'
-          }
-          ${isToday && !done ? 'ring-2 ring-offset-1' : ''}
-        `}
+              ? `opacity-100 hover:opacity-80 shadow-sm${justDone ? ' animate-pop' : ''}`
+              : 'bg-gray-100 hover:bg-gray-200 active:scale-90',
+          isToday && !done ? 'ring-2 ring-offset-1' : '',
+        ].join(' ')}
         style={{
           backgroundColor: done ? color : undefined,
-          ringColor: isToday && !done ? color : undefined,
           outline: isToday && !done ? `2px solid ${color}` : undefined,
         }}
         aria-label={`${done ? 'Unmark' : 'Mark'} ${dateStr}`}
@@ -277,7 +286,7 @@ export default function Habits() {
       ) : (
         <>
           {/* Summary bar */}
-          <div className="flex items-center gap-4 mb-4 px-1">
+          <div className="flex items-center gap-4 mb-3 px-1">
             <div className="text-sm text-gray-500">
               <span className="font-semibold text-gray-900">{doneToday}</span>
               <span>/{habits.length} done today</span>
@@ -288,6 +297,15 @@ export default function Habits() {
               </div>
             )}
           </div>
+
+          {/* All-done state */}
+          {doneToday === habits.length && habits.length > 0 && (
+            <CompletionBanner
+              title="All habits done today."
+              sub="Keep the streak alive — see you tomorrow."
+              className="mb-4"
+            />
+          )}
 
           {/* Month navigation */}
           <div className="flex items-center justify-between mb-3 px-1">

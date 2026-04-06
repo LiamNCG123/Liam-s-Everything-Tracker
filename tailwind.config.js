@@ -6,6 +6,22 @@ export default {
   ],
   theme: {
     extend: {
+      keyframes: {
+        pop: {
+          '0%':   { transform: 'scale(1)' },
+          '35%':  { transform: 'scale(1.45)' },
+          '65%':  { transform: 'scale(0.9)' },
+          '100%': { transform: 'scale(1)' },
+        },
+        'fade-in-up': {
+          from: { opacity: '0', transform: 'translateY(6px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        pop:          'pop 0.32s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
+        'fade-in-up': 'fade-in-up 0.25s ease-out both',
+      },
       colors: {
         brand: {
           50:  '#eef2ff',

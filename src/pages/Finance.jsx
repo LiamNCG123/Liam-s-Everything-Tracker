@@ -6,7 +6,7 @@ import { today, uid, fmtDate } from '../utils/storage'
 import { learnCategory, recallCategory } from '../utils/categoryMemory'
 import {
   Button, Card, Badge, Input, Textarea, Select,
-  EmptyState, StatCard, Modal, ProgressBar,
+  EmptyState, StatCard, Modal, ProgressBar, CompletionBanner,
 } from '../components/ui'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -500,6 +500,8 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
   const [search, setSearch]         = useState('')
 
   const monthTx = transactions.filter(t => t.date?.startsWith(month))
+  const uncatCount = monthTx.filter(t => t.category === 'Uncategorized').length
+  const hasExpenses = monthTx.some(t => t.type === 'expense')
 
   const allCats = [...new Set(monthTx.map(t => t.category))].sort()
 
@@ -536,6 +538,14 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
           ))}
         </div>
       </div>
+
+      {uncatCount === 0 && hasExpenses && (
+        <CompletionBanner
+          title="All transactions categorized."
+          sub="Clean books for the month."
+          className="mb-4"
+        />
+      )}
 
       <Button onClick={onAdd} className="w-full mb-4">+ Add Transaction</Button>
 
