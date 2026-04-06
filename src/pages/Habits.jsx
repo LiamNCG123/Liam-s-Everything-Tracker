@@ -126,15 +126,35 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
 
       {/* Streak stats — sticky right */}
       <td className="sticky right-0 z-10 bg-white pl-3 py-1.5 whitespace-nowrap">
-        <div className="flex flex-col gap-0.5 items-end">
-          <div className="flex items-center gap-1">
-            <span className="text-sm">🔥</span>
-            <span className="text-sm font-bold text-gray-900">{current}</span>
-          </div>
-          <div className="text-[10px] text-gray-400 leading-none">
-            best {longest} · {doneThisMonth}d mo.
-          </div>
-        </div>
+        {(() => {
+          const doneToday  = set.has(todayStr)
+          const atRisk     = !doneToday && current > 0
+          const streakIcon = current >= 30 ? '🏆' : '🔥'
+          const streakColor = current >= 30
+            ? 'text-yellow-500'
+            : current >= 14 ? 'text-orange-500'
+            : current >= 7  ? 'text-orange-400'
+            : current > 0   ? 'text-orange-300'
+            : 'text-gray-300'
+
+          return (
+            <div className="flex flex-col gap-0.5 items-end">
+              <div className={`flex items-center gap-1 ${atRisk ? 'animate-pulse' : ''}`}>
+                <span className="text-sm">{current > 0 ? streakIcon : '○'}</span>
+                <span className={`text-sm font-bold ${streakColor}`}>{current}</span>
+                {atRisk && (
+                  <span className="text-[9px] text-amber-500 font-semibold leading-none">!</span>
+                )}
+              </div>
+              <div className="text-[10px] text-gray-400 leading-none">
+                {atRisk
+                  ? <span className="text-amber-500">do it today</span>
+                  : `best ${longest} · ${doneThisMonth}d`
+                }
+              </div>
+            </div>
+          )
+        })()}
       </td>
 
       {/* Edit/Delete */}
