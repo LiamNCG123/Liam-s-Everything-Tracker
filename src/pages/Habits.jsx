@@ -137,20 +137,20 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
         </div>
       </td>
 
-      {/* Edit/Delete — always visible */}
-      <td className="pl-1">
+      {/* Edit/Delete */}
+      <td className="pl-2">
         <div className="flex gap-1">
           <button
             onClick={() => onEdit(habit)}
-            className="text-xs text-gray-400 hover:text-gray-700 px-1 py-0.5 rounded hover:bg-gray-100"
+            className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded hover:bg-gray-100"
           >
             Edit
           </button>
           <button
             onClick={() => onDelete(habit.id)}
-            className="text-xs text-red-300 hover:text-red-600 px-1 py-0.5 rounded hover:bg-red-50"
+            className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
           >
-            Del
+            Delete
           </button>
         </div>
       </td>
