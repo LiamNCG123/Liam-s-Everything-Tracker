@@ -186,12 +186,14 @@ function TrainingSection({ sessions, week }) {
   const prHints = []
   const allPrevSessions = sessions.filter(s => !inWeek(s.date, week))
   const prevExMax = {}
+  const maxWeight = (e) => parseFloat((e.sets || []).map(s => parseFloat(s.weight || 0)).reduce((m, v) => Math.max(m, v), 0))
+
   allPrevSessions.flatMap(s => s.exercises || []).forEach(e => {
-    const w = parseFloat(e.sets?.map(s => parseFloat(s.weight || 0)).reduce((m, v) => Math.max(m, v), 0))
+    const w = maxWeight(e)
     if (w > (prevExMax[e.name] || 0)) prevExMax[e.name] = w
   })
   weekSessions.flatMap(s => s.exercises || []).forEach(e => {
-    const w = parseFloat(e.sets?.map(s => parseFloat(s.weight || 0)).reduce((m, v) => Math.max(m, v), 0))
+    const w = maxWeight(e)
     if (w > 0 && w > (prevExMax[e.name] || 0)) prHints.push({ name: e.name, weight: w })
   })
 
