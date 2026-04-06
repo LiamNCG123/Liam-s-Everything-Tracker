@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { load, today } from '../utils/storage'
-import { StatCard, Card } from '../components/ui'
+import { StatCard, Card, CompletionBanner } from '../components/ui'
 
 function loadStats() {
   const habits    = load('habits') ?? []
@@ -28,7 +28,8 @@ function loadStats() {
   // Education: in-progress items
   const reading = education.filter(e => e.status === 'In Progress').length
 
-  return { habitsToday, totalHabits: habits.length, activeGoals, trainingSessions, reading }
+  const habitsAllDone = habits.length > 0 && habitsToday === habits.length
+  return { habitsToday, totalHabits: habits.length, activeGoals, trainingSessions, reading, habitsAllDone }
 }
 
 const MODULES = [
@@ -50,6 +51,15 @@ export default function Dashboard() {
         </h1>
         <p className="text-sm text-gray-500 mt-0.5">{formatToday()}</p>
       </div>
+
+      {/* Day completion state */}
+      {s.habitsAllDone && (
+        <CompletionBanner
+          title="Habits done for today."
+          sub="Building momentum, one day at a time."
+          className="mb-6"
+        />
+      )}
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
