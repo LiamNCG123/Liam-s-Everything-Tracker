@@ -1,50 +1,74 @@
-import { useMemo } from 'react'
+import { Component, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
+
+// ─── Error boundary ───────────────────────────────────────────────────────────
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null } }
+  static getDerivedStateFromError(e) { return { error: e } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="bg-red-50 border border-red-200 rounded-2xl px-5 py-4">
+          <p className="text-sm font-semibold text-red-700">{this.props.title} — couldn't load</p>
+          <p className="text-xs text-red-500 mt-1 font-mono break-all">{String(this.state.error)}</p>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
 function toStr(d) { return d.toISOString().slice(0, 10) }
 
 function getWeekRange() {
-  const now   = new Date()
-  const dow   = now.getDay()                         // 0=Sun
-  const mon   = new Date(now)
-  mon.setDate(now.getDate() - ((dow + 6) % 7))       // back to Monday
+  const now = new Date()
+  const dow  = now.getDay()
+  const mon  = new Date(now)
+  mon.setDate(now.getDate() - ((dow + 6) % 7))
   mon.setHours(0, 0, 0, 0)
-  const sun   = new Date(mon)
-  sun.setDate(mon.getDate() + 6)
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(mon); d.setDate(mon.getDate() + i); return toStr(d)
+  })
   return {
-    start: toStr(mon),
-    end:   toStr(sun),
-    days:  Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(mon); d.setDate(mon.getDate() + i); return toStr(d)
-    }),
-    label: `${mon.toLocaleDateString('en', { month: 'short', day: 'numeric' })} – ${sun.toLocaleDateString('en', { month: 'short', day: 'numeric' })}`,
+    start: days[0],
+    end:   days[6],
+    days,
+    label: `${mon.toLocaleDateString('en', { month: 'short', day: 'numeric' })} – ${new Date(days[6] + 'T12:00:00').toLocaleDateString('en', { month: 'short', day: 'numeric' })}`,
   }
 }
 
+const TODAY = toStr(new Date())
+
 function inWeek(dateStr, week) {
+  if (!dateStr || typeof dateStr !== 'string') return false
   return dateStr >= week.start && dateStr <= week.end
 }
 
-function fmt$(n) { return `$${Math.abs(n).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` }
+function fmt$(n) {
+  const v = Number(n) || 0
+  return `$${Math.abs(v).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
 
 // ─── Habit helpers ────────────────────────────────────────────────────────────
 
 function migrateCompletions(c) {
-  if (!c?.length) return []
-  if (typeof c[0] === 'string') return c
-  return c.filter(x => x.done).map(x => x.date)
+  if (!Array.isArray(c) || c.length === 0) return []
+  if (typeof c[0] === 'string') return c.filter(x => typeof x === 'string')
+  return c.filter(x => x && x.done).map(x => x.date).filter(Boolean)
 }
 
 function calcStreak(completions) {
-  const set = new Set(completions)
-  const today = toStr(new Date())
-  let d = new Date(), streak = 0
-  while (true) {
+  const set   = new Set(completions)
+  let streak  = 0
+  const d     = new Date()
+  // cap at 500 days to prevent runaway
+  for (let i = 0; i < 500; i++) {
     const s = toStr(d)
-    if (s > today) { d.setDate(d.getDate() - 1); continue }
+    if (s > TODAY) { d.setDate(d.getDate() - 1); continue }
     if (!set.has(s)) break
     streak++
     d.setDate(d.getDate() - 1)
@@ -52,7 +76,7 @@ function calcStreak(completions) {
   return streak
 }
 
-// ─── Shared UI atoms ──────────────────────────────────────────────────────────
+// ─── UI atoms ─────────────────────────────────────────────────────────────────
 
 function Section({ emoji, title, children }) {
   return (
@@ -61,48 +85,43 @@ function Section({ emoji, title, children }) {
         <span className="text-lg">{emoji}</span>
         <h2 className="font-semibold text-gray-900 text-base">{title}</h2>
       </div>
-      <div className="px-5 py-4 flex flex-col gap-3">
-        {children}
-      </div>
+      <div className="px-5 py-4 flex flex-col gap-3">{children}</div>
     </div>
   )
 }
 
-function StatRow({ label, value, sub, color = 'gray' }) {
-  const colors = { green: 'text-green-600', red: 'text-red-500', amber: 'text-amber-600', indigo: 'text-indigo-600', gray: 'text-gray-700' }
+function StatRow({ label, value, color = 'gray' }) {
+  const cls = { green: 'text-green-600', red: 'text-red-500', amber: 'text-amber-600', indigo: 'text-indigo-600', gray: 'text-gray-700' }
   return (
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-sm text-gray-500">{label}</span>
-      <span className={`text-sm font-semibold ${colors[color]} text-right`}>
-        {value}{sub && <span className="text-xs font-normal text-gray-400 ml-1">{sub}</span>}
-      </span>
+      <span className={`text-sm font-semibold ${cls[color] || cls.gray} text-right`}>{value}</span>
     </div>
   )
 }
 
 function MiniBar({ value, max, color = 'indigo' }) {
-  const pct = max ? Math.min(100, Math.round((value / max) * 100)) : 0
-  const bg = { indigo: 'bg-indigo-500', green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-400' }
+  const pct = max ? Math.min(100, Math.round(((Number(value) || 0) / max) * 100)) : 0
+  const bg  = { indigo: 'bg-indigo-500', green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-400' }
   return (
     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-      <div className={`h-full rounded-full ${bg[color] || 'bg-indigo-500'} transition-all`} style={{ width: `${pct}%` }} />
+      <div className={`h-full rounded-full ${bg[color] || bg.indigo} transition-all`} style={{ width: `${pct}%` }} />
     </div>
   )
 }
 
 function WeekDots({ days, completedSet }) {
   const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-  const today = toStr(new Date())
   return (
     <div className="flex gap-1.5 items-end">
       {days.map((d, i) => {
         const done   = completedSet.has(d)
-        const future = d > today
+        const future = d > TODAY
         return (
           <div key={d} className="flex flex-col items-center gap-1">
             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold
               ${future ? 'bg-gray-50 text-gray-300' : done ? 'bg-green-500 text-white' : 'bg-red-100 text-red-400'}`}>
-              {done && !future ? '✓' : future ? '·' : '✗'}
+              {future ? '·' : done ? '✓' : '✗'}
             </div>
             <span className="text-[9px] text-gray-400">{DOW[i]}</span>
           </div>
@@ -120,122 +139,109 @@ function Pill({ children, color = 'gray' }) {
     indigo: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
     gray:   'bg-gray-100 text-gray-600',
   }
-  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls[color]}`}>{children}</span>
+  return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls[color] || cls.gray}`}>{children}</span>
 }
 
-// ─── Module summaries ─────────────────────────────────────────────────────────
+// ─── Habit section ────────────────────────────────────────────────────────────
 
-function HabitSection({ habits, week }) {
-  const rows = useMemo(() => habits.map(h => {
-    const comp  = migrateCompletions(h.completions)
-    const doneThisWeek = week.days.filter(d => comp.includes(d))
+function HabitSectionInner({ habits, week }) {
+  const daysSoFar = week.days.filter(d => d <= TODAY).length
+
+  const rows = habits.map(h => {
+    const comp = migrateCompletions(h.completions)
+    const doneThisWeek = week.days.filter(d => d <= TODAY && comp.includes(d)).length
     const streak = calcStreak(comp)
-    return { ...h, doneThisWeek: doneThisWeek.length, streak, comp }
-  }), [habits, week])
+    return { id: h.id, name: h.name || '(unnamed)', doneThisWeek, streak, compSet: new Set(comp) }
+  })
 
-  const totalSlots  = week.days.filter(d => d <= toStr(new Date())).length
-  const daysSoFar   = totalSlots
   const totalPossible = habits.length * daysSoFar
   const totalDone     = rows.reduce((s, r) => s + r.doneThisWeek, 0)
-  const rate = totalPossible ? Math.round((totalDone / totalPossible) * 100) : 0
-
-  const bestStreak = rows.reduce((best, r) => r.streak > best ? r.streak : best, 0)
-  const missed     = rows.filter(r => r.doneThisWeek < daysSoFar)
+  const rate    = totalPossible ? Math.round((totalDone / totalPossible) * 100) : 0
+  const rateColor = rate >= 80 ? 'green' : rate >= 50 ? 'amber' : 'red'
+  const bestStreak = rows.reduce((b, r) => Math.max(b, r.streak), 0)
+  const missed = rows.filter(r => r.doneThisWeek < daysSoFar)
 
   if (!habits.length) return (
-    <Section emoji="✅" title="Habits">
-      <p className="text-sm text-gray-400">No habits set up yet. <Link to="/habits" className="text-indigo-600 underline">Add habits →</Link></p>
-    </Section>
+    <p className="text-sm text-gray-400">No habits yet. <Link to="/habits" className="text-indigo-600 underline">Add habits →</Link></p>
   )
 
   return (
-    <Section emoji="✅" title="Habits">
-      <StatRow label="Completion rate" value={`${rate}%`} color={rate >= 80 ? 'green' : rate >= 50 ? 'amber' : 'red'} />
-      <MiniBar value={rate} max={100} color={rate >= 80 ? 'green' : rate >= 50 ? 'amber' : 'red'} />
-      <StatRow label="Best streak" value={`${bestStreak} days`} color={bestStreak >= 7 ? 'green' : 'gray'} />
+    <>
+      <StatRow label="Completion rate" value={`${rate}%`} color={rateColor} />
+      <MiniBar value={rate} max={100} color={rateColor} />
+      <StatRow label="Best current streak" value={`${bestStreak} day${bestStreak !== 1 ? 's' : ''}`} color={bestStreak >= 7 ? 'green' : 'gray'} />
 
       <div className="flex flex-col gap-2 mt-1">
         {rows.map(r => (
           <div key={r.id} className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-600 truncate">{r.name}</span>
+            <span className="text-xs text-gray-600 truncate max-w-[90px]">{r.name}</span>
             <div className="flex items-center gap-2 shrink-0">
               {r.streak >= 3 && <span className="text-xs">🔥{r.streak}</span>}
-              <WeekDots days={week.days} completedSet={new Set(r.comp)} />
+              <WeekDots days={week.days} completedSet={r.compSet} />
             </div>
           </div>
         ))}
       </div>
 
-      {missed.length > 0 && (
+      {missed.length > 0 && daysSoFar > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">
           <span className="text-xs text-gray-400 self-center">Missed:</span>
           {missed.map(r => <Pill key={r.id} color="red">{r.name}</Pill>)}
         </div>
       )}
-    </Section>
+    </>
   )
 }
 
-function TrainingSection({ sessions, week }) {
-  const weekSessions = sessions.filter(s => inWeek(s.date, week))
-  const count = weekSessions.length
-  const exercises = weekSessions.flatMap(s => s.exercises || [])
-  const uniqueNames = [...new Set(exercises.map(e => e.name).filter(Boolean))]
+// ─── Training section ─────────────────────────────────────────────────────────
 
-  // Look for PRs: highest weight per exercise this week vs ever
-  const prHints = []
-  const allPrevSessions = sessions.filter(s => !inWeek(s.date, week))
-  const prevExMax = {}
-  const maxWeight = (e) => parseFloat((e.sets || []).map(s => parseFloat(s.weight || 0)).reduce((m, v) => Math.max(m, v), 0))
+function TrainingSectionInner({ sessions, week }) {
+  const weekSessions = sessions.filter(s => s && inWeek(s.date, week))
+  const count        = weekSessions.length
 
-  allPrevSessions.flatMap(s => s.exercises || []).forEach(e => {
-    const w = maxWeight(e)
-    if (w > (prevExMax[e.name] || 0)) prevExMax[e.name] = w
+  const exerciseNames = []
+  weekSessions.forEach(s => {
+    (s.exercises || []).forEach(e => { if (e && e.name) exerciseNames.push(e.name) })
   })
-  weekSessions.flatMap(s => s.exercises || []).forEach(e => {
-    const w = maxWeight(e)
-    if (w > 0 && w > (prevExMax[e.name] || 0)) prHints.push({ name: e.name, weight: w })
-  })
+  const uniqueNames = [...new Set(exerciseNames)]
 
   return (
-    <Section emoji="💪" title="Training">
+    <>
       <StatRow label="Sessions this week" value={count} color={count >= 3 ? 'green' : count >= 1 ? 'amber' : 'red'} />
-      {count === 0 && <p className="text-xs text-gray-400">No sessions logged this week.</p>}
-      {uniqueNames.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {uniqueNames.slice(0, 8).map(n => <Pill key={n} color="indigo">{n}</Pill>)}
-          {uniqueNames.length > 8 && <Pill color="gray">+{uniqueNames.length - 8} more</Pill>}
-        </div>
-      )}
-      {prHints.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          <span className="text-xs text-gray-400 self-center">New PRs:</span>
-          {prHints.slice(0, 3).map(p => (
-            <Pill key={p.name} color="green">🏆 {p.name} {p.weight}kg</Pill>
-          ))}
-        </div>
-      )}
-    </Section>
+      {count === 0
+        ? <p className="text-xs text-gray-400">No sessions logged this week.</p>
+        : uniqueNames.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {uniqueNames.slice(0, 8).map(n => <Pill key={n} color="indigo">{n}</Pill>)}
+            {uniqueNames.length > 8 && <Pill color="gray">+{uniqueNames.length - 8} more</Pill>}
+          </div>
+        )
+      }
+    </>
   )
 }
 
-function FinanceSection({ transactions, week }) {
-  const weekTx = transactions.filter(t => inWeek(t.date, week))
-  const expenses = weekTx.filter(t => t.type === 'expense')
-  const income   = weekTx.filter(t => t.type === 'income')
+// ─── Finance section ──────────────────────────────────────────────────────────
 
-  const totalSpend  = expenses.reduce((s, t) => s + Number(t.amount || 0), 0)
-  const totalIncome = income.reduce((s, t) => s + Number(t.amount || 0), 0)
+function FinanceSectionInner({ transactions, week }) {
+  const weekTx    = transactions.filter(t => t && inWeek(t.date, week))
+  const expenses  = weekTx.filter(t => t.type === 'expense')
+  const income    = weekTx.filter(t => t.type === 'income')
+
+  const totalSpend  = expenses.reduce((s, t) => s + (Number(t.amount) || 0), 0)
+  const totalIncome = income.reduce((s, t) => s + (Number(t.amount) || 0), 0)
   const uncategorized = expenses.filter(t => !t.category || t.category === 'Uncategorized').length
 
-  // Top categories
   const byCat = {}
-  expenses.forEach(t => { byCat[t.category || 'Uncategorized'] = (byCat[t.category || 'Uncategorized'] || 0) + Number(t.amount || 0) })
+  expenses.forEach(t => {
+    const cat = t.category || 'Uncategorized'
+    byCat[cat] = (byCat[cat] || 0) + (Number(t.amount) || 0)
+  })
   const topCats = Object.entries(byCat).sort((a, b) => b[1] - a[1]).slice(0, 4)
 
   return (
-    <Section emoji="💰" title="Finance">
-      <StatRow label="Total spend"  value={fmt$(totalSpend)}  color="red" />
+    <>
+      <StatRow label="Total spend"  value={fmt$(totalSpend)}  color={totalSpend > 0 ? 'red' : 'gray'} />
       {totalIncome > 0 && <StatRow label="Total income" value={fmt$(totalIncome)} color="green" />}
       {totalIncome > 0 && (
         <StatRow
@@ -262,28 +268,29 @@ function FinanceSection({ transactions, week }) {
           <Link to="/finance" className="text-xs text-amber-700 font-semibold underline">Fix →</Link>
         </div>
       )}
-    </Section>
+    </>
   )
 }
 
-function GoalsSection({ goals, week }) {
-  const inProgress  = goals.filter(g => g.status === 'In Progress')
-  const completedWk = goals.filter(g => g.status === 'Completed' && inWeek(g.updatedAt || g.createdAt || '', week))
-  const stalled     = inProgress.filter(g => (g.progress ?? 0) === 0)
-  const advancing   = inProgress.filter(g => (g.progress ?? 0) > 0 && (g.progress ?? 0) < 100)
+// ─── Goals section ────────────────────────────────────────────────────────────
 
-  // Overdue
-  const today = toStr(new Date())
-  const overdue = inProgress.filter(g => g.targetDate && g.targetDate < today)
+function GoalsSectionInner({ goals }) {
+  const inProgress = goals.filter(g => g && g.status === 'In Progress')
+  const stalled    = inProgress.filter(g => (Number(g.progress) || 0) === 0)
+  const advancing  = inProgress.filter(g => (Number(g.progress) || 0) > 0)
+  const overdue    = inProgress.filter(g => g.targetDate && g.targetDate < TODAY)
+
+  if (!goals.length) return (
+    <p className="text-xs text-gray-400">No goals yet. <Link to="/goals" className="text-indigo-600 underline">Add one →</Link></p>
+  )
 
   return (
-    <Section emoji="🎯" title="Goals">
-      <StatRow label="In progress"   value={inProgress.length}  color="indigo" />
-      {completedWk.length > 0 && <StatRow label="Completed this week" value={completedWk.length} color="green" />}
+    <>
+      <StatRow label="In progress" value={inProgress.length} color="indigo" />
       {stalled.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           <span className="text-xs text-gray-400 self-center">No progress yet:</span>
-          {stalled.slice(0, 3).map(g => <Pill key={g.id} color="amber">{g.title}</Pill>)}
+          {stalled.slice(0, 4).map(g => <Pill key={g.id} color="amber">{g.title}</Pill>)}
         </div>
       )}
       {overdue.length > 0 && (
@@ -298,136 +305,123 @@ function GoalsSection({ goals, week }) {
             <div key={g.id}>
               <div className="flex justify-between text-xs text-gray-600 mb-0.5">
                 <span className="truncate">{g.title}</span>
-                <span className="shrink-0 ml-2 font-semibold">{g.progress}%</span>
+                <span className="shrink-0 ml-2 font-semibold">{Number(g.progress) || 0}%</span>
               </div>
-              <MiniBar value={g.progress} max={100} color="indigo" />
+              <MiniBar value={Number(g.progress) || 0} max={100} color="indigo" />
             </div>
           ))}
         </div>
       )}
-      {goals.length === 0 && <p className="text-xs text-gray-400">No goals yet. <Link to="/goals" className="text-indigo-600 underline">Add one →</Link></p>}
-    </Section>
+    </>
   )
 }
 
-function EducationSection({ items, week }) {
-  const inProgress = items.filter(i => i.status === 'In Progress')
-  const completedWk = items.filter(i => i.status === 'Completed' && inWeek(i.updatedAt || i.createdAt || '', week))
-  const recentlyActive = items.filter(i =>
-    i.status === 'In Progress' && inWeek(i.updatedAt || i.createdAt || '', week)
+// ─── Education section ────────────────────────────────────────────────────────
+
+function EducationSectionInner({ items }) {
+  const inProgress = items.filter(i => i && i.status === 'In Progress')
+  const completed  = items.filter(i => i && i.status === 'Completed').length
+
+  if (!items.length) return (
+    <p className="text-xs text-gray-400">Nothing tracked yet. <Link to="/education" className="text-indigo-600 underline">Add an item →</Link></p>
   )
 
   return (
-    <Section emoji="📚" title="Education">
+    <>
       <StatRow label="In progress" value={inProgress.length} color="indigo" />
-      {completedWk.length > 0 && <StatRow label="Completed this week" value={completedWk.length} color="green" />}
-      {recentlyActive.length > 0 && (
+      {completed > 0 && <StatRow label="Completed total" value={completed} color="green" />}
+      {inProgress.length > 0 && (
         <div className="flex flex-col gap-2 mt-1">
-          {recentlyActive.slice(0, 4).map(i => (
+          {inProgress.slice(0, 4).map(i => (
             <div key={i.id}>
               <div className="flex justify-between text-xs text-gray-600 mb-0.5">
                 <span className="truncate">{i.title}</span>
-                <span className="shrink-0 ml-2 font-semibold">{i.progress ?? 0}%</span>
+                <span className="shrink-0 ml-2 font-semibold">{Number(i.progress) || 0}%</span>
               </div>
-              <MiniBar value={i.progress ?? 0} max={100} color="indigo" />
+              <MiniBar value={Number(i.progress) || 0} max={100} color="indigo" />
             </div>
           ))}
         </div>
       )}
-      {inProgress.length === 0 && completedWk.length === 0 && (
-        <p className="text-xs text-gray-400">Nothing active this week. <Link to="/education" className="text-indigo-600 underline">Add an item →</Link></p>
-      )}
-    </Section>
+    </>
   )
 }
 
-// ─── Takeaway logic ───────────────────────────────────────────────────────────
+// ─── Takeaway & focus logic ───────────────────────────────────────────────────
 
-function buildTakeaway({ habitRate, trainingSessions, financeSpend, financeUncategorized, goalsStalled, goalsOverdue, eduActive }) {
-  const highs = []
-  const lows  = []
-  const risks = []
+function buildTakeaway(s) {
+  const highs = [], lows = [], risks = []
 
-  if (habitRate >= 80) highs.push('habits on track')
-  else if (habitRate < 50 && habitRate >= 0) lows.push('habit consistency dropped')
+  if (s.habitRate >= 80)                       highs.push('habits on track')
+  else if (s.habitRate >= 0 && s.habitRate < 50) lows.push('habit consistency dropped')
 
-  if (trainingSessions >= 3) highs.push(`${trainingSessions} workouts logged`)
-  else if (trainingSessions === 0) lows.push('no training this week')
+  if (s.trainingSessions >= 3)   highs.push(`${s.trainingSessions} workouts logged`)
+  else if (s.trainingSessions === 0) lows.push('no training this week')
 
-  if (financeSpend === 0 && financeUncategorized === 0) {}
-  else if (financeUncategorized > 3) lows.push(`${financeUncategorized} transactions need categorising`)
-
-  if (goalsStalled > 0) risks.push(`${goalsStalled} goal${goalsStalled > 1 ? 's' : ''} with no progress`)
-  if (goalsOverdue > 0) risks.push(`${goalsOverdue} overdue goal${goalsOverdue > 1 ? 's' : ''}`)
-
-  if (eduActive > 0) highs.push('reading/learning active')
+  if (s.financeUncategorized > 3) lows.push(`${s.financeUncategorized} transactions need categorising`)
+  if (s.goalsStalled > 0)  risks.push(`${s.goalsStalled} goal${s.goalsStalled > 1 ? 's' : ''} with no progress`)
+  if (s.goalsOverdue > 0)  risks.push(`${s.goalsOverdue} overdue goal${s.goalsOverdue > 1 ? 's' : ''}`)
+  if (s.eduActive > 0)     highs.push('learning active')
 
   const parts = []
-  if (highs.length)  parts.push(`Strong: ${highs.join(', ')}.`)
-  if (lows.length)   parts.push(`Watch: ${lows.join(', ')}.`)
-  if (risks.length)  parts.push(`Risk: ${risks.join(', ')}.`)
-
-  return parts.length ? parts.join(' ') : 'Keep it up — you\'re making consistent progress.'
+  if (highs.length) parts.push(`Strong: ${highs.join(', ')}.`)
+  if (lows.length)  parts.push(`Watch: ${lows.join(', ')}.`)
+  if (risks.length) parts.push(`Risk: ${risks.join(', ')}.`)
+  return parts.length ? parts.join(' ') : "Keep showing up — you're building momentum."
 }
 
-function buildFocus({ habitRate, trainingSessions, financeUncategorized, goalsStalled, goalsOverdue, eduActive }) {
+function buildFocus(s) {
   const items = []
-  if (habitRate < 70)          items.push({ text: 'Re-engage with missed habits daily', color: 'amber' })
-  if (trainingSessions < 2)    items.push({ text: 'Aim for at least 2 training sessions', color: 'indigo' })
-  if (financeUncategorized > 0) items.push({ text: `Categorise ${financeUncategorized} pending transactions`, color: 'amber' })
-  if (goalsStalled > 0)        items.push({ text: 'Move at least one stalled goal forward', color: 'red' })
-  if (goalsOverdue > 0)        items.push({ text: 'Review or extend overdue goal deadlines', color: 'red' })
-  if (eduActive === 0)         items.push({ text: 'Pick up a book or course to read this week', color: 'gray' })
-
-  if (!items.length) items.push({ text: 'Maintain your momentum — you\'re doing great!', color: 'green' })
+  if (s.habitRate >= 0 && s.habitRate < 70) items.push({ text: 'Re-engage with missed habits', color: 'amber' })
+  if (s.trainingSessions < 2)               items.push({ text: 'Aim for at least 2 training sessions', color: 'indigo' })
+  if (s.financeUncategorized > 0)           items.push({ text: `Categorise ${s.financeUncategorized} pending transactions`, color: 'amber' })
+  if (s.goalsStalled > 0)                   items.push({ text: 'Move at least one stalled goal forward', color: 'red' })
+  if (s.goalsOverdue > 0)                   items.push({ text: 'Review or extend overdue goal deadlines', color: 'red' })
+  if (s.eduActive === 0)                    items.push({ text: 'Pick up a book or course this week', color: 'gray' })
+  if (!items.length)                        items.push({ text: "Maintain your momentum — you're doing great!", color: 'green' })
   return items
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function WeeklyReview() {
-  const { items: habits      } = useStore('habits')
-  const { items: sessions    } = useStore('training')
-  const { items: transactions} = useStore('financeTransactions')
-  const { items: goals       } = useStore('goals')
-  const { items: eduItems    } = useStore('education')
+  const { items: habits       } = useStore('habits')
+  const { items: sessions     } = useStore('training')
+  const { items: transactions } = useStore('financeTransactions')
+  const { items: goals        } = useStore('goals')
+  const { items: eduItems     } = useStore('education')
 
   const week = useMemo(getWeekRange, [])
 
-  // Computed signals for takeaway / focus
   const signals = useMemo(() => {
-    const today      = toStr(new Date())
-    const daysSoFar  = week.days.filter(d => d <= today).length
-    const totalPoss  = habits.length * daysSoFar
-    const totalDone  = habits.reduce((s, h) => {
+    const daysSoFar = week.days.filter(d => d <= TODAY).length
+    const totalPoss = (habits || []).length * daysSoFar
+    const totalDone = (habits || []).reduce((s, h) => {
       const comp = migrateCompletions(h.completions)
-      return s + week.days.filter(d => d <= today && comp.includes(d)).length
+      return s + week.days.filter(d => d <= TODAY && comp.includes(d)).length
     }, 0)
     const habitRate = totalPoss ? Math.round((totalDone / totalPoss) * 100) : -1
 
-    const trainingSessions = sessions.filter(s => inWeek(s.date, week)).length
+    const trainingSessions = (sessions || []).filter(s => s && inWeek(s.date, week)).length
 
-    const weekExpenses = transactions.filter(t => inWeek(t.date, week) && t.type === 'expense')
-    const financeSpend = weekExpenses.reduce((s, t) => s + Number(t.amount || 0), 0)
+    const weekExpenses = (transactions || []).filter(t => t && inWeek(t.date, week) && t.type === 'expense')
     const financeUncategorized = weekExpenses.filter(t => !t.category || t.category === 'Uncategorized').length
 
-    const inProg     = goals.filter(g => g.status === 'In Progress')
-    const goalsStalled = inProg.filter(g => (g.progress ?? 0) === 0).length
-    const goalsOverdue = inProg.filter(g => g.targetDate && g.targetDate < today).length
+    const inProg = (goals || []).filter(g => g && g.status === 'In Progress')
+    const goalsStalled = inProg.filter(g => (Number(g.progress) || 0) === 0).length
+    const goalsOverdue = inProg.filter(g => g.targetDate && g.targetDate < TODAY).length
 
-    const eduActive = eduItems.filter(i =>
-      i.status === 'In Progress' && inWeek(i.updatedAt || i.createdAt || '', week)
-    ).length
+    const eduActive = (eduItems || []).filter(i => i && i.status === 'In Progress').length
 
-    return { habitRate, trainingSessions, financeSpend, financeUncategorized, goalsStalled, goalsOverdue, eduActive }
+    return { habitRate, trainingSessions, financeUncategorized, goalsStalled, goalsOverdue, eduActive }
   }, [habits, sessions, transactions, goals, eduItems, week])
 
-  const takeaway = useMemo(() => buildTakeaway(signals), [signals])
-  const focus    = useMemo(() => buildFocus(signals),    [signals])
+  const takeaway = buildTakeaway(signals)
+  const focus    = buildFocus(signals)
+  const dotColors = { green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-400', indigo: 'bg-indigo-500', gray: 'bg-gray-300' }
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Weekly Review</h1>
@@ -436,31 +430,49 @@ export default function WeeklyReview() {
         <span className="text-2xl mt-1">📋</span>
       </div>
 
-      {/* Takeaway banner */}
       <div className="bg-indigo-600 rounded-2xl px-5 py-4 text-white shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-widest opacity-70 mb-1">This week</p>
         <p className="text-sm leading-relaxed">{takeaway}</p>
       </div>
 
-      {/* Module sections */}
-      <HabitSection    habits={habits}       week={week} />
-      <TrainingSection sessions={sessions}   week={week} />
-      <FinanceSection  transactions={transactions} week={week} />
-      <GoalsSection    goals={goals}         week={week} />
-      <EducationSection items={eduItems}     week={week} />
+      <ErrorBoundary title="Habits">
+        <Section emoji="✅" title="Habits">
+          <HabitSectionInner habits={habits || []} week={week} />
+        </Section>
+      </ErrorBoundary>
 
-      {/* Forward-looking focus */}
+      <ErrorBoundary title="Training">
+        <Section emoji="💪" title="Training">
+          <TrainingSectionInner sessions={sessions || []} week={week} />
+        </Section>
+      </ErrorBoundary>
+
+      <ErrorBoundary title="Finance">
+        <Section emoji="💰" title="Finance">
+          <FinanceSectionInner transactions={transactions || []} week={week} />
+        </Section>
+      </ErrorBoundary>
+
+      <ErrorBoundary title="Goals">
+        <Section emoji="🎯" title="Goals">
+          <GoalsSectionInner goals={goals || []} />
+        </Section>
+      </ErrorBoundary>
+
+      <ErrorBoundary title="Education">
+        <Section emoji="📚" title="Education">
+          <EducationSectionInner items={eduItems || []} />
+        </Section>
+      </ErrorBoundary>
+
       <Section emoji="🔭" title="Next week — focus on">
         <div className="flex flex-col gap-2">
-          {focus.map((item, i) => {
-            const dot = { green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-400', indigo: 'bg-indigo-500', gray: 'bg-gray-300' }
-            return (
-              <div key={i} className="flex items-start gap-2.5">
-                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dot[item.color] || 'bg-gray-300'}`} />
-                <span className="text-sm text-gray-700">{item.text}</span>
-              </div>
-            )
-          })}
+          {focus.map((item, i) => (
+            <div key={i} className="flex items-start gap-2.5">
+              <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColors[item.color] || 'bg-gray-300'}`} />
+              <span className="text-sm text-gray-700">{item.text}</span>
+            </div>
+          ))}
         </div>
       </Section>
 
