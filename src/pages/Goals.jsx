@@ -163,7 +163,21 @@ export default function Goals() {
               <div className="mt-3">
                 <div className="flex justify-between text-xs text-gray-500 mb-1">
                   <span>Progress</span>
-                  <span>{goal.progress ?? 0}%</span>
+                  <div className="flex items-center gap-2">
+                    <span>{goal.progress ?? 0}%</span>
+                    {goal.status === 'In Progress' && (goal.progress ?? 0) < 100 && (
+                      <button
+                        onClick={e => { e.stopPropagation(); update(goal.id, { progress: Math.min(100, (goal.progress ?? 0) + 10), status: 'In Progress' }) }}
+                        className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                      >+10%</button>
+                    )}
+                    {goal.status === 'In Progress' && (goal.progress ?? 0) >= 100 && (
+                      <button
+                        onClick={e => { e.stopPropagation(); update(goal.id, { status: 'Completed' }) }}
+                        className="text-[10px] font-semibold text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                      >✓ Mark complete</button>
+                    )}
+                  </div>
                 </div>
                 <ProgressBar value={goal.progress ?? 0} color={goal.status === 'Completed' ? 'green' : 'indigo'} />
               </div>

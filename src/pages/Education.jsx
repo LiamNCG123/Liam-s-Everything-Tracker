@@ -124,7 +124,21 @@ export default function Education() {
                 <div className="mt-3">
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>Progress</span>
-                    <span>{item.progress ?? 0}%</span>
+                    <div className="flex items-center gap-2">
+                      <span>{item.progress ?? 0}%</span>
+                      {item.status === 'In Progress' && (item.progress ?? 0) < 100 && (
+                        <button
+                          onClick={e => { e.stopPropagation(); update(item.id, { progress: Math.min(100, (item.progress ?? 0) + 10) }) }}
+                          className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                        >+10%</button>
+                      )}
+                      {item.status === 'In Progress' && (item.progress ?? 0) >= 100 && (
+                        <button
+                          onClick={e => { e.stopPropagation(); update(item.id, { status: 'Completed', endDate: new Date().toISOString().slice(0, 10) }) }}
+                          className="text-[10px] font-semibold text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                        >✓ Mark complete</button>
+                      )}
+                    </div>
                   </div>
                   <ProgressBar value={item.progress ?? 0} color={item.status === 'Completed' ? 'green' : 'indigo'} />
                 </div>

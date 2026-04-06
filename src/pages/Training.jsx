@@ -343,16 +343,37 @@ function NoteLogger({ entry, onChange }) {
 
 // ─── Session Logger ───────────────────────────────────────────────────────────
 
-function initEntries(day) {
+/**
+ * Build last-used map: { exerciseNameLower → { reps, weight } }
+ * from the most recent session for this day.
+ */
+function buildLastUsed(prevSessions) {
+  const map = {}
+  if (!prevSessions?.length) return map
+  const latest = prevSessions[0]
+  ;(latest.exercises || []).forEach(ex => {
+    if (ex.type !== 'strength' || !ex.name) return
+    const done = (ex.sets || []).filter(s => s.reps || s.weight)
+    const last = done.at(-1)
+    if (last) map[ex.name.toLowerCase()] = { reps: last.reps || '', weight: last.weight || '' }
+  })
+  return map
+}
+
+function initEntries(day, prevSessions = []) {
+  const lastUsed = buildLastUsed(prevSessions)
+
   return (day.items || []).map(item => {
     if (item.type === 'strength') {
-      const n = Math.max(1, parseInt(item.targetSets) || 3)
+      const n    = Math.max(1, parseInt(item.targetSets) || 3)
+      const prev = lastUsed[item.name?.toLowerCase()] || null
       return {
         ...item,
+        _prefilled: !!prev,
         sets: Array.from({ length: n }, () => ({
-          reps: '',
-          weight: item.unit === 'BW' ? 'BW' : (item.targetWeight || ''),
-          done: false,
+          reps:   prev?.reps   || '',
+          weight: item.unit === 'BW' ? 'BW' : (prev?.weight || item.targetWeight || ''),
+          done:   false,
         })),
         completed: false,
       }
@@ -360,10 +381,10 @@ function initEntries(day) {
     return {
       ...item,
       actualDuration: item.duration,
-      actualSpeed: item.speed,
-      actualIncline: item.incline,
-      actualRounds: item.rounds,
-      completed: false,
+      actualSpeed:    item.speed,
+      actualIncline:  item.incline,
+      actualRounds:   item.rounds,
+      completed:      false,
     }
   })
 }
@@ -371,7 +392,25 @@ function initEntries(day) {
 function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
   const [date, setDate] = useState(today())
   const [notes, setNotes] = useState('')
-  const [entries, setEntries] = useState(() => initEntries(day))
+
+  // Compute prev sessions first so we can prefill weights on mount
+  const prevSessions = useMemo(() =>
+    sessions
+      .filter(s => s.dayId === day.id && s.programmeId === programme?.id)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 3),
+    [sessions, day.id, programme?.id]
+  )
+
+  const [entries, setEntries] = useState(() => {
+    // Init fn runs once on mount — safe to use prevSessions reference
+    const all = sessions
+      .filter(s => s.dayId === day.id && s.programmeId === programme?.id)
+      .sort((a, b) => b.date.localeCompare(a.date))
+    return initEntries(day, all)
+  })
+
+  const anyprefilled = entries.some(e => e._prefilled)
 
   const updateEntry = (idx, patch) =>
     setEntries(es => es.map((e, i) => i === idx ? { ...e, ...patch } : e))
@@ -389,15 +428,6 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
   const removeSet = (eIdx, sIdx) =>
     updateEntry(eIdx, { sets: entries[eIdx].sets.filter((_, j) => j !== sIdx) })
 
-  // Previous sessions for this specific day
-  const prevSessions = useMemo(() =>
-    sessions
-      .filter(s => s.dayId === day.id && s.programmeId === programme?.id)
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 3),
-    [sessions, day.id, programme?.id]
-  )
-
   const loggedSets = entries.reduce((n, e) =>
     n + (e.sets ? e.sets.filter(s => s.done || s.reps).length : (e.completed ? 1 : 0)), 0)
 
@@ -412,6 +442,14 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
           className="text-xs border border-gray-200 rounded-xl px-2 py-1.5 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-brand-500" />
       </div>
+
+      {/* Prefill notice */}
+      {anyprefilled && (
+        <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 rounded-xl px-3 py-2 mb-4">
+          <span className="text-sm">⚡</span>
+          <span className="text-xs text-indigo-700">Weights prefilled from your last session — adjust as needed</span>
+        </div>
+      )}
 
       {/* Previous sessions for this day */}
       {prevSessions.length > 0 && (

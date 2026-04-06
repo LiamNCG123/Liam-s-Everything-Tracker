@@ -1,8 +1,9 @@
-import { useState, useMemo, createContext, useContext } from 'react'
+import { useState, useMemo, createContext, useContext, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { useCurrency } from '../hooks/useCurrency'
 import { today, uid, fmtDate } from '../utils/storage'
+import { learnCategory, recallCategory } from '../utils/categoryMemory'
 import {
   Button, Card, Badge, Input, Textarea, Select,
   EmptyState, StatCard, Modal, ProgressBar,
@@ -227,12 +228,40 @@ const EMPTY_TX = () => ({
 })
 
 function TransactionModal({ open, onClose, initial, onSave }) {
-  const [form, setForm] = useState(() => initial || EMPTY_TX())
+  const [form, setForm]         = useState(() => initial || EMPTY_TX())
+  const [catLocked, setCatLocked] = useState(false) // true once user manually picks a category
+  const [suggestion, setSuggestion] = useState(null)
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
   const cats = form.type === 'income' ? INCOME_CATS : EXPENSE_CATS
 
   // Reset form when modal opens
-  useState(() => { if (open) setForm(initial || EMPTY_TX()) }, [open])
+  useEffect(() => {
+    if (open) {
+      const base = initial || EMPTY_TX()
+      setForm(base)
+      setCatLocked(!!initial) // don't auto-suggest when editing
+      setSuggestion(null)
+    }
+  }, [open]) // eslint-disable-line
+
+  // Auto-suggest category as user types description
+  useEffect(() => {
+    if (catLocked || form.type === 'income') { setSuggestion(null); return }
+    const recalled = recallCategory(form.description)
+    if (recalled && recalled !== form.category) {
+      setSuggestion(recalled)
+    } else {
+      setSuggestion(null)
+    }
+  }, [form.description, form.type, catLocked]) // eslint-disable-line
+
+  const acceptSuggestion = () => {
+    if (!suggestion) return
+    set('category', suggestion)
+    setCatLocked(true)
+    setSuggestion(null)
+  }
 
   return (
     <Modal open={open} onClose={onClose} title={initial ? 'Edit Transaction' : 'Add Transaction'}>
@@ -274,7 +303,7 @@ function TransactionModal({ open, onClose, initial, onSave }) {
                   <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1 px-0.5">{g.group}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {g.categories.map(c => (
-                      <button key={c.name} onClick={() => set('category', c.name)}
+                      <button key={c.name} onClick={() => { set('category', c.name); setCatLocked(true); setSuggestion(null) }}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                           form.category === c.name ? 'text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
@@ -287,7 +316,7 @@ function TransactionModal({ open, onClose, initial, onSave }) {
             ) : (
               <div className="flex flex-wrap gap-1.5">
                 {INCOME_CATS.map(c => (
-                  <button key={c} onClick={() => set('category', c)}
+                  <button key={c} onClick={() => { set('category', c); setCatLocked(true); setSuggestion(null) }}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                       form.category === c ? 'text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
@@ -299,8 +328,20 @@ function TransactionModal({ open, onClose, initial, onSave }) {
           </div>
         </div>
 
-        <Input label="Description" placeholder="What was this for?"
-          value={form.description} onChange={e => set('description', e.target.value)} />
+        <div>
+          <Input label="Description" placeholder="What was this for?"
+            value={form.description}
+            onChange={e => { set('description', e.target.value); if (catLocked) setCatLocked(false) }} />
+          {suggestion && (
+            <button
+              onClick={acceptSuggestion}
+              className="mt-1.5 flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              <span className="bg-indigo-100 rounded-full px-2 py-0.5 font-medium">⚡ {suggestion}</span>
+              <span className="text-gray-400">remembered from last time — tap to use</span>
+            </button>
+          )}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Input label="Date" type="date" value={form.date} onChange={e => set('date', e.target.value)} />
@@ -327,7 +368,13 @@ function TransactionModal({ open, onClose, initial, onSave }) {
         <div className="flex gap-2 justify-end pt-2">
           <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button
-            onClick={() => { if (form.amount && form.description.trim()) { onSave(form); onClose() } }}
+            onClick={() => {
+              if (form.amount && form.description.trim()) {
+                learnCategory(form.description, form.category)
+                onSave(form)
+                onClose()
+              }
+            }}
             disabled={!form.amount || !form.description.trim()}
           >Save</Button>
         </div>
