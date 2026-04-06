@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, createContext, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
+import { useCurrency } from '../hooks/useCurrency'
 import { today, uid, fmtDate } from '../utils/storage'
 import {
   Button, Card, Badge, Input, Textarea, Select,
@@ -78,9 +79,14 @@ function catColor(cat) {
   return PALETTE[idx]
 }
 
-function fmt$(n) {
-  return '$' + Number(n || 0).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+// Fallback formatter used before currency context is available
+function fmt(n) {
+  return 'A$' + Number(n || 0).toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
+
+// Currency context — Finance provides { fmt }, sub-components consume via useFmt()
+const CurrencyCtx = createContext(null)
+const useFmt = () => useContext(CurrencyCtx) ?? fmt$
 
 function monthLabel(m) {
   const [y, mo] = m.split('-')
@@ -334,6 +340,7 @@ function TransactionModal({ open, onClose, initial, onSave }) {
 // ─── Overview tab ─────────────────────────────────────────────────────────────
 
 function OverviewTab({ transactions, budgets, month, onAdd }) {
+  const fmt = useFmt()
   const { income, expense, net } = calcMonthTotals(transactions, month)
   const byCat = calcCategorySpend(transactions, month)
   const budget = budgets.find(b => b.month === month)
@@ -347,11 +354,11 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
     <div className="flex flex-col gap-5">
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon="💰" label="Income" value={fmt$(income)} />
-        <StatCard icon="📉" label="Expenses" value={fmt$(expense)} />
+        <StatCard icon="💰" label="Income" value={fmt(income)} />
+        <StatCard icon="📉" label="Expenses" value={fmt(expense)} />
         <Card className={`p-4 ${net >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
           <div className={`text-2xl font-bold leading-tight ${net >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-            {net >= 0 ? '+' : ''}{fmt$(net)}
+            {net >= 0 ? '+' : ''}{fmt(net)}
           </div>
           <div className="text-sm font-medium text-gray-600 mt-0.5">Net</div>
         </Card>
@@ -370,7 +377,7 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
         <div className="flex justify-between mt-3 text-sm">
           <span className="text-gray-500">Projected end-of-month net</span>
           <span className={`font-bold ${projNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-            {projNet >= 0 ? '+' : ''}{fmt$(projNet)}
+            {projNet >= 0 ? '+' : ''}{fmt(projNet)}
           </span>
         </div>
       </Card>
@@ -391,10 +398,10 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
                       <span className="font-medium text-gray-800">{cat}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-700 font-semibold">{fmt$(amt)}</span>
+                      <span className="text-gray-700 font-semibold">{fmt(amt)}</span>
                       {budgetItem && (
                         <span className={`text-xs ${amt > budgetItem.limit ? 'text-red-500' : 'text-gray-400'}`}>
-                          / {fmt$(budgetItem.limit)}
+                          / {fmt(budgetItem.limit)}
                         </span>
                       )}
                     </div>
@@ -425,7 +432,7 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
                   <div className="text-xs text-gray-400">{t.category} · {fmtDate(t.date)}</div>
                 </div>
                 <span className={`text-sm font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
-                  {t.type === 'income' ? '+' : '-'}{fmt$(t.amount)}
+                  {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                 </span>
               </div>
             ))}
@@ -440,6 +447,7 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
 // ─── Transactions tab ─────────────────────────────────────────────────────────
 
 function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
+  const fmt = useFmt()
   const [typeFilter, setTypeFilter] = useState('all')
   const [catFilter, setCatFilter]   = useState('all')
   const [search, setSearch]         = useState('')
@@ -509,7 +517,7 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={`text-sm font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
-                  {t.type === 'income' ? '+' : '-'}{fmt$(t.amount)}
+                  {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => onEdit(t)} className="text-xs text-gray-400 hover:text-gray-700 px-1 py-0.5 rounded hover:bg-gray-100">Edit</button>
@@ -526,10 +534,10 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
           <span className="text-gray-400">{visible.length} transactions</span>
           <div className="flex gap-3">
             <span className="text-green-600 font-medium">
-              +{fmt$(visible.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0))}
+              +{fmt(visible.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0))}
             </span>
             <span className="text-red-500 font-medium">
-              -{fmt$(visible.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0))}
+              -{fmt(visible.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0))}
             </span>
           </div>
         </div>
@@ -557,7 +565,7 @@ function BudgetEditorRow({ item, onChange }) {
       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catColor(item.category) }} />
       <span className="flex-1 text-sm text-gray-700 min-w-0 truncate">{item.category}</span>
       {item.annual && (
-        <span className="text-[10px] text-gray-400 shrink-0">≈{fmt$(monthly)}/mo</span>
+        <span className="text-[10px] text-gray-400 shrink-0">≈{fmt(monthly)}/mo</span>
       )}
       <div className="relative w-24 shrink-0">
         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
@@ -584,6 +592,7 @@ function BudgetEditorRow({ item, onChange }) {
 }
 
 function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
+  const fmt = useFmt()
   const budget   = budgets.find(b => b.month === month)
   const byCatMap = Object.fromEntries(calcCategorySpend(transactions, month))
   const [editing, setEditing] = useState(false)
@@ -681,12 +690,12 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
       <Card className="p-4 mb-5">
         <div className="flex justify-between text-sm mb-2">
           <span className="font-semibold text-gray-700">Total budget</span>
-          <span className="text-gray-500">{fmt$(totalSpent)} / {fmt$(totalBudget)}</span>
+          <span className="text-gray-500">{fmt(totalSpent)} / {fmt(totalBudget)}</span>
         </div>
         <ProgressBar value={totalSpent} max={totalBudget}
           color={totalSpent > totalBudget ? 'red' : totalSpent / totalBudget > 0.8 ? 'yellow' : 'green'} />
         <div className="flex justify-between mt-2 text-xs text-gray-400">
-          <span>{fmt$(Math.max(0, totalBudget - totalSpent))} remaining</span>
+          <span>{fmt(Math.max(0, totalBudget - totalSpent))} remaining</span>
           <span>{totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}% used</span>
         </div>
       </Card>
@@ -709,10 +718,10 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
               </div>
               <div className="flex items-center gap-1.5 text-xs">
                 <span className={groupOver ? 'text-red-500 font-semibold' : 'text-gray-500'}>
-                  {fmt$(groupSpent)}
+                  {fmt(groupSpent)}
                 </span>
                 <span className="text-gray-300">/</span>
-                <span className="text-gray-400">{fmt$(groupBudget)}</span>
+                <span className="text-gray-400">{fmt(groupBudget)}</span>
               </div>
             </div>
 
@@ -732,8 +741,8 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
                         {item.annual && <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">annual</span>}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-gray-700'}`}>{fmt$(spent)}</span>
-                        <span className="text-xs text-gray-400">/ {fmt$(limit)}</span>
+                        <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-gray-700'}`}>{fmt(spent)}</span>
+                        <span className="text-xs text-gray-400">/ {fmt(limit)}</span>
                         {over && <Badge color="red">Over</Badge>}
                         {near && <Badge color="yellow">Near</Badge>}
                         {!over && !near && spent > 0 && <Badge color="green">✓</Badge>}
@@ -756,6 +765,7 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
 // ─── Insights tab (forecast + insights combined) ──────────────────────────────
 
 function InsightsTab({ transactions, budgets, month }) {
+  const fmt = useFmt()
   const ins = calcInsights(transactions, budgets, month)
   const fc  = calcForecast(transactions, month)
   const budget = budgets.find(b => b.month === month)
@@ -768,15 +778,15 @@ function InsightsTab({ transactions, budgets, month }) {
         <h3 className="font-bold text-gray-900 mb-1">End-of-month forecast</h3>
         <p className="text-xs text-gray-400 mb-4">
           Based on {fc.elapsed} of {fc.total} days ({fc.pct}% of month elapsed).
-          Daily spend: {fmt$(fc.dailySpend)}.
+          Daily spend: {fmt(fc.dailySpend)}.
         </p>
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center">
-            <div className="text-lg font-bold text-green-600">{fmt$(fc.projIncome)}</div>
+            <div className="text-lg font-bold text-green-600">{fmt(fc.projIncome)}</div>
             <div className="text-xs text-gray-400 mt-0.5">Proj. income</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-red-500">{fmt$(fc.projExpense)}</div>
+            <div className="text-lg font-bold text-red-500">{fmt(fc.projExpense)}</div>
             <div className="text-xs text-gray-400 mt-0.5">Proj. expenses</div>
             {totalBudget > 0 && fc.projExpense > totalBudget && (
               <div className="text-[10px] text-red-400 mt-0.5">⚠ over budget</div>
@@ -784,7 +794,7 @@ function InsightsTab({ transactions, budgets, month }) {
           </div>
           <div className="text-center">
             <div className={`text-lg font-bold ${fc.projNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-              {fc.projNet >= 0 ? '+' : ''}{fmt$(fc.projNet)}
+              {fc.projNet >= 0 ? '+' : ''}{fmt(fc.projNet)}
             </div>
             <div className="text-xs text-gray-400 mt-0.5">Proj. net</div>
           </div>
@@ -793,7 +803,7 @@ function InsightsTab({ transactions, budgets, month }) {
           <div className="mt-4">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
               <span>Projected vs budget</span>
-              <span>{fmt$(fc.projExpense)} / {fmt$(totalBudget)}</span>
+              <span>{fmt(fc.projExpense)} / {fmt(totalBudget)}</span>
             </div>
             <ProgressBar
               value={fc.projExpense} max={totalBudget}
@@ -812,7 +822,7 @@ function InsightsTab({ transactions, budgets, month }) {
             <div>
               <div className="flex justify-between text-xs text-gray-500 mb-1.5">
                 <span className="font-medium text-gray-700">Fixed vs Variable</span>
-                <span>{fmt$(ins.fixedSpend)} fixed · {fmt$(ins.variableSpend)} variable</span>
+                <span>{fmt(ins.fixedSpend)} fixed · {fmt(ins.variableSpend)} variable</span>
               </div>
               <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100">
                 <div
@@ -834,7 +844,7 @@ function InsightsTab({ transactions, budgets, month }) {
             <div>
               <div className="flex justify-between text-xs text-gray-500 mb-1.5">
                 <span className="font-medium text-gray-700">Essentials vs Lifestyle</span>
-                <span>{fmt$(ins.essentialSpend)} · {fmt$(ins.lifestyleSpend)}</span>
+                <span>{fmt(ins.essentialSpend)} · {fmt(ins.lifestyleSpend)}</span>
               </div>
               <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100">
                 <div
@@ -859,22 +869,22 @@ function InsightsTab({ transactions, budgets, month }) {
       <div>
         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">Key insights</h3>
         <div className="flex flex-col gap-2">
-          <InsightRow icon="💰" label="Total income" value={fmt$(ins.income)} color="green" />
-          <InsightRow icon="📉" label="Total expenses" value={fmt$(ins.expense)} color="red" />
+          <InsightRow icon="💰" label="Total income" value={fmt(ins.income)} color="green" />
+          <InsightRow icon="📉" label="Total expenses" value={fmt(ins.expense)} color="red" />
           <InsightRow
             icon="📊"
             label="Net cash flow"
-            value={(ins.net >= 0 ? '+' : '') + fmt$(ins.net)}
+            value={(ins.net >= 0 ? '+' : '') + fmt(ins.net)}
             color={ins.net >= 0 ? 'green' : 'red'}
           />
-          <InsightRow icon="📅" label="Avg weekly spend" value={fmt$(ins.avgWeekly)} />
+          <InsightRow icon="📅" label="Avg weekly spend" value={fmt(ins.avgWeekly)} />
           {ins.savingsMet !== null && (
             <InsightRow
               icon={ins.savingsMet ? '✅' : '⚠️'}
               label="Savings/investing target"
               value={ins.savingsMet
-                ? `Met — ${fmt$(ins.savingsActual)} saved`
-                : `${fmt$(ins.savingsActual)} of ${fmt$(ins.savingsBudget)} target`}
+                ? `Met — ${fmt(ins.savingsActual)} saved`
+                : `${fmt(ins.savingsActual)} of ${fmt(ins.savingsBudget)} target`}
               color={ins.savingsMet ? 'green' : 'red'}
             />
           )}
@@ -882,18 +892,18 @@ function InsightsTab({ transactions, budgets, month }) {
             <InsightRow
               icon="🔴"
               label="Biggest overspend"
-              value={`${ins.biggestOver[0].category} (+${fmt$(ins.biggestOver[0].overspend)})`}
+              value={`${ins.biggestOver[0].category} (+${fmt(ins.biggestOver[0].overspend)})`}
               color="red"
             />
           )}
           {ins.financialSpend > 0 && (
-            <InsightRow icon="💹" label="Taxes & financial" value={fmt$(ins.financialSpend)} />
+            <InsightRow icon="💹" label="Taxes & financial" value={fmt(ins.financialSpend)} />
           )}
           {ins.businessSpend > 0 && (
-            <InsightRow icon="💼" label="Business expenses" value={fmt$(ins.businessSpend)} />
+            <InsightRow icon="💼" label="Business expenses" value={fmt(ins.businessSpend)} />
           )}
           {ins.miscSpend > 0 && (
-            <InsightRow icon="📦" label="Misc/buffer used" value={fmt$(ins.miscSpend)} />
+            <InsightRow icon="📦" label="Misc/buffer used" value={fmt(ins.miscSpend)} />
           )}
           {ins.spendTrend !== null && (
             <InsightRow
@@ -925,7 +935,7 @@ function InsightsTab({ transactions, budgets, month }) {
                 <div key={g.group} className="flex items-center gap-3">
                   <span>{g.icon}</span>
                   <span className="flex-1 text-sm text-gray-700">{g.group}</span>
-                  <span className="text-sm font-bold text-gray-800">{fmt$(amt)}</span>
+                  <span className="text-sm font-bold text-gray-800">{fmt(amt)}</span>
                   <span className="text-xs text-gray-400 w-10 text-right">
                     {ins.expense ? Math.round((amt / ins.expense) * 100) : 0}%
                   </span>
@@ -946,7 +956,7 @@ function InsightsTab({ transactions, budgets, month }) {
                 <span className="text-lg font-bold text-gray-200 w-5 shrink-0">{i + 1}</span>
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: catColor(cat) }} />
                 <span className="flex-1 text-sm font-medium text-gray-700">{cat}</span>
-                <span className="text-sm font-bold text-gray-800">{fmt$(amt)}</span>
+                <span className="text-sm font-bold text-gray-800">{fmt(amt)}</span>
               </div>
             ))}
           </Card>
@@ -976,6 +986,7 @@ export default function Finance() {
   const navigate = useNavigate()
   const { items: transactions, add: addTx, update: updateTx, remove: removeTx } = useStore('financeTransactions')
   const { items: budgets, add: addBudget, update: updateBudget } = useStore('monthlyBudgets')
+  const { fmt, display, setDisplay, home, setHome, loading: rateLoading, rateError, CURRENCIES } = useCurrency()
 
   const [tab, setTab]     = useState('overview')
   const [modal, setModal] = useState(null)   // null | 'add' | transaction object
@@ -1024,17 +1035,42 @@ export default function Finance() {
   ]
 
   return (
+    <CurrencyCtx.Provider value={fmt}>
     <div>
       {/* Header with month nav */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-gray-900">Finance</h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => navigate('/finance/import')}
             className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
           >
             <span>📥</span> Import CSV
           </button>
+
+          {/* Currency selector */}
+          <div className="flex items-center gap-1">
+            <select
+              value={home}
+              onChange={e => setHome(e.target.value)}
+              title="Home currency (what your amounts are stored in)"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 text-gray-600"
+            >
+              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <span className="text-gray-300 text-xs">→</span>
+            <select
+              value={display}
+              onChange={e => setDisplay(e.target.value)}
+              title="Display currency"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 font-semibold text-indigo-700"
+            >
+              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            {rateLoading && <span className="text-[10px] text-gray-400 animate-pulse">loading…</span>}
+            {rateError   && <span className="text-[10px] text-red-400" title={rateError}>rates unavailable</span>}
+          </div>
+
           <div className="flex items-center gap-1">
             <button onClick={prevMonth}
               className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg">‹</button>
@@ -1078,5 +1114,6 @@ export default function Finance() {
         onSave={handleSaveTx}
       />
     </div>
+    </CurrencyCtx.Provider>
   )
 }
