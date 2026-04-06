@@ -137,8 +137,8 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
         </div>
       </td>
 
-      {/* Edit/Delete — appears on hover, after stats */}
-      <td className="pl-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Edit/Delete — always visible */}
+      <td className="pl-1">
         <div className="flex gap-1">
           <button
             onClick={() => onEdit(habit)}
@@ -226,6 +226,12 @@ export default function Habits() {
     } else {
       update(modal.id, { name: form.name, color: form.color, notes: form.notes })
     }
+    setModal(null)
+  }
+
+  const handleDelete = (id, name) => {
+    if (!window.confirm(`Delete "${name}" and all its history? This cannot be undone.`)) return
+    remove(id)
     setModal(null)
   }
 
@@ -323,7 +329,7 @@ export default function Habits() {
                     todayStr={todayStr}
                     onToggle={handleToggle}
                     onEdit={openEdit}
-                    onDelete={remove}
+                    onDelete={(id) => handleDelete(id, habits.find(h => h.id === id)?.name)}
                   />
                 ))}
               </tbody>
@@ -385,9 +391,16 @@ export default function Habits() {
               </div>
             </div>
           )}
-          <div className="flex gap-2 justify-end pt-2">
-            <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={!form.name.trim()}>Save</Button>
+          <div className="flex gap-2 pt-2">
+            {modal !== 'add' && (
+              <Button variant="danger" onClick={() => handleDelete(modal.id, modal.name)}>
+                Delete habit
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
+              <Button onClick={handleSave} disabled={!form.name.trim()}>Save</Button>
+            </div>
           </div>
         </div>
       </Modal>
