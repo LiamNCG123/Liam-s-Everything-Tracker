@@ -360,7 +360,7 @@ export default function QuickAdd() {
         }
 
         default:
-          setError("Couldn't understand that. Try e.g. "Lunch 120", "Bench 80kg 5x5", "Meditation done".")
+          setError("Couldn't understand that. Try e.g. 'Lunch 120', 'Bench 80kg 5x5', 'Meditation done'.")
           return
       }
 
