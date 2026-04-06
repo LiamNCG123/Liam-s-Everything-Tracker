@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 
 const NAV = [
-  { to: '/',          label: 'Dashboard', emoji: '🏠' },
+  { to: '/',          label: 'Today',     emoji: '☀️' },
   { to: '/habits',    label: 'Habits',    emoji: '✅' },
   { to: '/goals',     label: 'Goals',     emoji: '🎯' },
   { to: '/training',  label: 'Training',  emoji: '💪' },

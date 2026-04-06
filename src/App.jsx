@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
+import Today from './pages/Today'
 import Habits from './pages/Habits'
 import Goals from './pages/Goals'
 import Training from './pages/Training'
@@ -13,7 +13,7 @@ export default function App() {
     <BrowserRouter>
       <Layout>
         <Routes>
-          <Route path="/"               element={<Dashboard />} />
+          <Route path="/"               element={<Today />} />
           <Route path="/habits"         element={<Habits />} />
           <Route path="/goals"          element={<Goals />} />
           <Route path="/training"       element={<Training />} />
