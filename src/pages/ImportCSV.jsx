@@ -461,9 +461,11 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
       }
 
       const text = data?.content?.[0]?.text || ''
+      console.log('[AI categorization] raw response:', text)
       const match = text.match(/\[[\s\S]*\]/)
       if (!match) {
-        setAiError('Unexpected response from API — no JSON array found.')
+        setAiError(`Unexpected response: "${text.slice(0, 120)}"`)
+
         return
       }
 
