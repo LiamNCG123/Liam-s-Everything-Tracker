@@ -15,8 +15,19 @@ const STATUS_COLORS = {
   'Dropped':     'red',
 }
 
+const CATEGORIES = [
+  { name: 'Business',            icon: '💼', color: 'blue'   },
+  { name: 'Finance',             icon: '💰', color: 'green'  },
+  { name: 'Experience',          icon: '🌍', color: 'purple' },
+  { name: 'Learning',            icon: '📚', color: 'indigo' },
+  { name: 'Hobby',               icon: '🎨', color: 'yellow' },
+  { name: 'Long-term Life Goal', icon: '🌟', color: 'red'    },
+]
+const CATEGORY_NAMES = CATEGORIES.map(c => c.name)
+const CATEGORY_META  = Object.fromEntries(CATEGORIES.map(c => [c.name, c]))
+
 const EMPTY_FORM = {
-  title: '', description: '', status: 'Not Started',
+  title: '', description: '', category: '', status: 'Not Started',
   targetDate: '', progress: 0, notes: '',
 }
 
@@ -24,13 +35,14 @@ export default function Goals() {
   const { items: goals, add, update, remove } = useStore('goals')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
-  const [filter, setFilter] = useState('All')
+  const [filter, setFilter]       = useState('All')
+  const [catFilter, setCatFilter] = useState('All')
 
   const openAdd = () => { setForm(EMPTY_FORM); setModal('add') }
   const openEdit = (g) => {
     setForm({
-      title: g.title, description: g.description || '', status: g.status,
-      targetDate: g.targetDate || '', progress: g.progress ?? 0, notes: g.notes || '',
+      title: g.title, description: g.description || '', category: g.category || '',
+      status: g.status, targetDate: g.targetDate || '', progress: g.progress ?? 0, notes: g.notes || '',
     })
     setModal(g)
   }
@@ -47,7 +59,9 @@ export default function Goals() {
   const completed  = goals.filter(g => g.status === 'Completed').length
 
   const filterOptions = ['All', ...STATUSES]
-  const visible = filter === 'All' ? goals : goals.filter(g => g.status === filter)
+  const visible = goals
+    .filter(g => filter    === 'All' || g.status   === filter)
+    .filter(g => catFilter === 'All' || g.category === catFilter)
 
   return (
     <div>
@@ -65,20 +79,49 @@ export default function Goals() {
       )}
 
       {goals.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-1 mb-4 no-scrollbar">
-          {filterOptions.map(f => (
+        <div className="flex flex-col gap-2 mb-4">
+          {/* Status filter */}
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {filterOptions.map(f => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  filter === f
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+          {/* Category filter */}
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             <button
-              key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => setCatFilter('All')}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === f
-                  ? 'bg-brand-500 text-white'
+                catFilter === 'All'
+                  ? 'bg-gray-700 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {f}
+              All categories
             </button>
-          ))}
+            {CATEGORIES.map(c => (
+              <button
+                key={c.name}
+                onClick={() => setCatFilter(c.name)}
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  catFilter === c.name
+                    ? 'bg-gray-700 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {c.icon} {c.name}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -100,6 +143,11 @@ export default function Goals() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-gray-900">{goal.title}</span>
                     <Badge color={STATUS_COLORS[goal.status]}>{goal.status}</Badge>
+                    {goal.category && CATEGORY_META[goal.category] && (
+                      <Badge color={CATEGORY_META[goal.category].color}>
+                        {CATEGORY_META[goal.category].icon} {goal.category}
+                      </Badge>
+                    )}
                   </div>
                   {goal.description && (
                     <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{goal.description}</p>
@@ -144,19 +192,29 @@ export default function Goals() {
           />
           <div className="grid grid-cols-2 gap-3">
             <Select
+              label="Category"
+              value={form.category}
+              onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+            >
+              <option value="">— none —</option>
+              {CATEGORIES.map(c => (
+                <option key={c.name} value={c.name}>{c.icon} {c.name}</option>
+              ))}
+            </Select>
+            <Select
               label="Status"
               value={form.status}
               onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
             >
               {STATUSES.map(s => <option key={s}>{s}</option>)}
             </Select>
-            <Input
-              label="Target date"
-              type="date"
-              value={form.targetDate}
-              onChange={e => setForm(f => ({ ...f, targetDate: e.target.value }))}
-            />
           </div>
+          <Input
+            label="Target date"
+            type="date"
+            value={form.targetDate}
+            onChange={e => setForm(f => ({ ...f, targetDate: e.target.value }))}
+          />
           <label className="flex flex-col gap-1">
             <span className="text-sm font-medium text-gray-700">Progress — {form.progress}%</span>
             <input
