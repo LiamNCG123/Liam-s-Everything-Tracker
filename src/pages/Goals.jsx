@@ -18,10 +18,11 @@ const STATUS_COLORS = {
 const CATEGORIES = [
   { name: 'Business',            icon: '💼', color: 'blue'   },
   { name: 'Finance',             icon: '💰', color: 'green'  },
+  { name: 'Health & Fitness',    icon: '🏋️', color: 'red'    },
   { name: 'Experience',          icon: '🌍', color: 'purple' },
   { name: 'Learning',            icon: '📚', color: 'indigo' },
   { name: 'Hobby',               icon: '🎨', color: 'yellow' },
-  { name: 'Long-term Life Goal', icon: '🌟', color: 'red'    },
+  { name: 'Long-term Life Goal', icon: '🌟', color: 'gray'   },
 ]
 const CATEGORY_NAMES = CATEGORIES.map(c => c.name)
 const CATEGORY_META  = Object.fromEntries(CATEGORIES.map(c => [c.name, c]))
