@@ -722,7 +722,7 @@ function DoneStep({ stats, onGoToFinance, onImportAnother }) {
 
 export default function ImportCSV() {
   const navigate = useNavigate()
-  const { items: existingTx, add: addTx }   = useStore('financeTransactions')
+  const { items: existingTx, add: addTx, addMany: addManyTx } = useStore('financeTransactions')
   const { items: storedBatches, add: addBatch } = useStore('transactionImportBatches')
   const { items: storedRules,   add: addRule  } = useStore('categorizationRules')
 
@@ -787,11 +787,11 @@ export default function ImportCSV() {
       }
     }
 
-    // Save transactions
-    for (const row of toSave) {
-      const { _importId, _excluded, _isDuplicate, rawRowData, ...tx } = row
-      addTx({ ...tx, importedAt: new Date().toISOString() })
-    }
+    // Save transactions — single atomic write to avoid stale-closure issues
+    const txRecords = toSave.map(({ _importId, _excluded, _isDuplicate, rawRowData, ...tx }) => ({
+      ...tx, importedAt: new Date().toISOString(),
+    }))
+    addManyTx(txRecords)
 
     setDoneStats({
       imported: toSave.length,

@@ -23,6 +23,13 @@ export function useStore(key) {
     return record
   }, [persist])
 
+  // Bulk insert — single atomic save, safe for large imports
+  const addMany = useCallback((newItems) => {
+    const records = newItems.map(item => ({ ...item, id: uid(), createdAt: new Date().toISOString() }))
+    persist(prev => [...prev, ...records])
+    return records
+  }, [persist])
+
   const update = useCallback((id, patch) => {
     persist(prev => prev.map(i => i.id === id ? { ...i, ...patch, updatedAt: new Date().toISOString() } : i))
   }, [persist])
@@ -31,5 +38,5 @@ export function useStore(key) {
     persist(prev => prev.filter(i => i.id !== id))
   }, [persist])
 
-  return { items, add, update, remove }
+  return { items, add, addMany, update, remove }
 }
