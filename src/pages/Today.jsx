@@ -1,7 +1,168 @@
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { today, fmtDate } from '../utils/storage'
 import { Card, ProgressBar, Button } from '../components/ui'
+
+// ─── Needs Attention inbox ────────────────────────────────────────────────────
+
+function daysAgo(isoStr) {
+  if (!isoStr) return Infinity
+  const d = new Date(isoStr)
+  const now = new Date()
+  return Math.floor((now - d) / 86400000)
+}
+
+function generateInboxItems({ habits, sessions, transactions, goals, eduItems, budgets, todayStr }) {
+  const items = []
+  const month = todayStr.slice(0, 7)
+
+  // 1. At-risk habit streaks (priority 1)
+  const atRiskHabits = habits.filter(h => {
+    const comp = migrateCompletions(h.completions)
+    return !comp.includes(todayStr) && calcCurrentStreak(comp) > 0
+  })
+  if (atRiskHabits.length > 0) {
+    items.push({
+      key: 'habits-at-risk',
+      priority: 1,
+      emoji: '🔥',
+      label: atRiskHabits.length === 1
+        ? `"${atRiskHabits[0].name}" streak at risk today`
+        : `${atRiskHabits.length} habit streaks at risk today`,
+      to: '/habits',
+    })
+  }
+
+  // 2. Uncategorized transactions (priority 1)
+  const monthTx = transactions.filter(t => t.date?.startsWith(month))
+  const uncat = monthTx.filter(t => !t.category || t.category === 'Uncategorized')
+  if (uncat.length > 0) {
+    items.push({
+      key: 'finance-uncat',
+      priority: 1,
+      emoji: '💳',
+      label: `${uncat.length} transaction${uncat.length > 1 ? 's' : ''} need${uncat.length === 1 ? 's' : ''} a category`,
+      to: '/finance',
+    })
+  }
+
+  // 3. Over-budget categories (priority 2)
+  const budget = budgets.find(b => b.month === month)
+  if (budget?.items?.length > 0) {
+    const byCatMap = {}
+    monthTx.forEach(t => {
+      if (t.type === 'expense' && t.category) {
+        byCatMap[t.category] = (byCatMap[t.category] || 0) + Number(t.amount || 0)
+      }
+    })
+    const over = budget.items.filter(b => (byCatMap[b.category] || 0) > Number(b.limit || 0))
+    if (over.length > 0) {
+      items.push({
+        key: 'finance-over-budget',
+        priority: 2,
+        emoji: '📊',
+        label: `${over.length} budget categor${over.length > 1 ? 'ies' : 'y'} over limit`,
+        to: '/finance',
+      })
+    }
+  }
+
+  // 4. Stalled goals — In Progress but not updated in 14+ days (priority 2)
+  const stalledGoals = goals.filter(g => {
+    if (g.status !== 'In Progress') return false
+    return daysAgo(g.updatedAt || g.createdAt) >= 14
+  })
+  if (stalledGoals.length > 0) {
+    items.push({
+      key: 'goals-stalled',
+      priority: 2,
+      emoji: '🎯',
+      label: `${stalledGoals.length} goal${stalledGoals.length > 1 ? 's' : ''} haven't moved in 2+ weeks`,
+      to: '/goals',
+    })
+  }
+
+  // 5. Overdue goals — past target date and not completed (priority 2)
+  const overdueGoals = goals.filter(g =>
+    g.status !== 'Completed' && g.status !== 'Dropped' &&
+    g.targetDate && g.targetDate < todayStr
+  )
+  if (overdueGoals.length > 0) {
+    items.push({
+      key: 'goals-overdue',
+      priority: 2,
+      emoji: '📅',
+      label: `${overdueGoals.length} goal${overdueGoals.length > 1 ? 's' : ''} past target date`,
+      to: '/goals',
+    })
+  }
+
+  // 6. Stalled education — In Progress but not updated in 14+ days (priority 3)
+  const stalledEdu = (eduItems || []).filter(e => {
+    if (e.status !== 'In Progress') return false
+    return daysAgo(e.updatedAt || e.createdAt) >= 14
+  })
+  if (stalledEdu.length > 0) {
+    items.push({
+      key: 'edu-stalled',
+      priority: 3,
+      emoji: '📚',
+      label: `${stalledEdu.length} learning item${stalledEdu.length > 1 ? 's' : ''} haven't progressed in 2+ weeks`,
+      to: '/education',
+    })
+  }
+
+  return items.sort((a, b) => a.priority - b.priority)
+}
+
+const PRIORITY_DOT = {
+  1: 'bg-red-400',
+  2: 'bg-amber-400',
+  3: 'bg-gray-400',
+}
+
+function InboxSection({ items }) {
+  const navigate = useNavigate()
+  const [expanded, setExpanded] = useState(false)
+
+  if (items.length === 0) return null
+
+  const visible = expanded ? items : items.slice(0, 3)
+  const hasMore = items.length > 3
+
+  return (
+    <Card className="p-4">
+      <SectionHeader
+        emoji="📥"
+        title="Needs Attention"
+        meta={`${items.length} item${items.length > 1 ? 's' : ''}`}
+      />
+      <div className="flex flex-col gap-2">
+        {visible.map(item => (
+          <button
+            key={item.key}
+            onClick={() => navigate(item.to)}
+            className="flex items-center gap-3 text-left w-full hover:bg-gray-50 rounded-xl px-2 py-1.5 transition-colors"
+          >
+            <span className={`w-2 h-2 rounded-full shrink-0 ${PRIORITY_DOT[item.priority]}`} />
+            <span className="text-base shrink-0">{item.emoji}</span>
+            <span className="text-sm text-gray-700 flex-1">{item.label}</span>
+            <span className="text-xs text-gray-400 shrink-0">→</span>
+          </button>
+        ))}
+      </div>
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="mt-2 text-xs text-indigo-500 hover:underline w-full text-center"
+        >
+          {expanded ? 'Show less' : `+${items.length - 3} more`}
+        </button>
+      )}
+    </Card>
+  )
+}
 
 // ─── Habit helpers (mirrored from Habits.jsx) ────────────────────────────────
 
@@ -16,7 +177,6 @@ function calcCurrentStreak(completions) {
   const set = new Set(completions)
   let streak = 0
   const d = new Date()
-  // don't penalise for today not yet done
   if (!set.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1)
   while (set.has(d.toISOString().slice(0, 10))) {
     streak++
@@ -41,7 +201,6 @@ function suggestNextDay(programme, sessions) {
   const lastDayIdx = programme.days.findIndex(d => d.id === progSessions[0].dayId)
   if (lastDayIdx === -1) return nonRest[0]
 
-  // Cycle forward through all days (skip rest days)
   const total = programme.days.length
   for (let i = 1; i <= total; i++) {
     const day = programme.days[(lastDayIdx + i) % total]
@@ -74,14 +233,30 @@ function SectionHeader({ emoji, title, meta, action }) {
   )
 }
 
-function HabitsSection({ habits, todayStr, onToggle }) {
+// Returns a streak-momentum tier for visual treatment
+function streakTier(streak) {
+  if (streak >= 30) return 'gold'
+  if (streak >= 14) return 'high'
+  if (streak >= 7)  return 'mid'
+  if (streak >= 3)  return 'low'
+  return 'none'
+}
+
+function HabitsSection({ habits, todayStr, onToggle, flashIds }) {
   const navigate = useNavigate()
+
   const enriched = habits.map(h => {
     const completions = migrateCompletions(h.completions)
-    return { ...h, completions, done: completions.includes(todayStr), streak: calcCurrentStreak(completions) }
+    const done   = completions.includes(todayStr)
+    const streak = calcCurrentStreak(completions)
+    const atRisk = !done && streak > 0
+    const broken = !done && streak === 0 && completions.length > 0
+    return { ...h, completions, done, streak, atRisk, broken }
   })
-  const doneCount = enriched.filter(h => h.done).length
-  const total = enriched.length
+
+  const doneCount   = enriched.filter(h => h.done).length
+  const total       = enriched.length
+  const atRiskCount = enriched.filter(h => h.atRisk).length
 
   if (!total) return (
     <Card className="p-4">
@@ -95,7 +270,7 @@ function HabitsSection({ habits, todayStr, onToggle }) {
   const allDone = doneCount === total
 
   return (
-    <Card className={`p-4 transition-colors ${allDone ? 'bg-green-50 border-green-100' : ''}`}>
+    <Card className={`p-4 transition-colors duration-500 ${allDone ? 'bg-green-50 border-green-100' : ''}`}>
       <SectionHeader
         emoji="✅"
         title="Habits"
@@ -107,7 +282,6 @@ function HabitsSection({ habits, todayStr, onToggle }) {
         }
       />
 
-      {/* Day progress */}
       <div className="mb-3">
         <ProgressBar
           value={total ? Math.round((doneCount / total) * 100) : 0}
@@ -115,35 +289,75 @@ function HabitsSection({ habits, todayStr, onToggle }) {
         />
       </div>
 
-      {/* Habit rows */}
+      {atRiskCount > 0 && !allDone && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">
+          <span className="text-base">⚠️</span>
+          <span className="text-xs text-amber-800 font-medium">
+            {atRiskCount} streak{atRiskCount > 1 ? 's' : ''} at risk — complete before midnight
+          </span>
+        </div>
+      )}
+
       <div className="flex flex-col divide-y divide-gray-50">
-        {enriched.map(h => (
-          <button
-            key={h.id}
-            onClick={() => onToggle(h.id, h.completions)}
-            className={`flex items-center gap-3 py-2.5 text-left w-full transition-opacity ${h.done ? 'opacity-60' : ''}`}
-          >
-            {/* Check circle */}
-            <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-              h.done ? 'bg-green-500 border-green-500' : 'border-gray-300'
-            }`}>
-              {h.done && <span className="text-white text-xs">✓</span>}
-            </span>
-            {/* Color dot + name */}
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
-            <span className={`flex-1 text-sm font-medium ${h.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-              {h.name}
-            </span>
-            {/* Streak */}
-            {h.streak > 0 && (
-              <span className="text-xs text-orange-500 font-semibold shrink-0">🔥 {h.streak}</span>
-            )}
-          </button>
-        ))}
+        {enriched.map(h => {
+          const flashing = flashIds?.has(h.id)
+          const tier = streakTier(h.streak)
+
+          return (
+            <button
+              key={h.id}
+              onClick={() => onToggle(h.id, h.completions)}
+              className={`flex items-center gap-3 py-2.5 text-left w-full transition-all duration-200 ${
+                h.done ? 'opacity-60' : ''
+              }`}
+            >
+              <span className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
+                flashing
+                  ? 'bg-green-400 border-green-400 scale-125'
+                  : h.done
+                    ? 'bg-green-500 border-green-500'
+                    : h.atRisk
+                      ? 'border-amber-400 bg-amber-50 animate-pulse'
+                      : 'border-gray-300'
+              }`}>
+                {(h.done || flashing) && <span className="text-white text-xs font-bold">✓</span>}
+              </span>
+
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
+              <span className={`flex-1 text-sm font-medium ${
+                h.done ? 'line-through text-gray-400' : 'text-gray-800'
+              }`}>
+                {h.name}
+              </span>
+
+              {h.done && h.streak >= 3 && (
+                <span className={`text-xs font-semibold shrink-0 ${
+                  tier === 'gold' ? 'text-yellow-500' :
+                  tier === 'high' ? 'text-orange-500' :
+                  'text-orange-400'
+                }`}>
+                  {tier === 'gold' ? '🏆' : '🔥'} {h.streak}
+                </span>
+              )}
+              {h.atRisk && h.streak >= 3 && (
+                <span className="text-xs font-semibold text-amber-600 shrink-0 flex items-center gap-0.5">
+                  🔥 {h.streak}
+                  <span className="text-[10px] font-normal ml-0.5">at risk</span>
+                </span>
+              )}
+              {h.atRisk && h.streak < 3 && (
+                <span className="text-[10px] text-amber-500 shrink-0">today</span>
+              )}
+              {h.broken && (
+                <span className="text-[10px] text-gray-400 italic shrink-0">restart today</span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {allDone && (
-        <div className="mt-3 text-center text-xs font-semibold text-green-600">
+        <div className="mt-3 text-center text-sm font-semibold text-green-600">
           All habits done today 🎉
         </div>
       )}
@@ -251,7 +465,6 @@ function FinanceSection({ transactions }) {
         </div>
       ) : (
         <>
-          {/* Month summary */}
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div className="bg-green-50 rounded-xl p-2 text-center">
               <div className="text-xs text-green-600 font-medium">Income</div>
@@ -269,7 +482,6 @@ function FinanceSection({ transactions }) {
             </div>
           </div>
 
-          {/* Uncategorized alert */}
           {uncategorized.length > 0 && (
             <button
               onClick={() => navigate('/finance/import')}
@@ -282,7 +494,6 @@ function FinanceSection({ transactions }) {
             </button>
           )}
 
-          {/* Recent transactions */}
           {recent.length > 0 && (
             <div className="flex flex-col divide-y divide-gray-50">
               {recent.map(t => (
@@ -356,55 +567,103 @@ function GoalsSection({ goals }) {
 
 // ─── Completion bar ───────────────────────────────────────────────────────────
 
-function CompletionBar({ habits, todayStr, sessions, transactions }) {
+function weekStr() {
+  const d = new Date()
+  d.setDate(d.getDate() - 6)
+  return d.toISOString().slice(0, 10)
+}
+
+function getStatusSignals({ habits, todayStr, sessions, transactions, eduItems }) {
+  const signals = []
+
+  if (habits.length > 0) {
+    const done  = habits.filter(h => migrateCompletions(h.completions).includes(todayStr)).length
+    const total = habits.length
+    const atRisk = habits.some(h => {
+      const comp = migrateCompletions(h.completions)
+      return !comp.includes(todayStr) && calcCurrentStreak(comp) > 0
+    })
+    signals.push({
+      key: 'habits',
+      label: 'Habits',
+      value: `${done}/${total}`,
+      state: done === total ? 'done' : atRisk ? 'risk' : 'pending',
+    })
+  }
+
+  const wStr = weekStr()
+  const weekSessions = sessions.filter(s => s.date >= wStr).length
+  signals.push({
+    key: 'training',
+    label: 'Training',
+    value: `${weekSessions} this week`,
+    state: weekSessions >= 3 ? 'done' : weekSessions >= 1 ? 'pending' : 'risk',
+  })
+
+  const month = currentMonthStr()
+  const monthTx  = transactions.filter(t => t.date?.startsWith(month))
+  const uncat    = monthTx.filter(t => !t.category || t.category === 'Uncategorized').length
+  const income   = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0)
+  const expense  = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0)
+  if (monthTx.length > 0) {
+    const net = income - expense
+    signals.push({
+      key: 'finance',
+      label: 'Budget',
+      value: uncat > 0 ? `${uncat} uncategorized` : net >= 0 ? 'on track' : 'overspent',
+      state: uncat > 0 ? 'risk' : net >= 0 ? 'done' : 'risk',
+    })
+  }
+
+  if (eduItems?.length > 0) {
+    const active = eduItems.filter(i => i.status === 'In Progress').length
+    signals.push({
+      key: 'education',
+      label: 'Reading',
+      value: active > 0 ? `${active} active` : 'nothing active',
+      state: active > 0 ? 'done' : 'risk',
+    })
+  }
+
+  return signals
+}
+
+function CompletionBar({ habits, todayStr, sessions, transactions, eduItems }) {
   const enrichedHabits = habits.map(h => migrateCompletions(h.completions).includes(todayStr))
   const habitsDone  = enrichedHabits.filter(Boolean).length
   const habitsTotal = enrichedHabits.length
   const workoutDone = sessions.some(s => s.date === todayStr)
-  const month = currentMonthStr()
-  const monthTx = transactions.filter(t => t.date?.startsWith(month))
-  const uncat = monthTx.filter(t => t.category === 'Uncategorized' || !t.category).length
-  const financeClear = uncat === 0
 
-  const items = [
-    habitsTotal > 0 && {
-      label: 'Habits',
-      value: `${habitsDone}/${habitsTotal}`,
-      done: habitsDone === habitsTotal,
-    },
-    { label: 'Workout', value: workoutDone ? 'done' : 'not logged', done: workoutDone },
-    monthTx.length > 0 && {
-      label: 'Finance',
-      value: financeClear ? 'clear' : `${uncat} pending`,
-      done: financeClear,
-    },
-  ].filter(Boolean)
+  const allDone = (habitsTotal === 0 || habitsDone === habitsTotal) && workoutDone
 
-  const allComplete = items.every(i => i.done)
+  const signals = getStatusSignals({ habits, todayStr, sessions, transactions, eduItems })
+
+  const stateStyle = {
+    done:    { dot: 'bg-green-400',  text: 'text-white',       label: 'text-green-100' },
+    pending: { dot: 'bg-gray-600',   text: 'text-gray-300',    label: 'text-gray-500'  },
+    risk:    { dot: 'bg-amber-400',  text: 'text-amber-200',   label: 'text-amber-400' },
+  }
 
   return (
-    <div className={`rounded-2xl px-4 py-3 mb-4 flex flex-wrap gap-3 items-center ${
-      allComplete ? 'bg-green-600' : 'bg-gray-900'
+    <div className={`rounded-2xl px-4 py-3 mb-1 transition-colors duration-700 ${
+      allDone ? 'bg-green-600' : 'bg-gray-900'
     }`}>
-      <div className="flex-1 min-w-0">
-        <div className={`text-xs font-semibold uppercase tracking-wide mb-1 ${allComplete ? 'text-green-200' : 'text-gray-400'}`}>
-          {allComplete ? 'Day complete 🎉' : 'Today'}
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {items.map(item => (
-            <div key={item.label} className="flex items-center gap-1.5">
-              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
-                item.done ? 'bg-green-400 text-white' : 'bg-gray-700 text-gray-400'
-              }`}>
-                {item.done ? '✓' : '·'}
-              </span>
-              <span className={`text-xs ${item.done ? 'text-white' : 'text-gray-400'}`}>
-                <span className="font-medium">{item.label}</span>
-                <span className="ml-1 opacity-70">{item.value}</span>
-              </span>
+      <div className={`text-xs font-semibold uppercase tracking-wider mb-2 ${
+        allDone ? 'text-green-200' : 'text-gray-500'
+      }`}>
+        {allDone ? 'Day complete 🎉' : 'Status'}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+        {signals.map(sig => {
+          const s = stateStyle[sig.state] || stateStyle.pending
+          return (
+            <div key={sig.key} className="flex items-center gap-1.5">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${s.dot}`} />
+              <span className="text-xs text-gray-500">{sig.label}</span>
+              <span className={`text-xs font-medium ${s.text}`}>{sig.value}</span>
             </div>
-          ))}
-        </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -418,40 +677,56 @@ export default function Today() {
   const { items: sessions                           } = useStore('training')
   const { items: transactions                       } = useStore('financeTransactions')
   const { items: goals                              } = useStore('goals')
+  const { items: eduItems                           } = useStore('education')
+  const { items: budgets                            } = useStore('monthlyBudgets')
 
   const todayStr = today()
   const dateLabel = new Date().toLocaleDateString('en-AU', {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
-  const handleHabitToggle = (id, currentCompletions) => {
-    const next = currentCompletions.includes(todayStr)
-      ? currentCompletions.filter(d => d !== todayStr)
-      : [...currentCompletions, todayStr]
+  const [flashIds, setFlashIds] = useState(new Set())
+
+  const inboxItems = generateInboxItems({
+    habits, sessions, transactions, goals, eduItems, budgets, todayStr,
+  })
+
+  const handleHabitToggle = useCallback((id, currentCompletions) => {
+    const wasUndone = !currentCompletions.includes(todayStr)
+    if (wasUndone) {
+      setFlashIds(prev => new Set([...prev, id]))
+      setTimeout(() => setFlashIds(prev => {
+        const next = new Set(prev); next.delete(id); return next
+      }), 500)
+    }
+    const next = wasUndone
+      ? [...currentCompletions, todayStr]
+      : currentCompletions.filter(d => d !== todayStr)
     updateHabit(id, { completions: next })
-  }
+  }, [todayStr, updateHabit])
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Date heading */}
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Today</h1>
         <span className="text-sm text-gray-400">{dateLabel}</span>
       </div>
 
-      {/* Completion strip */}
       <CompletionBar
         habits={habits}
         todayStr={todayStr}
         sessions={sessions}
         transactions={transactions}
+        eduItems={eduItems}
       />
 
-      {/* Module sections */}
+      <InboxSection items={inboxItems} />
+
       <HabitsSection
         habits={habits}
         todayStr={todayStr}
         onToggle={handleHabitToggle}
+        flashIds={flashIds}
       />
       <TrainingSection
         programmes={programmes}
