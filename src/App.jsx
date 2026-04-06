@@ -7,6 +7,7 @@ import Training from './pages/Training'
 import Education from './pages/Education'
 import Finance from './pages/Finance'
 import ImportCSV from './pages/ImportCSV'
+import WeeklyReview from './pages/WeeklyReview'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/education"      element={<Education />} />
           <Route path="/finance"        element={<Finance />} />
           <Route path="/finance/import" element={<ImportCSV />} />
+          <Route path="/review"         element={<WeeklyReview />} />
         </Routes>
       </Layout>
     </BrowserRouter>

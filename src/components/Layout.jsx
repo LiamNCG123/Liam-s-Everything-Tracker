@@ -2,12 +2,17 @@ import { NavLink, useLocation } from 'react-router-dom'
 import QuickAdd from './QuickAdd'
 
 const NAV = [
-  { to: '/',          label: 'Today',     emoji: '☀️' },
-  { to: '/habits',    label: 'Habits',    emoji: '✅' },
-  { to: '/goals',     label: 'Goals',     emoji: '🎯' },
-  { to: '/training',  label: 'Training',  emoji: '💪' },
-  { to: '/education', label: 'Education', emoji: '📚' },
-  { to: '/finance',   label: 'Finance',   emoji: '💰' },
+  { to: '/',          label: 'Today',    emoji: '☀️' },
+  { to: '/habits',    label: 'Habits',   emoji: '✅' },
+  { to: '/training',  label: 'Training', emoji: '💪' },
+  { to: '/finance',   label: 'Finance',  emoji: '💰' },
+  { to: '/review',    label: 'Review',   emoji: '📋' },
+]
+
+const DESKTOP_NAV = [
+  ...NAV,
+  { to: '/goals',     label: 'Goals',    emoji: '🎯' },
+  { to: '/education', label: 'Education',emoji: '📚' },
 ]
 
 export default function Layout({ children }) {
@@ -17,7 +22,7 @@ export default function Layout({ children }) {
       <header className="hidden sm:flex items-center gap-3 px-6 py-4 bg-white border-b border-gray-100 sticky top-0 z-30">
         <span className="text-xl font-bold text-brand-600 tracking-tight">Liam's Tracker</span>
         <nav className="flex gap-1 ml-6">
-          {NAV.map(({ to, label, emoji }) => (
+          {DESKTOP_NAV.map(({ to, label, emoji }) => (
             <NavLink
               key={to}
               to={to}

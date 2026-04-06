@@ -240,16 +240,13 @@ export default function QuickAdd() {
   const inputRef   = useRef(null)
   const prevType   = useRef(null)
 
-  // Re-parse on input change
+  // Re-parse on input change — always sync parsed values so amount/fields
+  // update as the user keeps typing (e.g. "salary 4" → "salary 4000")
   useEffect(() => {
     const parsed = parse(input, { habits })
     setIntent(parsed)
-
-    // Re-init fields only when intent type changes
-    if (parsed.type !== prevType.current) {
-      setFields(initFields(parsed))
-      prevType.current = parsed.type
-    }
+    setFields(initFields(parsed))
+    prevType.current = parsed.type
   }, [input, habits])
 
   // Auto-focus input when modal opens
