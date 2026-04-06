@@ -8,24 +8,28 @@ import { load, save, uid } from '../utils/storage'
 export function useStore(key) {
   const [items, setItems] = useState(() => load(key) ?? [])
 
-  const persist = useCallback((next) => {
-    setItems(next)
-    save(key, next)
+  // Functional updater — avoids stale-closure bugs when called in a loop
+  const persist = useCallback((updater) => {
+    setItems(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      save(key, next)
+      return next
+    })
   }, [key])
 
   const add = useCallback((item) => {
     const record = { ...item, id: uid(), createdAt: new Date().toISOString() }
-    persist([...items, record])
+    persist(prev => [...prev, record])
     return record
-  }, [items, persist])
+  }, [persist])
 
   const update = useCallback((id, patch) => {
-    persist(items.map(i => i.id === id ? { ...i, ...patch, updatedAt: new Date().toISOString() } : i))
-  }, [items, persist])
+    persist(prev => prev.map(i => i.id === id ? { ...i, ...patch, updatedAt: new Date().toISOString() } : i))
+  }, [persist])
 
   const remove = useCallback((id) => {
-    persist(items.filter(i => i.id !== id))
-  }, [items, persist])
+    persist(prev => prev.filter(i => i.id !== id))
+  }, [persist])
 
   return { items, add, update, remove }
 }
