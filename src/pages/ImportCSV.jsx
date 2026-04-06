@@ -394,6 +394,7 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
   const [aiKey, setAiKey]             = useState('')
   const [aiRunning, setAiRunning]     = useState(false)
   const [aiDone, setAiDone]           = useState(false)
+  const [aiError, setAiError]         = useState(null)
   const [showAiPanel, setShowAiPanel] = useState(false)
 
   const update = (index, patch) => {
@@ -422,6 +423,7 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
   const runAI = async () => {
     if (!aiKey || uncategorized.length === 0) return
     setAiRunning(true)
+    setAiError(null)
     try {
       const payload = uncategorized.map(r => ({
         id: r._importId, description: r.description, amount: r.amount, type: r.type,
@@ -451,26 +453,36 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
         }),
       })
       const data = await resp.json()
+
+      if (!resp.ok) {
+        const msg = data?.error?.message || `API error ${resp.status}`
+        setAiError(msg)
+        return
+      }
+
       const text = data?.content?.[0]?.text || ''
       const match = text.match(/\[[\s\S]*\]/)
-      if (match) {
-        const results = JSON.parse(match[0])
-        const byId = Object.fromEntries(results.map(r => [r.id, r]))
-        setRows(rs => rs.map(r => {
-          const ai = byId[r._importId]
-          if (!ai) return r
-          return {
-            ...r,
-            category:            ai.category || r.category,
-            type:                ai.type || r.type,
-            confidenceScore:     ai.confidence || 0.7,
-            categorizationSource: 'ai',
-          }
-        }))
-        setAiDone(true)
+      if (!match) {
+        setAiError('Unexpected response from API — no JSON array found.')
+        return
       }
+
+      const results = JSON.parse(match[0])
+      const byId = Object.fromEntries(results.map(r => [r.id, r]))
+      setRows(rs => rs.map(r => {
+        const ai = byId[r._importId]
+        if (!ai) return r
+        return {
+          ...r,
+          category:             ai.category || r.category,
+          type:                 ai.type || r.type,
+          confidenceScore:      ai.confidence || 0.7,
+          categorizationSource: 'ai',
+        }
+      }))
+      setAiDone(true)
     } catch (e) {
-      alert('AI categorization failed: ' + e.message)
+      setAiError(e.message)
     } finally {
       setAiRunning(false)
     }
@@ -570,6 +582,9 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
               </div>
               {aiDone && (
                 <p className="text-xs text-green-600 mt-2">✓ AI categorization applied. Review the results above.</p>
+              )}
+              {aiError && (
+                <p className="text-xs text-red-600 mt-2">✗ {aiError}</p>
               )}
             </Card>
           )}
