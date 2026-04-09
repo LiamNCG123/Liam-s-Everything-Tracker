@@ -566,7 +566,7 @@ export default function Today() {
     <div className="flex flex-col gap-4">
       {/* Date heading */}
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Today</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Today</h1>
         <span className="text-sm text-gray-400">{dateLabel}</span>
       </div>
 

@@ -806,7 +806,7 @@ export default function Training() {
     <Toast message="Session logged." visible={sessionToast} />
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Training</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Training</h1>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => setView('adhoc')}>Quick log</Button>
           {tab === 'programmes' && (

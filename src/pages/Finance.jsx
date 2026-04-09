@@ -1096,7 +1096,7 @@ export default function Finance() {
     <div>
       {/* Header with month nav */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h1 className="text-2xl font-bold text-gray-900">Finance</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Finance</h1>
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => navigate('/finance/import')}

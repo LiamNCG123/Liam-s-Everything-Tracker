@@ -10,8 +10,8 @@ export function Card({ children, className = '' }) {
 
 export function PageHeader({ title, action }) {
   return (
-    <div className="flex items-center justify-between mb-6">
-      <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+    <div className="flex items-center justify-between mb-8">
+      <h1 className="text-3xl font-bold tracking-tight text-gray-900">{title}</h1>
       {action}
     </div>
   )
@@ -183,8 +183,8 @@ export function StatCard({ label, value, sub, icon }) {
     <Card className="p-4 flex items-start gap-3">
       {icon && <span className="text-2xl mt-0.5">{icon}</span>}
       <div className="min-w-0">
-        <div className="text-2xl font-bold text-gray-900 leading-tight">{value}</div>
-        <div className="text-sm font-medium text-gray-600">{label}</div>
+        <div className="text-3xl font-bold text-gray-900 leading-tight tabular-nums">{value}</div>
+        <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mt-0.5">{label}</div>
         {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
       </div>
     </Card>
