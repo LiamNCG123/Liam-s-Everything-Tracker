@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { useStore } from '../hooks/useStore'
 import { today } from '../utils/storage'
 import { PageHeader, Button, Modal, Input, EmptyState, CompletionBanner } from '../components/ui'
@@ -12,6 +12,13 @@ const PALETTE = [
 ]
 
 const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+
+const TIME_SLOTS = [
+  { key: 'morning',   label: 'Morning',   icon: '🌅' },
+  { key: 'afternoon', label: 'Afternoon', icon: '☀️'  },
+  { key: 'evening',   label: 'Evening',   icon: '🌙' },
+  { key: 'anytime',   label: 'Anytime',   icon: '◌'  },
+]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -29,7 +36,6 @@ function migrateCompletions(completions) {
 function calcCurrentStreak(completions) {
   const set = new Set(completions)
   const d = new Date()
-  // If today isn't done yet, start counting from yesterday
   if (!set.has(toStr(d))) d.setDate(d.getDate() - 1)
   let streak = 0
   while (set.has(toStr(d))) {
@@ -114,14 +120,21 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
             className="w-3 h-3 rounded-full shrink-0 shadow-sm"
             style={{ backgroundColor: habit.color }}
           />
-          <span className="text-sm font-medium text-gray-800 truncate leading-tight">
-            {habit.name}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-medium text-gray-800 truncate leading-tight">
+              {habit.name}
+            </span>
+            {habit.cue && (
+              <span className="text-[10px] text-gray-400 leading-tight truncate">
+                {habit.cue}
+              </span>
+            )}
+          </div>
         </div>
       </td>
 
       {/* Day cells */}
-      {days.map(({ dateStr, dow }) => (
+      {days.map(({ dateStr }) => (
         <Cell
           key={dateStr}
           dateStr={dateStr}
@@ -187,6 +200,30 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
   )
 }
 
+// Group header row — sticky-left cell keeps label visible while scrolling
+function SlotHeader({ slot, habits, todayStr }) {
+  const doneCount = habits.filter(h => migrateCompletions(h.completions).includes(todayStr)).length
+  const allDone = doneCount === habits.length
+
+  return (
+    <tr>
+      <td className="sticky left-0 z-10 bg-gray-50 px-3 pt-3.5 pb-1 min-w-[120px] max-w-[160px] border-t border-gray-100">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm leading-none">{slot.icon}</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none">
+            {slot.label}
+          </span>
+          <span className={`text-[10px] font-semibold leading-none ${allDone ? 'text-green-600' : 'text-gray-400'}`}>
+            {doneCount}/{habits.length}{allDone ? ' ✓' : ''}
+          </span>
+        </div>
+      </td>
+      {/* Fill remaining columns with the same background */}
+      <td colSpan={999} className="bg-gray-50 border-t border-gray-100" />
+    </tr>
+  )
+}
+
 function ColorPicker({ value, onChange }) {
   return (
     <div>
@@ -208,9 +245,34 @@ function ColorPicker({ value, onChange }) {
   )
 }
 
+function TimeOfDayPicker({ value, onChange }) {
+  return (
+    <div>
+      <span className="text-sm font-medium text-gray-700 block mb-2">Time of day</span>
+      <div className="grid grid-cols-4 gap-1.5">
+        {TIME_SLOTS.map(slot => (
+          <button
+            key={slot.key}
+            type="button"
+            onClick={() => onChange(slot.key)}
+            className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-colors ${
+              value === slot.key
+                ? 'bg-brand-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <span className="text-base leading-none">{slot.icon}</span>
+            <span>{slot.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '' }
+const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '', timeOfDay: 'anytime', cue: '' }
 
 export default function Habits() {
   const { items: habits, add, update, remove } = useStore('habits')
@@ -245,15 +307,28 @@ export default function Habits() {
     update(id, { completions: next })
   }
 
-  const openAdd  = () => { setForm({ ...EMPTY_FORM, color: PALETTE[habits.length % PALETTE.length] }); setModal('add') }
-  const openEdit = (h) => { setForm({ name: h.name, color: h.color, notes: h.notes || '' }); setModal(h) }
+  const openAdd  = () => {
+    setForm({ ...EMPTY_FORM, color: PALETTE[habits.length % PALETTE.length] })
+    setModal('add')
+  }
+  const openEdit = (h) => {
+    setForm({
+      name: h.name, color: h.color, notes: h.notes || '',
+      timeOfDay: h.timeOfDay || 'anytime', cue: h.cue || '',
+    })
+    setModal(h)
+  }
 
   const handleSave = () => {
     if (!form.name.trim()) return
+    const payload = {
+      name: form.name, color: form.color, notes: form.notes,
+      timeOfDay: form.timeOfDay, cue: form.cue.trim(),
+    }
     if (modal === 'add') {
-      add({ name: form.name, color: form.color, notes: form.notes, completions: [] })
+      add({ ...payload, completions: [] })
     } else {
-      update(modal.id, { name: form.name, color: form.color, notes: form.notes })
+      update(modal.id, payload)
     }
     setModal(null)
   }
@@ -264,10 +339,31 @@ export default function Habits() {
     setModal(null)
   }
 
+  // Group habits by time slot — only used if at least one habit has a specific time set
+  const useGroups = habits.some(h => h.timeOfDay && h.timeOfDay !== 'anytime')
+  const grouped = TIME_SLOTS
+    .map(slot => ({
+      ...slot,
+      habits: habits.filter(h => (h.timeOfDay || 'anytime') === slot.key),
+    }))
+    .filter(g => g.habits.length > 0)
+
   // Summary stats
   const allCurrentStreaks = habits.map(h => calcCurrentStreak(migrateCompletions(h.completions)))
   const doneToday = habits.filter(h => migrateCompletions(h.completions).includes(todayStr)).length
   const topStreak = allCurrentStreaks.length ? Math.max(...allCurrentStreaks) : 0
+
+  const habitRows = (list) => list.map(habit => (
+    <HabitRow
+      key={habit.id}
+      habit={{ ...habit, completions: migrateCompletions(habit.completions) }}
+      days={days}
+      todayStr={todayStr}
+      onToggle={handleToggle}
+      onEdit={openEdit}
+      onDelete={(id) => handleDelete(id, habits.find(h => h.id === id)?.name)}
+    />
+  ))
 
   return (
     <div>
@@ -329,7 +425,6 @@ export default function Habits() {
           <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
             <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
               <thead>
-                {/* Day numbers */}
                 <tr>
                   <th className="sticky left-0 z-20 bg-white min-w-[120px] max-w-[160px]" />
                   {days.map(({ day, dateStr }) => (
@@ -359,17 +454,15 @@ export default function Habits() {
               </thead>
 
               <tbody className="divide-y divide-gray-50">
-                {habits.map((habit, i) => (
-                  <HabitRow
-                    key={habit.id}
-                    habit={{ ...habit, completions: migrateCompletions(habit.completions) }}
-                    days={days}
-                    todayStr={todayStr}
-                    onToggle={handleToggle}
-                    onEdit={openEdit}
-                    onDelete={(id) => handleDelete(id, habits.find(h => h.id === id)?.name)}
-                  />
-                ))}
+                {useGroups
+                  ? grouped.map(slot => (
+                    <Fragment key={slot.key}>
+                      <SlotHeader slot={slot} habits={slot.habits} todayStr={todayStr} />
+                      {habitRows(slot.habits)}
+                    </Fragment>
+                  ))
+                  : habitRows(habits)
+                }
               </tbody>
             </table>
           </div>
@@ -400,6 +493,16 @@ export default function Habits() {
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
             autoFocus
           />
+          <TimeOfDayPicker
+            value={form.timeOfDay}
+            onChange={v => setForm(f => ({ ...f, timeOfDay: v }))}
+          />
+          <Input
+            label="Cue (optional)"
+            placeholder="e.g. after coffee, before bed, after gym…"
+            value={form.cue}
+            onChange={e => setForm(f => ({ ...f, cue: e.target.value }))}
+          />
           <ColorPicker
             value={form.color}
             onChange={c => setForm(f => ({ ...f, color: c }))}
@@ -413,8 +516,13 @@ export default function Habits() {
           {/* Preview */}
           {form.name && (
             <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: form.color }} />
-              <span className="text-sm font-medium text-gray-800">{form.name}</span>
+              <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: form.color }} />
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium text-gray-800">{form.name}</span>
+                {form.cue && (
+                  <span className="text-xs text-gray-400">{form.cue}</span>
+                )}
+              </div>
               <div className="ml-auto flex gap-1">
                 {[...Array(7)].map((_, i) => (
                   <div

@@ -218,13 +218,27 @@ function ProgrammeEditor({ initial, onSave, onCancel }) {
 
 // ─── Session Logger sub-components ───────────────────────────────────────────
 
-function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet }) {
+function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets }) {
   const target = describeItem(entry)
+  const doneSets = (entry.sets || []).filter(s => s.done || s.reps)
+  const delta = doneSets.length ? calcStrengthDelta(entry.sets, prevSets) : null
+
+  const prevSummary = prevSets?.length
+    ? prevSets.slice(0, 4).map(s => `${s.reps}×${s.weight || 'BW'}`).join(', ')
+      + (prevSets.length > 4 ? '…' : '')
+    : null
+
   return (
     <Card className="overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
-        <div className="font-semibold text-sm text-gray-900">{entry.name}</div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="font-semibold text-sm text-gray-900">{entry.name}</div>
+          {delta && <DeltaBadge delta={delta} />}
+        </div>
         {target && <div className="text-xs text-brand-500 mt-0.5">Target: {target}</div>}
+        {prevSummary && (
+          <div className="text-xs text-gray-400 mt-0.5">Last: {prevSummary}</div>
+        )}
         {entry.notes && <div className="text-xs text-gray-400 mt-0.5 italic">{entry.notes}</div>}
       </div>
       <div className="px-4 py-3">
@@ -234,41 +248,44 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet }) {
           <div>Weight</div>
           <div />
         </div>
-        {(entry.sets || []).map((set, i) => (
-          <div key={i} className="grid grid-cols-[28px_1fr_1fr_24px] gap-2 mb-2 items-center">
-            <button
-              onClick={() => onUpdateSet(i, { done: !set.done })}
-              className={`w-7 h-7 rounded-full border-2 text-xs flex items-center justify-center transition-all ${
-                set.done
-                  ? 'bg-green-500 border-green-500 text-white'
-                  : 'border-gray-300 text-gray-400 hover:border-green-400'
-              }`}
-            >
-              {set.done ? '✓' : i + 1}
-            </button>
-            <input type="number" min="0"
-              placeholder={entry.targetReps || 'Reps'}
-              value={set.reps}
-              onChange={e => onUpdateSet(i, { reps: e.target.value })}
-              onBlur={() => { if (set.reps && !set.done) onUpdateSet(i, { done: true }) }}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white"
-            />
-            <input
-              placeholder={entry.unit === 'BW' ? 'BW' : (entry.targetWeight || 'kg')}
-              value={set.weight}
-              onChange={e => onUpdateSet(i, { weight: e.target.value })}
-              className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white"
-            />
-            <button onClick={() => onRemoveSet(i)} disabled={entry.sets.length <= 1}
-              className="text-red-300 hover:text-red-500 disabled:opacity-20 text-lg leading-none">×</button>
-          </div>
-        ))}
+        {(entry.sets || []).map((set, i) => {
+          const prevSet = prevSets?.[i]
+          return (
+            <div key={i} className="grid grid-cols-[28px_1fr_1fr_24px] gap-2 mb-2 items-center">
+              <button
+                onClick={() => onUpdateSet(i, { done: !set.done })}
+                className={`w-7 h-7 rounded-full border-2 text-xs flex items-center justify-center transition-all ${
+                  set.done
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : 'border-gray-300 text-gray-400 hover:border-green-400'
+                }`}
+              >
+                {set.done ? '✓' : i + 1}
+              </button>
+              <input type="number" min="0"
+                placeholder={prevSet?.reps || entry.targetReps || 'Reps'}
+                value={set.reps}
+                onChange={e => onUpdateSet(i, { reps: e.target.value })}
+                onBlur={() => { if (set.reps && !set.done) onUpdateSet(i, { done: true }) }}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white"
+              />
+              <input
+                placeholder={entry.unit === 'BW' ? 'BW' : (prevSet?.weight || entry.targetWeight || 'kg')}
+                value={set.weight}
+                onChange={e => onUpdateSet(i, { weight: e.target.value })}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white"
+              />
+              <button onClick={() => onRemoveSet(i)} disabled={entry.sets.length <= 1}
+                className="text-red-300 hover:text-red-500 disabled:opacity-20 text-lg leading-none">×</button>
+            </div>
+          )
+        })}
         <div className="flex items-center justify-between mt-1">
           <button onClick={onAddSet} className="text-xs text-brand-500 hover:text-brand-700 font-medium">
             + Add set
           </button>
           <span className="text-xs text-gray-400">
-            {(entry.sets || []).filter(s => s.done || s.reps).length}/{(entry.sets || []).length} logged
+            {doneSets.length}/{(entry.sets || []).length} logged
           </span>
         </div>
       </div>
@@ -361,6 +378,62 @@ function buildLastUsed(prevSessions) {
   return map
 }
 
+// Build map: { exerciseNameLower → [{reps, weight}] } from a single session's done sets
+function buildPrevExerciseData(session) {
+  const map = {}
+  if (!session) return map
+  ;(session.exercises || []).forEach(ex => {
+    if (ex.type !== 'strength' || !ex.name) return
+    const done = (ex.sets || []).filter(s => s.reps || s.weight)
+    if (done.length) map[ex.name.toLowerCase()] = done
+  })
+  return map
+}
+
+// Calculate improvement of currentSets vs prevSets.
+// Returns { dir: 'up'|'down'|'same', label: string } or null if not enough data.
+function calcStrengthDelta(currentSets, prevSets) {
+  if (!prevSets?.length) return null
+  const done = (currentSets || []).filter(s => s.done || s.reps)
+  if (!done.length) return null
+
+  const parseW = v => { const n = parseFloat(v); return isNaN(n) ? null : n }
+
+  const prevWeights = prevSets.map(s => parseW(s.weight)).filter(v => v !== null)
+  const curWeights  = done.map(s => parseW(s.weight)).filter(v => v !== null)
+
+  if (prevWeights.length && curWeights.length) {
+    const d = Math.max(...curWeights) - Math.max(...prevWeights)
+    if (d > 0) return { dir: 'up',   label: `+${d}kg` }
+    if (d < 0) return { dir: 'down', label: `${d}kg` }
+  }
+
+  const prevReps = prevSets.reduce((a, s) => a + (parseInt(s.reps) || 0), 0)
+  const curReps  = done.reduce((a, s) => a + (parseInt(s.reps) || 0), 0)
+  if (prevReps && curReps) {
+    const d = curReps - prevReps
+    if (d > 0) return { dir: 'up',   label: `+${d} reps` }
+    if (d < 0) return { dir: 'down', label: `${d} reps` }
+  }
+
+  return { dir: 'same', label: 'Matched last session' }
+}
+
+function DeltaBadge({ delta }) {
+  if (!delta) return null
+  const cls = delta.dir === 'up'
+    ? 'text-green-700 bg-green-50 border-green-200'
+    : delta.dir === 'down'
+    ? 'text-red-500 bg-red-50 border-red-200'
+    : 'text-gray-400 bg-gray-50 border-gray-200'
+  const arrow = delta.dir === 'up' ? '↑' : delta.dir === 'down' ? '↓' : '→'
+  return (
+    <span className={`text-[10px] font-semibold border rounded-full px-2 py-0.5 whitespace-nowrap ${cls}`}>
+      {arrow} {delta.label}
+    </span>
+  )
+}
+
 function initEntries(day, prevSessions = []) {
   const lastUsed = buildLastUsed(prevSessions)
 
@@ -412,6 +485,9 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
   })
 
   const anyprefilled = entries.some(e => e._prefilled)
+
+  // Per-exercise previous sets — keyed by exercise name (lowercase)
+  const prevExData = useMemo(() => buildPrevExerciseData(prevSessions[0]), [prevSessions])
 
   const updateEntry = (idx, patch) =>
     setEntries(es => es.map((e, i) => i === idx ? { ...e, ...patch } : e))
@@ -481,7 +557,8 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
             <StrengthLogger key={entry.id || idx} entry={entry}
               onUpdateSet={(si, p) => updateSet(idx, si, p)}
               onAddSet={() => addSet(idx)}
-              onRemoveSet={(si) => removeSet(idx, si)} />
+              onRemoveSet={(si) => removeSet(idx, si)}
+              prevSets={prevExData[entry.name?.toLowerCase()] || null} />
           )
           if (entry.type === 'cardio') return (
             <CardioLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)} />
@@ -512,11 +589,12 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
 
 // ─── History card ─────────────────────────────────────────────────────────────
 
-function HistoryCard({ session }) {
+function HistoryCard({ session, prevSession }) {
   const [open, setOpen] = useState(false)
   const exCount = session.exercises?.length ?? 0
   const subtitle = [session.programmeName, fmtDate(session.date), `${exCount} exercise${exCount !== 1 ? 's' : ''}`]
     .filter(Boolean).join(' · ')
+  const prevExData = useMemo(() => buildPrevExerciseData(prevSession), [prevSession])
 
   return (
     <Card className="overflow-hidden">
@@ -549,9 +627,14 @@ function HistoryCard({ session }) {
             }
             if (ex.type === 'strength') {
               const logged = (ex.sets || []).filter(s => s.reps || s.done)
+              const prev   = prevExData[ex.name?.toLowerCase()]
+              const delta  = calcStrengthDelta(logged.map(s => ({ ...s, done: true })), prev)
               return (
                 <div key={i} className="py-1.5 border-b border-gray-50 last:border-0">
-                  <div className="text-sm font-medium text-gray-800 mb-1">{ex.name}</div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <div className="text-sm font-medium text-gray-800">{ex.name}</div>
+                    {delta && <DeltaBadge delta={delta} />}
+                  </div>
                   <div className="flex flex-wrap gap-1">
                     {logged.length > 0
                       ? logged.map((s, j) => (
@@ -867,7 +950,16 @@ export default function Training() {
           />
         ) : (
           <div className="flex flex-col gap-3">
-            {sortedSessions.map(s => <HistoryCard key={s.id} session={s} />)}
+            {sortedSessions.map(s => {
+              const prev = (s.dayId && s.programmeId)
+                ? sessions.filter(x =>
+                    x.dayId === s.dayId &&
+                    x.programmeId === s.programmeId &&
+                    x.date < s.date
+                  ).sort((a, b) => b.date.localeCompare(a.date))[0] ?? null
+                : null
+              return <HistoryCard key={s.id} session={s} prevSession={prev} />
+            })}
           </div>
         )
       )}
