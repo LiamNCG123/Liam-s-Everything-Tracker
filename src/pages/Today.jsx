@@ -418,6 +418,155 @@ function GoalsSection({ goals }) {
   )
 }
 
+// ─── Needs Attention inbox ────────────────────────────────────────────────────
+
+function generateInboxItems({ habits, sessions, transactions, goals, eduItems, budgets, todayStr }) {
+  const items = []
+  const month = todayStr.slice(0, 7)
+  const now = new Date(todayStr)
+
+  // Priority 1 — at-risk habit streaks
+  habits.forEach(h => {
+    const completions = migrateCompletions(h.completions)
+    if (!completions.includes(todayStr) && calcCurrentStreak(completions) > 0) {
+      const streak = calcCurrentStreak(completions)
+      items.push({
+        id: `habit-risk-${h.id}`,
+        priority: 1,
+        label: `"${h.name}" streak at risk`,
+        sub: `${streak}-day streak — complete before midnight`,
+        to: '/habits',
+      })
+    }
+  })
+
+  // Priority 1 — uncategorized transactions this month
+  const monthTx = transactions.filter(t => t.date?.startsWith(month))
+  const uncatCount = monthTx.filter(t => !t.category || t.category === 'Uncategorized').length
+  if (uncatCount > 0) {
+    items.push({
+      id: 'finance-uncat',
+      priority: 1,
+      label: `${uncatCount} uncategorized transaction${uncatCount > 1 ? 's' : ''}`,
+      sub: 'Review and categorize in Finance',
+      to: '/finance',
+    })
+  }
+
+  // Priority 2 — over-budget categories
+  const currentBudget = budgets.find(b => b.month === month)
+  if (currentBudget?.items?.length) {
+    currentBudget.items.forEach(bi => {
+      const spent = monthTx
+        .filter(t => t.type === 'expense' && t.category === bi.category)
+        .reduce((s, t) => s + Number(t.amount || 0), 0)
+      const limit = Number(bi.limit || 0)
+      if (limit > 0 && spent > limit) {
+        items.push({
+          id: `budget-over-${bi.category}`,
+          priority: 2,
+          label: `${bi.category} over budget`,
+          sub: `Spent A$${Math.round(spent)} of A$${Math.round(limit)} limit`,
+          to: '/finance',
+        })
+      }
+    })
+  }
+
+  // Priority 2 — overdue goals (past target date, still In Progress)
+  const overdueIds = new Set()
+  goals.filter(g => g.status === 'In Progress' && g.targetDate && g.targetDate < todayStr).forEach(g => {
+    overdueIds.add(g.id)
+    items.push({
+      id: `goal-overdue-${g.id}`,
+      priority: 2,
+      label: `"${g.title}" overdue`,
+      sub: `Target date was ${fmtDate(g.targetDate)}`,
+      to: '/goals',
+    })
+  })
+
+  // Priority 2 — stalled goals (14+ days no update, not already flagged as overdue)
+  goals.filter(g => g.status === 'In Progress' && !overdueIds.has(g.id)).forEach(g => {
+    const lastUpdate = g.updatedAt || g.createdAt
+    if (lastUpdate) {
+      const daysSince = Math.floor((now - new Date(lastUpdate)) / 86400000)
+      if (daysSince >= 14) {
+        items.push({
+          id: `goal-stalled-${g.id}`,
+          priority: 2,
+          label: `"${g.title}" stalled`,
+          sub: `No update in ${daysSince} days`,
+          to: '/goals',
+        })
+      }
+    }
+  })
+
+  // Priority 3 — stalled education (In Progress, 14+ days no update)
+  eduItems.filter(e => e.status === 'In Progress').forEach(e => {
+    const lastUpdate = e.updatedAt || e.createdAt
+    if (lastUpdate) {
+      const daysSince = Math.floor((now - new Date(lastUpdate)) / 86400000)
+      if (daysSince >= 14) {
+        items.push({
+          id: `edu-stalled-${e.id}`,
+          priority: 3,
+          label: `"${e.title}" stalled`,
+          sub: `No progress in ${daysSince} days`,
+          to: '/education',
+        })
+      }
+    }
+  })
+
+  return items.sort((a, b) => a.priority - b.priority)
+}
+
+function InboxSection({ items }) {
+  const navigate = useNavigate()
+  const [expanded, setExpanded] = useState(false)
+
+  if (!items.length) return null
+
+  const visible = expanded ? items : items.slice(0, 3)
+  const dotColor = { 1: 'bg-red-400', 2: 'bg-amber-400', 3: 'bg-gray-300' }
+
+  return (
+    <Card className="p-4 border-amber-100">
+      <SectionHeader
+        emoji="📋"
+        title="Needs Attention"
+        meta={`${items.length} item${items.length > 1 ? 's' : ''}`}
+      />
+      <div className="flex flex-col divide-y divide-gray-50">
+        {visible.map(item => (
+          <button
+            key={item.id}
+            onClick={() => navigate(item.to)}
+            className="flex items-start gap-3 py-2.5 text-left w-full hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColor[item.priority]}`} />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-gray-800">{item.label}</div>
+              {item.sub && <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>}
+            </div>
+            <span className="text-xs text-gray-400 shrink-0 mt-1">→</span>
+          </button>
+        ))}
+      </div>
+      {items.length > 3 && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="mt-1 text-xs text-indigo-500 hover:underline w-full text-center"
+        >
+          {expanded ? 'Show less' : `+${items.length - 3} more`}
+        </button>
+      )}
+    </Card>
+  )
+}
+
 // ─── Completion bar ───────────────────────────────────────────────────────────
 
 // Cross-module status signals ─────────────────────────────────────────────────
@@ -538,6 +687,7 @@ export default function Today() {
   const { items: transactions                       } = useStore('financeTransactions')
   const { items: goals                              } = useStore('goals')
   const { items: eduItems                           } = useStore('education')
+  const { items: budgets                            } = useStore('monthlyBudgets')
 
   const todayStr = today()
   const dateLabel = new Date().toLocaleDateString('en-AU', {
@@ -577,6 +727,11 @@ export default function Today() {
         sessions={sessions}
         transactions={transactions}
         eduItems={eduItems}
+      />
+
+      {/* Needs Attention inbox */}
+      <InboxSection
+        items={generateInboxItems({ habits, sessions, transactions, goals, eduItems, budgets, todayStr })}
       />
 
       {/* Module sections */}
