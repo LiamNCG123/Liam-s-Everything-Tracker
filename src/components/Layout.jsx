@@ -3,17 +3,13 @@ import QuickAdd from './QuickAdd'
 
 // Each route carries its own accent color for the active pill
 const NAV = [
-  { to: '/',         label: 'Today',    emoji: '☀️',  pill: 'bg-indigo-100', text: 'text-indigo-600'  },
-  { to: '/habits',   label: 'Habits',   emoji: '✅',  pill: 'bg-violet-100', text: 'text-violet-600'  },
-  { to: '/training', label: 'Training', emoji: '💪',  pill: 'bg-orange-100', text: 'text-orange-600'  },
-  { to: '/finance',  label: 'Finance',  emoji: '💰',  pill: 'bg-emerald-100',text: 'text-emerald-600' },
-  { to: '/review',   label: 'Review',   emoji: '📋',  pill: 'bg-sky-100',    text: 'text-sky-600'     },
-]
-
-const DESKTOP_NAV = [
-  ...NAV,
-  { to: '/goals',     label: 'Goals',     emoji: '🎯', pill: 'bg-blue-100',  text: 'text-blue-600'  },
-  { to: '/education', label: 'Education', emoji: '📚', pill: 'bg-amber-100', text: 'text-amber-600' },
+  { to: '/',          label: 'Today',     emoji: '☀️',  pill: 'bg-indigo-100', text: 'text-indigo-600'  },
+  { to: '/habits',    label: 'Habits',    emoji: '✅',  pill: 'bg-violet-100', text: 'text-violet-600'  },
+  { to: '/training',  label: 'Training',  emoji: '💪',  pill: 'bg-orange-100', text: 'text-orange-600'  },
+  { to: '/finance',   label: 'Finance',   emoji: '💰',  pill: 'bg-emerald-100',text: 'text-emerald-600' },
+  { to: '/goals',     label: 'Goals',     emoji: '🎯',  pill: 'bg-blue-100',   text: 'text-blue-600'    },
+  { to: '/education', label: 'Education', emoji: '📚',  pill: 'bg-amber-100',  text: 'text-amber-600'   },
+  { to: '/review',    label: 'Review',    emoji: '📋',  pill: 'bg-sky-100',    text: 'text-sky-600'     },
 ]
 
 export default function Layout({ children }) {
@@ -24,7 +20,7 @@ export default function Layout({ children }) {
       <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-100 sticky top-0 z-30">
         <span className="text-lg font-bold text-gray-900 tracking-tight">Liam's Tracker</span>
         <nav className="flex gap-0.5 ml-6">
-          {DESKTOP_NAV.map(({ to, label, emoji, pill, text }) => (
+          {NAV.map(({ to, label, emoji, pill, text }) => (
             <NavLink
               key={to}
               to={to}
@@ -60,7 +56,7 @@ export default function Layout({ children }) {
           >
             {({ isActive }) => (
               <>
-                <span className={`text-xl leading-none px-3.5 py-1.5 rounded-2xl transition-colors ${isActive ? pill : ''}`}>
+                <span className={`text-lg leading-none px-2.5 py-1 rounded-2xl transition-colors ${isActive ? pill : ''}`}>
                   {emoji}
                 </span>
                 <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-gray-400'}`}>
