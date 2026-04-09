@@ -1,4 +1,4 @@
-# Liam's Everything Tracker — Developer Handoff
+# OnTrack — Developer Handoff
 
 Personal-use web app replacing Google Sheets across five life domains.
 Local-first, no backend, no auth. All data lives in `localStorage`.

@@ -18,7 +18,7 @@ export default function Layout({ children }) {
 
       {/* Top bar — desktop only */}
       <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-100 sticky top-0 z-30">
-        <span className="text-lg font-bold text-gray-900 tracking-tight">Liam's Tracker</span>
+        <span className="text-lg font-bold text-gray-900 tracking-tight">OnTrack</span>
         <nav className="flex gap-0.5 ml-6">
           {NAV.map(({ to, label, emoji, pill, text }) => (
             <NavLink
