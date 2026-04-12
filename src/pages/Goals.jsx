@@ -1,6 +1,21 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
 import { fmtDate } from '../utils/storage'
+
+// Minimal streak helpers (mirrored from Habits.jsx)
+function migrateCompletions(raw) {
+  if (!raw?.length) return []
+  if (typeof raw[0] === 'string') return raw
+  return raw.filter(c => c.done).map(c => c.date)
+}
+function calcCurrentStreak(completions) {
+  const set = new Set(completions)
+  const d = new Date()
+  if (!set.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1)
+  let streak = 0
+  while (set.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1) }
+  return streak
+}
 import { useFlash } from '../utils/microReward'
 import {
   PageHeader, Button, Card, Badge, Modal,
@@ -35,6 +50,7 @@ const EMPTY_FORM = {
 
 export default function Goals() {
   const { items: goals, add, update, remove } = useStore('goals')
+  const { items: habits } = useStore('habits')
   const [modal, setModal] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [filter, setFilter]       = useState('All')
@@ -191,6 +207,37 @@ export default function Goals() {
                 </div>
                 <ProgressBar value={goal.progress ?? 0} color={goal.status === 'Completed' ? 'green' : 'indigo'} />
               </div>
+
+              {/* Linked habits */}
+              {(() => {
+                const linked = habits.filter(h => h.goalId === goal.id)
+                if (!linked.length) return null
+                return (
+                  <div className="mt-3 pt-3 border-t border-gray-50">
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Supporting habits</div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {linked.map(h => {
+                        const streak = calcCurrentStreak(migrateCompletions(h.completions))
+                        const atRisk = streak > 0 && !migrateCompletions(h.completions).includes(new Date().toISOString().slice(0, 10))
+                        return (
+                          <span
+                            key={h.id}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${atRisk ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}
+                          >
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
+                            {h.name}
+                            {streak > 0 && (
+                              <span className={`font-semibold ${streak >= 7 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                {streak >= 7 ? '🔥' : ''}{streak}d
+                              </span>
+                            )}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
 
               <div className="flex gap-4 mt-3 text-xs text-gray-400">
                 {goal.targetDate && <span>🗓 {fmtDate(goal.targetDate)}</span>}

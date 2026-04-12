@@ -84,8 +84,9 @@ function streakTier(streak) {
   return 'none'
 }
 
-function HabitsSection({ habits, todayStr, onToggle, flashIds }) {
+function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
   const navigate = useNavigate()
+  const goalMap = Object.fromEntries((goals || []).map(g => [g.id, g.title]))
 
   const enriched = habits.map(h => {
     const completions = migrateCompletions(h.completions)
@@ -171,12 +172,15 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds }) {
                 {(h.done || flashing) && <span className="text-white text-xs font-bold">✓</span>}
               </span>
 
-              {/* Color dot + name */}
+              {/* Color dot + name + goal tag */}
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
-              <span className={`flex-1 text-sm font-medium ${
-                h.done ? 'line-through text-gray-400' : 'text-gray-800'
-              }`}>
-                {h.name}
+              <span className="flex-1 flex flex-col min-w-0">
+                <span className={`text-sm font-medium ${h.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                  {h.name}
+                </span>
+                {h.goalId && goalMap[h.goalId] && (
+                  <span className="text-[10px] text-brand-500 leading-tight truncate">→ {goalMap[h.goalId]}</span>
+                )}
               </span>
 
               {/* Streak badge — tiered visuals */}
@@ -520,6 +524,29 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
     }
   })
 
+  // Priority 2 — streak nudge: habit linked to a goal with 7+ day streak
+  // and goal hasn't been updated in 7+ days
+  habits.forEach(h => {
+    if (!h.goalId) return
+    const completions = migrateCompletions(h.completions)
+    const streak = calcCurrentStreak(completions)
+    if (streak < 7) return
+    const linkedGoal = goals.find(g => g.id === h.goalId && g.status === 'In Progress')
+    if (!linkedGoal) return
+    const lastUpdate = linkedGoal.updatedAt || linkedGoal.createdAt
+    if (!lastUpdate) return
+    const daysSince = Math.floor((now - new Date(lastUpdate)) / 86400000)
+    if (daysSince >= 7) {
+      items.push({
+        id: `streak-nudge-${h.id}`,
+        priority: 2,
+        label: `"${h.name}" is on a ${streak}-day streak`,
+        sub: `Time to update progress on "${linkedGoal.title}"`,
+        to: '/goals',
+      })
+    }
+  })
+
   return items.sort((a, b) => a.priority - b.priority)
 }
 
@@ -740,6 +767,7 @@ export default function Today() {
         todayStr={todayStr}
         onToggle={handleHabitToggle}
         flashIds={flashIds}
+        goals={goals}
       />
       <TrainingSection
         programmes={programmes}

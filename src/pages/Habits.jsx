@@ -104,7 +104,7 @@ function Cell({ dateStr, color, done, isToday, isFuture, onToggle }) {
   )
 }
 
-function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
+function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle }) {
   const completions = migrateCompletions(habit.completions)
   const set = new Set(completions)
   const current = calcCurrentStreak(completions)
@@ -127,6 +127,11 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete }) {
             {habit.cue && (
               <span className="text-[10px] text-gray-400 leading-tight truncate">
                 {habit.cue}
+              </span>
+            )}
+            {goalTitle && (
+              <span className="text-[10px] text-brand-500 leading-tight truncate">
+                → {goalTitle}
               </span>
             )}
           </div>
@@ -245,6 +250,26 @@ function ColorPicker({ value, onChange }) {
   )
 }
 
+function GoalPicker({ value, onChange, goals }) {
+  const active = goals.filter(g => g.status === 'In Progress' || g.status === 'Not Started')
+  if (!active.length) return null
+  return (
+    <div>
+      <span className="text-sm font-medium text-gray-700 block mb-1">Contributing to goal (optional)</span>
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white transition"
+      >
+        <option value="">— none —</option>
+        {active.map(g => (
+          <option key={g.id} value={g.id}>{g.title}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 function TimeOfDayPicker({ value, onChange }) {
   return (
     <div>
@@ -272,10 +297,12 @@ function TimeOfDayPicker({ value, onChange }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '', timeOfDay: 'anytime', cue: '' }
+const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '', timeOfDay: 'anytime', cue: '', goalId: '' }
 
 export default function Habits() {
   const { items: habits, add, update, remove } = useStore('habits')
+  const { items: goals } = useStore('goals')
+  const goalMap = Object.fromEntries(goals.map(g => [g.id, g.title]))
   const [modal, setModal] = useState(null)       // null | 'add' | habit object
   const [form, setForm] = useState(EMPTY_FORM)
 
@@ -315,6 +342,7 @@ export default function Habits() {
     setForm({
       name: h.name, color: h.color, notes: h.notes || '',
       timeOfDay: h.timeOfDay || 'anytime', cue: h.cue || '',
+      goalId: h.goalId || '',
     })
     setModal(h)
   }
@@ -323,7 +351,7 @@ export default function Habits() {
     if (!form.name.trim()) return
     const payload = {
       name: form.name, color: form.color, notes: form.notes,
-      timeOfDay: form.timeOfDay, cue: form.cue.trim(),
+      timeOfDay: form.timeOfDay, cue: form.cue.trim(), goalId: form.goalId,
     }
     if (modal === 'add') {
       add({ ...payload, completions: [] })
@@ -362,6 +390,7 @@ export default function Habits() {
       onToggle={handleToggle}
       onEdit={openEdit}
       onDelete={(id) => handleDelete(id, habits.find(h => h.id === id)?.name)}
+      goalTitle={habit.goalId ? goalMap[habit.goalId] : null}
     />
   ))
 
@@ -496,6 +525,11 @@ export default function Habits() {
           <TimeOfDayPicker
             value={form.timeOfDay}
             onChange={v => setForm(f => ({ ...f, timeOfDay: v }))}
+          />
+          <GoalPicker
+            value={form.goalId}
+            onChange={v => setForm(f => ({ ...f, goalId: v }))}
+            goals={goals}
           />
           <Input
             label="Cue (optional)"
