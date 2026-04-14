@@ -22,7 +22,7 @@ const INTENT_META = {
   [INTENT.HABIT]:     { emoji: '✅', label: 'Habit',     bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-700 dark:text-indigo-400' },
   [INTENT.TRAINING]:  { emoji: '💪', label: 'Training',  bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-700 dark:text-orange-400' },
   [INTENT.EDUCATION]: { emoji: '📚', label: 'Education', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-700 dark:text-purple-400' },
-  [INTENT.UNKNOWN]:   { emoji: '❓', label: 'Unknown',   bg: 'bg-gray-50 dark:bg-gray-800',        border: 'border-gray-200 dark:border-gray-700',     text: 'text-gray-500 dark:text-gray-400'     },
+  [INTENT.UNKNOWN]:   { emoji: '❓', label: 'Unknown',   bg: 'bg-gray-50 dark:bg-dm-input',        border: 'border-gray-200 dark:border-dm-border',     text: 'text-gray-500 dark:text-dm-muted'     },
 }
 
 // ─── Field initializers ───────────────────────────────────────────────────────
@@ -71,33 +71,33 @@ function FinanceForm({ fields, onChange, habits }) {
   return (
     <div className="flex flex-col gap-2">
       <input
-        className="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+        className="w-full text-sm border border-gray-200 dark:border-dm-border rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary placeholder-gray-400 dark:placeholder-dm-muted focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         placeholder="Description"
         value={fields.description}
         onChange={e => onChange('description', e.target.value)}
       />
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">A$</span>
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dm-muted text-sm">A$</span>
           <input
             type="number" step="0.01" min="0"
-            className="w-full text-sm border border-gray-200 rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+            className="w-full text-sm border border-gray-200 rounded-xl pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
             placeholder="0.00"
             value={fields.amount}
             onChange={e => onChange('amount', e.target.value)}
           />
         </div>
-        <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shrink-0">
+        <div className="flex rounded-xl overflow-hidden border border-gray-200 dark:border-dm-border shrink-0">
           <button
             onClick={() => onChange('txType', 'expense')}
             className={`px-3 py-2 text-xs font-semibold transition-colors ${
-              fields.txType === 'expense' ? 'bg-red-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              fields.txType === 'expense' ? 'bg-red-500 text-white' : 'bg-white dark:bg-dm-input text-gray-500 dark:text-dm-muted hover:bg-gray-50 dark:hover:bg-dm-hover'
             }`}
           >Expense</button>
           <button
             onClick={() => onChange('txType', 'income')}
             className={`px-3 py-2 text-xs font-semibold transition-colors ${
-              fields.txType === 'income' ? 'bg-green-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+              fields.txType === 'income' ? 'bg-green-500 text-white' : 'bg-white dark:bg-dm-input text-gray-500 dark:text-dm-muted hover:bg-gray-50 dark:hover:bg-dm-hover'
             }`}
           >Income</button>
         </div>
@@ -105,7 +105,7 @@ function FinanceForm({ fields, onChange, habits }) {
       <select
         value={fields.category}
         onChange={e => onChange('category', e.target.value)}
-        className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+        className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
       >
         {cats.map(c => <option key={c} value={c}>{c}</option>)}
       </select>
@@ -124,7 +124,7 @@ function HabitForm({ fields, onChange, habits }) {
             onChange('habitId', e.target.value)
             if (h) onChange('habitName', h.name)
           }}
-          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         >
           <option value="">— select habit —</option>
           {habits.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
@@ -133,7 +133,7 @@ function HabitForm({ fields, onChange, habits }) {
         <p className="text-xs text-gray-400 py-2">No habits set up yet — go to the Habits page first.</p>
       )}
       {fields.habitId && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-xl px-3 py-2">
+        <p className="text-xs text-gray-500 dark:text-dm-muted bg-gray-50 dark:bg-dm-input rounded-xl px-3 py-2">
           Will mark <strong>{fields.habitName}</strong> as done for today.
         </p>
       )}
@@ -145,14 +145,14 @@ function TrainingForm({ fields, onChange }) {
   return (
     <div className="flex flex-col gap-2">
       <input
-        className="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+        className="w-full text-sm border border-gray-200 dark:border-dm-border rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary placeholder-gray-400 dark:placeholder-dm-muted focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         placeholder="Exercise name"
         value={fields.exercise}
         onChange={e => onChange('exercise', e.target.value)}
       />
       {fields.isCardio ? (
         <input
-          className="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          className="w-full text-sm border border-gray-200 dark:border-dm-border rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary placeholder-gray-400 dark:placeholder-dm-muted focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
           placeholder="Duration (e.g. 30 min)"
           value={fields.duration}
           onChange={e => onChange('duration', e.target.value)}
@@ -165,10 +165,10 @@ function TrainingForm({ fields, onChange }) {
             { key: 'weight', label: 'Weight', type: 'number' },
           ].map(({ key, label, type }) => (
             <div key={key} className="flex flex-col gap-1">
-              <label className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</label>
+              <label className="text-[10px] font-semibold text-gray-500 dark:text-dm-muted uppercase tracking-wide">{label}</label>
               <input
                 type={type} min="0"
-                className="w-full text-sm border border-gray-200 rounded-xl px-2 py-2 text-center focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+                className="w-full text-sm border border-gray-200 rounded-xl px-2 py-2 text-center focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
                 placeholder="—"
                 value={fields[key]}
                 onChange={e => onChange(key, e.target.value)}
@@ -176,11 +176,11 @@ function TrainingForm({ fields, onChange }) {
             </div>
           ))}
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Unit</label>
+            <label className="text-[10px] font-semibold text-gray-500 dark:text-dm-muted uppercase tracking-wide">Unit</label>
             <select
               value={fields.unit}
               onChange={e => onChange('unit', e.target.value)}
-              className="w-full text-sm border border-gray-200 rounded-xl px-2 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+              className="w-full text-sm border border-gray-200 rounded-xl px-2 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
             >
               <option value="kg">kg</option>
               <option value="lbs">lbs</option>
@@ -197,7 +197,7 @@ function EducationForm({ fields, onChange }) {
   return (
     <div className="flex flex-col gap-2">
       <input
-        className="w-full text-sm border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+        className="w-full text-sm border border-gray-200 dark:border-dm-border rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary placeholder-gray-400 dark:placeholder-dm-muted focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         placeholder="Title (book, course, podcast…)"
         value={fields.title}
         onChange={e => onChange('title', e.target.value)}
@@ -206,13 +206,13 @@ function EducationForm({ fields, onChange }) {
         <select
           value={fields.type}
           onChange={e => onChange('type', e.target.value)}
-          className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         >
           {EDU_TYPES.map(t => <option key={t}>{t}</option>)}
         </select>
         <input
           type="number" min="0" max="100"
-          className="w-24 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          className="w-24 text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:border-dm-border dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
           placeholder="Pages"
           value={fields.pages}
           onChange={e => onChange('pages', e.target.value)}
@@ -405,14 +405,14 @@ export default function QuickAdd() {
           onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}
         >
           {/* Sheet */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-5 flex flex-col gap-4">
+          <div className="bg-white dark:bg-dm-card rounded-2xl shadow-2xl w-full max-w-md p-5 flex flex-col gap-4">
 
             {/* Header */}
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-gray-900 dark:text-white">Quick Add</span>
+              <span className="font-semibold text-gray-900 dark:text-dm-primary">Quick Add</span>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] text-gray-300 dark:text-gray-600 hidden sm:block">⌘K</span>
-                <button onClick={() => setOpen(false)} className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-lg leading-none">✕</button>
+                <button onClick={() => setOpen(false)} className="text-gray-400 dark:text-dm-muted hover:text-gray-700 dark:hover:text-gray-300 text-lg leading-none">✕</button>
               </div>
             </div>
 
@@ -424,8 +424,8 @@ export default function QuickAdd() {
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && hasIntent) handleSave() }}
                 placeholder="Lunch 120 · Bench 80kg 5x5 · Meditation done · Read 20 pages"
-                className="w-full text-sm border-2 border-indigo-300 dark:border-indigo-700 rounded-xl px-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-                  focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 placeholder-gray-300 dark:placeholder-gray-600"
+                className="w-full text-sm border-2 border-indigo-300 dark:border-indigo-700 rounded-xl px-4 py-3 bg-white dark:bg-dm-input text-gray-900 dark:text-dm-primary
+                  focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 placeholder-gray-300 dark:placeholder-dm-muted"
               />
               {input && (
                 <button
@@ -457,7 +457,7 @@ export default function QuickAdd() {
                   <button
                     key={ex}
                     onClick={() => setInput(ex)}
-                    className="text-xs px-2.5 py-1 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-full transition-colors"
+                    className="text-xs px-2.5 py-1 bg-gray-100 dark:bg-dm-input hover:bg-gray-200 dark:hover:bg-dm-hover text-gray-500 dark:text-dm-muted rounded-full transition-colors"
                   >{ex}</button>
                 ))}
               </div>
@@ -472,7 +472,7 @@ export default function QuickAdd() {
             <div className="flex gap-2">
               <button
                 onClick={() => setOpen(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-colors"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-600 dark:text-dm-secondary bg-gray-100 dark:bg-dm-input hover:bg-gray-200 dark:hover:bg-dm-hover rounded-xl transition-colors"
               >Cancel</button>
               <button
                 onClick={handleSave}

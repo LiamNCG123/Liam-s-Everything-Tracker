@@ -67,8 +67,8 @@ function SectionHeader({ emoji, title, meta, action }) {
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
         <span className="text-base">{emoji}</span>
-        <span className="font-semibold text-gray-900 dark:text-white text-sm">{title}</span>
-        {meta && <span className="text-xs text-gray-400 dark:text-gray-500">{meta}</span>}
+        <span className="font-semibold text-gray-900 dark:text-dm-primary text-sm">{title}</span>
+        {meta && <span className="text-xs text-gray-400 dark:text-dm-muted">{meta}</span>}
       </div>
       {action}
     </div>
@@ -121,7 +121,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
         title="Habits"
         meta={`${doneCount}/${total} today`}
         action={
-          <button onClick={() => navigate('/habits')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+          <button onClick={() => navigate('/habits')} className="text-xs text-gray-400 dark:text-dm-muted hover:text-indigo-600 dark:hover:text-indigo-400">
             All habits →
           </button>
         }
@@ -146,7 +146,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
       )}
 
       {/* Habit rows */}
-      <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
+      <div className="flex flex-col divide-y divide-gray-50 dark:divide-dm-subtle">
         {enriched.map(h => {
           const flashing = flashIds?.has(h.id)
           const tier = streakTier(h.streak)
@@ -175,7 +175,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
               {/* Color dot + name + goal tag */}
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
               <span className="flex-1 flex flex-col min-w-0">
-                <span className={`text-sm font-medium ${h.done ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-100'}`}>
+                <span className={`text-sm font-medium ${h.done ? 'line-through text-gray-400 dark:text-dm-muted' : 'text-gray-800 dark:text-dm-primary'}`}>
                   {h.name}
                 </span>
                 {h.goalId && goalMap[h.goalId] && (
@@ -203,7 +203,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
                 <span className="text-[10px] text-amber-500 shrink-0">today</span>
               )}
               {h.broken && (
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic shrink-0">restart today</span>
+                <span className="text-[10px] text-gray-400 dark:text-dm-muted italic shrink-0">restart today</span>
               )}
             </button>
           )
@@ -237,7 +237,7 @@ function TrainingSection({ programmes, sessions, todayStr }) {
         title="Training"
         meta={workoutDoneToday ? `${todaySessions.length} session${todaySessions.length > 1 ? 's' : ''} logged` : null}
         action={
-          <button onClick={() => navigate('/training')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+          <button onClick={() => navigate('/training')} className="text-xs text-gray-400 dark:text-dm-muted hover:text-indigo-600 dark:hover:text-indigo-400">
             Open →
           </button>
         }
@@ -252,21 +252,21 @@ function TrainingSection({ programmes, sessions, todayStr }) {
         </div>
       ) : activeProg && suggestedDay ? (
         <div>
-          <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">
+          <div className="text-xs text-gray-400 dark:text-dm-muted mb-1">
             {activeProg.name} · {lastSession ? `Last: ${fmtDate(lastSession.date)}` : 'No sessions yet'}
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold text-gray-900 dark:text-white">{suggestedDay.title}</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-dm-primary">{suggestedDay.title}</div>
               {suggestedDay.items?.slice(0, 3).map(ex => (
-                <div key={ex.id} className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <div key={ex.id} className="text-xs text-gray-500 dark:text-dm-muted mt-0.5">
                   {ex.name}
                   {ex.targetSets && ex.targetReps ? ` · ${ex.targetSets}×${ex.targetReps}` : ''}
                   {ex.targetWeight && ex.unit !== 'NA' ? ` @ ${ex.targetWeight}${ex.unit}` : ''}
                 </div>
               ))}
               {(suggestedDay.items?.length || 0) > 3 && (
-                <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">+{suggestedDay.items.length - 3} more</div>
+                <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">+{suggestedDay.items.length - 3} more</div>
               )}
             </div>
             <Button variant="primary" size="sm" onClick={() => navigate('/training')}>
@@ -306,7 +306,7 @@ function FinanceSection({ transactions }) {
         title="Finance"
         meta={monthLabel()}
         action={
-          <button onClick={() => navigate('/finance')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+          <button onClick={() => navigate('/finance')} className="text-xs text-gray-400 dark:text-dm-muted hover:text-indigo-600 dark:hover:text-indigo-400">
             Open →
           </button>
         }
@@ -329,9 +329,9 @@ function FinanceSection({ transactions }) {
               <div className="text-xs text-red-500 dark:text-red-400 font-medium">Spent</div>
               <div className="text-sm font-bold text-red-600 dark:text-red-400">{fmt(expense)}</div>
             </div>
-            <div className={`rounded-xl p-2 text-center ${income - expense >= 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-orange-50 dark:bg-orange-900/30'}`}>
-              <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Net</div>
-              <div className={`text-sm font-bold ${income - expense >= 0 ? 'text-gray-700 dark:text-gray-200' : 'text-orange-600 dark:text-orange-400'}`}>
+            <div className={`rounded-xl p-2 text-center ${income - expense >= 0 ? 'bg-gray-50 dark:bg-dm-input' : 'bg-orange-50 dark:bg-orange-900/30'}`}>
+              <div className="text-xs text-gray-500 dark:text-dm-muted font-medium">Net</div>
+              <div className={`text-sm font-bold ${income - expense >= 0 ? 'text-gray-700 dark:text-dm-primary' : 'text-orange-600 dark:text-orange-400'}`}>
                 {income - expense >= 0 ? '+' : ''}{fmt(income - expense)}
               </div>
             </div>
@@ -352,14 +352,14 @@ function FinanceSection({ transactions }) {
 
           {/* Recent transactions */}
           {recent.length > 0 && (
-            <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
+            <div className="flex flex-col divide-y divide-gray-50 dark:divide-dm-subtle">
               {recent.map(t => (
                 <div key={t.id} className="flex items-center gap-2 py-2">
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-gray-800 dark:text-gray-100 truncate">{t.description || '—'}</div>
-                    <div className="text-[10px] text-gray-400 dark:text-gray-500">{t.category} · {fmtDate(t.date)}</div>
+                    <div className="text-xs font-medium text-gray-800 dark:text-dm-primary truncate">{t.description || '—'}</div>
+                    <div className="text-[10px] text-gray-400 dark:text-dm-muted">{t.category} · {fmtDate(t.date)}</div>
                   </div>
-                  <span className={`text-xs font-semibold shrink-0 ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                  <span className={`text-xs font-semibold shrink-0 ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-dm-secondary'}`}>
                     {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                   </span>
                 </div>
@@ -383,7 +383,7 @@ function GoalsSection({ goals }) {
         title="Goals"
         meta={active.length ? `${active.length} in progress` : null}
         action={
-          <button onClick={() => navigate('/goals')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
+          <button onClick={() => navigate('/goals')} className="text-xs text-gray-400 dark:text-dm-muted hover:text-indigo-600 dark:hover:text-indigo-400">
             All goals →
           </button>
         }
@@ -399,15 +399,15 @@ function GoalsSection({ goals }) {
           {active.slice(0, 4).map(g => (
             <div key={g.id}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate flex-1 mr-2">{g.title}</span>
-                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{g.progress ?? 0}%</span>
+                <span className="text-sm font-medium text-gray-800 dark:text-dm-primary truncate flex-1 mr-2">{g.title}</span>
+                <span className="text-xs text-gray-400 dark:text-dm-muted shrink-0">{g.progress ?? 0}%</span>
               </div>
               <ProgressBar
                 value={g.progress ?? 0}
                 color={(g.progress ?? 0) >= 80 ? 'green' : 'indigo'}
               />
               {g.targetDate && (
-                <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Due {fmtDate(g.targetDate)}</div>
+                <div className="text-[10px] text-gray-400 dark:text-dm-muted mt-0.5">Due {fmtDate(g.targetDate)}</div>
               )}
             </div>
           ))}
@@ -571,12 +571,12 @@ function InboxSection({ items }) {
           <button
             key={item.id}
             onClick={() => navigate(item.to)}
-            className="flex items-start gap-3 py-2.5 text-left w-full hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="flex items-start gap-3 py-2.5 text-left w-full hover:bg-gray-50 dark:hover:bg-dm-hover rounded-lg transition-colors"
           >
             <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColor[item.priority]}`} />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.label}</div>
-              {item.sub && <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{item.sub}</div>}
+              <div className="text-sm font-medium text-gray-800 dark:text-dm-primary">{item.label}</div>
+              {item.sub && <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">{item.sub}</div>}
             </div>
             <span className="text-xs text-gray-400 shrink-0 mt-1">→</span>
           </button>
@@ -744,7 +744,7 @@ export default function Today() {
       {/* Date heading */}
       <div className="flex items-baseline justify-between">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Today</h1>
-        <span className="text-sm text-gray-400 dark:text-gray-500">{dateLabel}</span>
+        <span className="text-sm text-gray-400 dark:text-dm-muted">{dateLabel}</span>
       </div>
 
       {/* Status bar */}

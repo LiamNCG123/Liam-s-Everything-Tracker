@@ -267,13 +267,13 @@ function TransactionModal({ open, onClose, initial, onSave }) {
     <Modal open={open} onClose={onClose} title={initial ? 'Edit Transaction' : 'Add Transaction'}>
       <div className="flex flex-col gap-4">
         {/* Income / Expense toggle */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+        <div className="flex gap-1 bg-gray-100 dark:bg-dm-input rounded-xl p-1">
           {['expense','income'].map(t => (
             <button key={t} onClick={() => set('type', t)}
               className={`flex-1 py-1.5 rounded-lg text-sm font-semibold capitalize transition-colors ${
                 form.type === t
                   ? t === 'income' ? 'bg-green-500 text-white shadow-sm' : 'bg-red-400 text-white shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  : 'text-gray-500 dark:text-dm-muted hover:text-gray-700 dark:hover:text-gray-300'
               }`}
             >{t}</button>
           ))}
@@ -281,31 +281,31 @@ function TransactionModal({ open, onClose, initial, onSave }) {
 
         {/* Amount */}
         <div>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Amount</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-dm-secondary block mb-1">Amount</span>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 font-medium">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dm-muted font-medium">$</span>
             <input
               type="number" min="0" step="0.01" placeholder="0.00"
               value={form.amount} onChange={e => set('amount', e.target.value)}
               autoFocus
-              className="w-full pl-7 pr-3 py-3 text-xl font-bold border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-700"
+              className="w-full pl-7 pr-3 py-3 text-xl font-bold border border-gray-200 dark:border-dm-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted focus:bg-white dark:focus:bg-gray-700"
             />
           </div>
         </div>
 
         {/* Category chips — grouped for expenses, flat for income */}
         <div>
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Category</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-dm-secondary block mb-2">Category</span>
           <div className="max-h-40 overflow-y-auto">
             {form.type === 'expense' ? (
               CATEGORY_GROUPS.map(g => (
                 <div key={g.group} className="mb-2">
-                  <div className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1 px-0.5">{g.group}</div>
+                  <div className="text-[10px] font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-1 px-0.5">{g.group}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {g.categories.map(c => (
                       <button key={c.name} onClick={() => { set('category', c.name); setCatLocked(true); setSuggestion(null) }}
                         className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                          form.category === c.name ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                          form.category === c.name ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
                         }`}
                         style={form.category === c.name ? { backgroundColor: g.color } : {}}
                       >{c.name}</button>
@@ -318,7 +318,7 @@ function TransactionModal({ open, onClose, initial, onSave }) {
                 {INCOME_CATS.map(c => (
                   <button key={c} onClick={() => { set('category', c); setCatLocked(true); setSuggestion(null) }}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                      form.category === c ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      form.category === c ? 'text-white shadow-sm' : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
                     }`}
                     style={form.category === c ? { backgroundColor: catColor(c) } : {}}
                   >{c}</button>
@@ -352,7 +352,7 @@ function TransactionModal({ open, onClose, initial, onSave }) {
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.recurring}
             onChange={e => set('recurring', e.target.checked)} />
-          <span className="text-sm text-gray-700 dark:text-gray-300">Recurring transaction</span>
+          <span className="text-sm text-gray-700 dark:text-dm-secondary">Recurring transaction</span>
         </label>
 
         {form.recurring && (
@@ -407,7 +407,7 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
           <div className={`text-2xl font-bold leading-tight ${net >= 0 ? 'text-green-700' : 'text-red-600'}`}>
             {net >= 0 ? '+' : ''}{fmt(net)}
           </div>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mt-0.5">Net</div>
+          <div className="text-sm font-medium text-gray-600 dark:text-dm-secondary mt-0.5">Net</div>
         </Card>
       </div>
 
@@ -417,12 +417,12 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
       {/* Month progress + forecast */}
       <Card className="p-4">
         <div className="flex justify-between text-sm mb-2">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">Month progress</span>
-          <span className="text-gray-400 dark:text-gray-500">{pct}% through month</span>
+          <span className="font-semibold text-gray-700 dark:text-dm-secondary">Month progress</span>
+          <span className="text-gray-400 dark:text-dm-muted">{pct}% through month</span>
         </div>
         <ProgressBar value={pct} color="indigo" />
         <div className="flex justify-between mt-3 text-sm">
-          <span className="text-gray-500 dark:text-gray-400">Projected end-of-month net</span>
+          <span className="text-gray-500 dark:text-dm-muted">Projected end-of-month net</span>
           <span className={`font-bold ${projNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
             {projNet >= 0 ? '+' : ''}{fmt(projNet)}
           </span>
@@ -432,7 +432,7 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
       {/* Top spending categories */}
       {byCat.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Top spending</h3>
+          <h3 className="text-sm font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-2">Top spending</h3>
           <Card className="p-4 flex flex-col gap-3">
             {byCat.slice(0, 5).map(([cat, amt]) => {
               const budgetItem = budget?.items.find(b => b.category === cat)
@@ -442,12 +442,12 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
                   <div className="flex justify-between text-sm mb-1">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: catColor(cat) }} />
-                      <span className="font-medium text-gray-800 dark:text-gray-100">{cat}</span>
+                      <span className="font-medium text-gray-800 dark:text-dm-primary">{cat}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-700 dark:text-gray-300 font-semibold">{fmt(amt)}</span>
+                      <span className="text-gray-700 dark:text-dm-secondary font-semibold">{fmt(amt)}</span>
                       {budgetItem && (
-                        <span className={`text-xs ${amt > budgetItem.limit ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <span className={`text-xs ${amt > budgetItem.limit ? 'text-red-500' : 'text-gray-400 dark:text-dm-muted'}`}>
                           / {fmt(budgetItem.limit)}
                         </span>
                       )}
@@ -466,8 +466,8 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
       {/* Recent transactions */}
       {recent.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Recent</h3>
-          <Card className="divide-y divide-gray-50 dark:divide-gray-800">
+          <h3 className="text-sm font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-2">Recent</h3>
+          <Card className="divide-y divide-gray-50 dark:divide-dm-subtle">
             {recent.map(t => (
               <div key={t.id} className="flex items-center gap-3 px-4 py-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm shrink-0"
@@ -475,8 +475,8 @@ function OverviewTab({ transactions, budgets, month, onAdd }) {
                   {t.category[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate">{t.description}</div>
-                  <div className="text-xs text-gray-400 dark:text-gray-500">{t.category} · {fmtDate(t.date)}</div>
+                  <div className="text-sm font-medium text-gray-800 dark:text-dm-primary truncate">{t.description}</div>
+                  <div className="text-xs text-gray-400 dark:text-dm-muted">{t.category} · {fmtDate(t.date)}</div>
                 </div>
                 <span className={`text-sm font-bold ${t.type === 'income' ? 'text-green-600' : 'text-red-500'}`}>
                   {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
@@ -518,20 +518,20 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
         <input
           placeholder="Search transactions…"
           value={search} onChange={e => setSearch(e.target.value)}
-          className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          className="w-full border border-gray-200 dark:border-dm-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         />
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
           {['all','income','expense'].map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
-                typeFilter === t ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                typeFilter === t ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
               }`}>{t}</button>
           ))}
-          <div className="w-px bg-gray-200 dark:bg-gray-700 shrink-0" />
+          <div className="w-px bg-gray-200 dark:bg-dm-hover shrink-0" />
           {allCats.map(c => (
             <button key={c} onClick={() => setCatFilter(catFilter === c ? 'all' : c)}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                catFilter === c ? 'text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                catFilter === c ? 'text-white' : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
               }`}
               style={catFilter === c ? { backgroundColor: catColor(c) } : {}}
             >{c}</button>
@@ -555,7 +555,7 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
           action={monthTx.length === 0 ? <Button onClick={onAdd}>Add transaction</Button> : null}
         />
       ) : (
-        <Card className="divide-y divide-gray-50 dark:divide-gray-800">
+        <Card className="divide-y divide-gray-50 dark:divide-dm-subtle">
           {visible.map(t => (
             <div key={t.id} className="flex items-center gap-3 px-4 py-3 group">
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
@@ -564,10 +564,10 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{t.description}</span>
-                  {t.recurring && <span className="text-[10px] text-gray-400 dark:text-gray-500">🔄 {t.recurringFrequency}</span>}
+                  <span className="text-sm font-medium text-gray-800 dark:text-dm-primary">{t.description}</span>
+                  {t.recurring && <span className="text-[10px] text-gray-400 dark:text-dm-muted">🔄 {t.recurringFrequency}</span>}
                 </div>
-                <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">
                   {t.category}{t.subcategory ? ` · ${t.subcategory}` : ''} · {fmtDate(t.date)}
                   {t.paymentMethod ? ` · ${t.paymentMethod}` : ''}
                 </div>
@@ -577,7 +577,7 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
                   {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                 </span>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => onEdit(t)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-1 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800">Edit</button>
+                  <button onClick={() => onEdit(t)} className="text-xs text-gray-400 dark:text-dm-muted hover:text-gray-700 dark:hover:text-gray-300 px-1 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-dm-hover">Edit</button>
                   <button onClick={() => onDelete(t.id)} className="text-xs text-red-300 hover:text-red-600 px-1 py-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30">Del</button>
                 </div>
               </div>
@@ -588,7 +588,7 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
 
       {visible.length > 0 && (
         <div className="flex justify-between mt-3 px-1 text-sm">
-          <span className="text-gray-400 dark:text-gray-500">{visible.length} transactions</span>
+          <span className="text-gray-400 dark:text-dm-muted">{visible.length} transactions</span>
           <div className="flex gap-3">
             <span className="text-green-600 font-medium">
               +{fmt(visible.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0))}
@@ -620,12 +620,12 @@ function BudgetEditorRow({ item, onChange }) {
   return (
     <div className="flex items-center gap-2 py-1.5">
       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catColor(item.category) }} />
-      <span className="flex-1 text-sm text-gray-700 dark:text-gray-300 min-w-0 truncate">{item.category}</span>
+      <span className="flex-1 text-sm text-gray-700 dark:text-dm-secondary min-w-0 truncate">{item.category}</span>
       {item.annual && (
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">≈{fmt(monthly)}/mo</span>
+        <span className="text-[10px] text-gray-400 dark:text-dm-muted shrink-0">≈{fmt(monthly)}/mo</span>
       )}
       <div className="relative w-24 shrink-0">
-        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xs">$</span>
+        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-dm-muted text-xs">$</span>
         <input
           type="number" min="0"
           placeholder={item.annual ? 'Annual' : 'Monthly'}
@@ -634,7 +634,7 @@ function BudgetEditorRow({ item, onChange }) {
             if (item.annual) onChange({ annualAmount: e.target.value, limit: e.target.value ? (Number(e.target.value) / 12).toFixed(2) : '' })
             else onChange({ limit: e.target.value })
           }}
-          className="w-full pl-5 pr-1 py-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500"
+          className="w-full pl-5 pr-1 py-1 text-xs border border-gray-200 dark:border-dm-border rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-dm-input dark:text-dm-primary dark:placeholder-dm-muted"
         />
       </div>
       <button
@@ -686,13 +686,13 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
     return (
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-gray-900 dark:text-white">Budget — {monthLabel(month)}</h2>
+          <h2 className="font-bold text-gray-900 dark:text-dm-primary">Budget — {monthLabel(month)}</h2>
           <div className="flex gap-2">
             <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>Cancel</Button>
             <Button size="sm" onClick={save}>Save</Button>
           </div>
         </div>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-3">
+        <p className="text-xs text-gray-400 dark:text-dm-muted mb-3">
           Leave blank to skip. Toggle <span className="font-medium">yr</span> to enter annual amounts (auto-converts to monthly).
         </p>
         {CATEGORY_GROUPS.map(g => {
@@ -704,9 +704,9 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
             <div key={g.group} className="mb-3">
               <div className="flex items-center gap-2 mb-1">
                 <span>{g.icon}</span>
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{g.group}</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-dm-muted uppercase tracking-wide">{g.group}</span>
               </div>
-              <Card className="px-4 py-2 divide-y divide-gray-50 dark:divide-gray-800">
+              <Card className="px-4 py-2 divide-y divide-gray-50 dark:divide-dm-subtle">
                 {groupItems.map((item, i) => (
                   <BudgetEditorRow key={item.category} item={item}
                     onChange={patch => updateItem(groupStart + i, patch)} />
@@ -737,7 +737,7 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="font-bold text-gray-900 dark:text-white">{monthLabel(month)}</h2>
+          <h2 className="font-bold text-gray-900 dark:text-dm-primary">{monthLabel(month)}</h2>
           {overCount > 0 && <p className="text-xs text-red-500 mt-0.5">{overCount} categor{overCount > 1 ? 'ies' : 'y'} over budget</p>}
         </div>
         <Button variant="secondary" size="sm" onClick={startEdit}>Edit budget</Button>
@@ -746,14 +746,14 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
       {/* Total summary */}
       <Card className="p-4 mb-5">
         <div className="flex justify-between text-sm mb-2">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">Total budget</span>
-          <span className="text-gray-500 dark:text-gray-400">{fmt(totalSpent)} / {fmt(totalBudget)}</span>
+          <span className="font-semibold text-gray-700 dark:text-dm-secondary">Total budget</span>
+          <span className="text-gray-500 dark:text-dm-muted">{fmt(totalSpent)} / {fmt(totalBudget)}</span>
         </div>
         <ProgressBar value={totalSpent} max={totalBudget}
           color={totalSpent > totalBudget ? 'red' : totalSpent / totalBudget > 0.8 ? 'yellow' : 'green'} />
         <div className="flex justify-between mt-2 text-xs text-gray-400">
-          <span className="text-gray-400 dark:text-gray-500">{fmt(Math.max(0, totalBudget - totalSpent))} remaining</span>
-          <span className="text-gray-400 dark:text-gray-500">{totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}% used</span>
+          <span className="text-gray-400 dark:text-dm-muted">{fmt(Math.max(0, totalBudget - totalSpent))} remaining</span>
+          <span className="text-gray-400 dark:text-dm-muted">{totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}% used</span>
         </div>
       </Card>
 
@@ -771,14 +771,14 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-1.5">
                 <span>{g.icon}</span>
-                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{g.group}</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-dm-muted uppercase tracking-wide">{g.group}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs">
-                <span className={groupOver ? 'text-red-500 font-semibold' : 'text-gray-500 dark:text-gray-400'}>
+                <span className={groupOver ? 'text-red-500 font-semibold' : 'text-gray-500 dark:text-dm-muted'}>
                   {fmt(groupSpent)}
                 </span>
-                <span className="text-gray-300 dark:text-gray-600">/</span>
-                <span className="text-gray-400 dark:text-gray-500">{fmt(groupBudget)}</span>
+                <span className="text-gray-300 dark:text-dm-muted">/</span>
+                <span className="text-gray-400 dark:text-dm-muted">{fmt(groupBudget)}</span>
               </div>
             </div>
 
@@ -794,12 +794,12 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
-                        <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.category}</span>
-                        {item.annual && <span className="text-[10px] text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded-full">annual</span>}
+                        <span className="text-sm font-medium text-gray-800 dark:text-dm-primary">{item.category}</span>
+                        {item.annual && <span className="text-[10px] text-gray-400 dark:text-dm-muted bg-gray-100 dark:bg-dm-input px-1.5 py-0.5 rounded-full">annual</span>}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'}`}>{fmt(spent)}</span>
-                        <span className="text-xs text-gray-400 dark:text-gray-500">/ {fmt(limit)}</span>
+                        <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-gray-700 dark:text-dm-secondary'}`}>{fmt(spent)}</span>
+                        <span className="text-xs text-gray-400 dark:text-dm-muted">/ {fmt(limit)}</span>
                         {over && <Badge color="red">Over</Badge>}
                         {near && <Badge color="yellow">Near</Badge>}
                         {!over && !near && spent > 0 && <Badge color="green">✓</Badge>}
@@ -832,19 +832,19 @@ function InsightsTab({ transactions, budgets, month }) {
     <div className="flex flex-col gap-5">
       {/* Forecast card */}
       <Card className="p-4">
-        <h3 className="font-bold text-gray-900 dark:text-white mb-1">End-of-month forecast</h3>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+        <h3 className="font-bold text-gray-900 dark:text-dm-primary mb-1">End-of-month forecast</h3>
+        <p className="text-xs text-gray-400 dark:text-dm-muted mb-4">
           Based on {fc.elapsed} of {fc.total} days ({fc.pct}% of month elapsed).
           Daily spend: {fmt(fc.dailySpend)}.
         </p>
         <div className="grid grid-cols-3 gap-3">
           <div className="text-center">
             <div className="text-lg font-bold text-green-600">{fmt(fc.projIncome)}</div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Proj. income</div>
+            <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">Proj. income</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-red-500">{fmt(fc.projExpense)}</div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Proj. expenses</div>
+            <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">Proj. expenses</div>
             {totalBudget > 0 && fc.projExpense > totalBudget && (
               <div className="text-[10px] text-red-400 mt-0.5">⚠ over budget</div>
             )}
@@ -853,12 +853,12 @@ function InsightsTab({ transactions, budgets, month }) {
             <div className={`text-lg font-bold ${fc.projNet >= 0 ? 'text-green-600' : 'text-red-500'}`}>
               {fc.projNet >= 0 ? '+' : ''}{fmt(fc.projNet)}
             </div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Proj. net</div>
+            <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">Proj. net</div>
           </div>
         </div>
         {totalBudget > 0 && (
           <div className="mt-4">
-            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-dm-muted mb-1">
               <span>Projected vs budget</span>
               <span>{fmt(fc.projExpense)} / {fmt(totalBudget)}</span>
             </div>
@@ -873,15 +873,15 @@ function InsightsTab({ transactions, budgets, month }) {
       {/* Spending breakdown */}
       {ins.expense > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Spending breakdown</h3>
+          <h3 className="text-sm font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-3">Spending breakdown</h3>
           <Card className="p-4 flex flex-col gap-4">
             {/* Fixed vs Variable */}
             <div>
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Fixed vs Variable</span>
+              <div className="flex justify-between text-xs text-gray-500 dark:text-dm-muted mb-1.5">
+                <span className="font-medium text-gray-700 dark:text-dm-secondary">Fixed vs Variable</span>
                 <span>{fmt(ins.fixedSpend)} fixed · {fmt(ins.variableSpend)} variable</span>
               </div>
-              <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+              <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-dm-input">
                 <div
                   className="bg-indigo-400 transition-all"
                   style={{ width: `${ins.expense ? (ins.fixedSpend / ins.expense) * 100 : 0}%` }}
@@ -891,7 +891,7 @@ function InsightsTab({ transactions, budgets, month }) {
                   style={{ width: `${ins.expense ? (ins.variableSpend / ins.expense) * 100 : 0}%` }}
                 />
               </div>
-              <div className="flex gap-3 mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+              <div className="flex gap-3 mt-1.5 text-[10px] text-gray-400 dark:text-dm-muted">
                 <span><span className="inline-block w-2 h-2 rounded-full bg-indigo-400 mr-1" />Fixed {ins.expense ? Math.round((ins.fixedSpend / ins.expense) * 100) : 0}%</span>
                 <span><span className="inline-block w-2 h-2 rounded-full bg-pink-400 mr-1" />Variable {ins.expense ? Math.round((ins.variableSpend / ins.expense) * 100) : 0}%</span>
               </div>
@@ -899,11 +899,11 @@ function InsightsTab({ transactions, budgets, month }) {
 
             {/* Essentials vs Lifestyle */}
             <div>
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                <span className="font-medium text-gray-700 dark:text-gray-300">Essentials vs Lifestyle</span>
+              <div className="flex justify-between text-xs text-gray-500 dark:text-dm-muted mb-1.5">
+                <span className="font-medium text-gray-700 dark:text-dm-secondary">Essentials vs Lifestyle</span>
                 <span>{fmt(ins.essentialSpend)} · {fmt(ins.lifestyleSpend)}</span>
               </div>
-              <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+              <div className="flex h-2.5 rounded-full overflow-hidden bg-gray-100 dark:bg-dm-input">
                 <div
                   className="bg-emerald-400 transition-all"
                   style={{ width: `${ins.expense ? (ins.essentialSpend / ins.expense) * 100 : 0}%` }}
@@ -913,7 +913,7 @@ function InsightsTab({ transactions, budgets, month }) {
                   style={{ width: `${ins.expense ? (ins.lifestyleSpend / ins.expense) * 100 : 0}%` }}
                 />
               </div>
-              <div className="flex gap-3 mt-1.5 text-[10px] text-gray-400 dark:text-gray-500">
+              <div className="flex gap-3 mt-1.5 text-[10px] text-gray-400 dark:text-dm-muted">
                 <span><span className="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1" />Essentials {ins.expense ? Math.round((ins.essentialSpend / ins.expense) * 100) : 0}%</span>
                 <span><span className="inline-block w-2 h-2 rounded-full bg-orange-400 mr-1" />Lifestyle {ins.expense ? Math.round((ins.lifestyleSpend / ins.expense) * 100) : 0}%</span>
               </div>
@@ -924,7 +924,7 @@ function InsightsTab({ transactions, budgets, month }) {
 
       {/* Key insights */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Key insights</h3>
+        <h3 className="text-sm font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-3">Key insights</h3>
         <div className="flex flex-col gap-2">
           <InsightRow icon="💰" label="Total income" value={fmt(ins.income)} color="green" />
           <InsightRow icon="📉" label="Total expenses" value={fmt(ins.expense)} color="red" />
@@ -983,7 +983,7 @@ function InsightsTab({ transactions, budgets, month }) {
       {/* Spend by group */}
       {Object.keys(ins.byGroup).length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Spend by group</h3>
+          <h3 className="text-sm font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-3">Spend by group</h3>
           <Card className="p-4 flex flex-col gap-2">
             {CATEGORY_GROUPS.map(g => {
               const amt = ins.byGroup[g.group] || 0
@@ -991,9 +991,9 @@ function InsightsTab({ transactions, budgets, month }) {
               return (
                 <div key={g.group} className="flex items-center gap-3">
                   <span>{g.icon}</span>
-                  <span className="flex-1 text-sm text-gray-700 dark:text-gray-300">{g.group}</span>
-                  <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{fmt(amt)}</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 w-10 text-right">
+                  <span className="flex-1 text-sm text-gray-700 dark:text-dm-secondary">{g.group}</span>
+                  <span className="text-sm font-bold text-gray-800 dark:text-dm-primary">{fmt(amt)}</span>
+                  <span className="text-xs text-gray-400 dark:text-dm-muted w-10 text-right">
                     {ins.expense ? Math.round((amt / ins.expense) * 100) : 0}%
                   </span>
                 </div>
@@ -1006,14 +1006,14 @@ function InsightsTab({ transactions, budgets, month }) {
       {/* Top 3 categories */}
       {ins.top3.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Top expense categories</h3>
+          <h3 className="text-sm font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-3">Top expense categories</h3>
           <Card className="p-4 flex flex-col gap-3">
             {ins.top3.map(([cat, amt], i) => (
               <div key={cat} className="flex items-center gap-3">
-                <span className="text-lg font-bold text-gray-200 dark:text-gray-600 w-5 shrink-0">{i + 1}</span>
+                <span className="text-lg font-bold text-gray-200 dark:text-dm-muted w-5 shrink-0">{i + 1}</span>
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: catColor(cat) }} />
-                <span className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-300">{cat}</span>
-                <span className="text-sm font-bold text-gray-800 dark:text-gray-100">{fmt(amt)}</span>
+                <span className="flex-1 text-sm font-medium text-gray-700 dark:text-dm-secondary">{cat}</span>
+                <span className="text-sm font-bold text-gray-800 dark:text-dm-primary">{fmt(amt)}</span>
               </div>
             ))}
           </Card>
@@ -1024,12 +1024,12 @@ function InsightsTab({ transactions, budgets, month }) {
 }
 
 function InsightRow({ icon, label, value, color }) {
-  const colors = { green: 'text-green-600', red: 'text-red-500', default: 'text-gray-800 dark:text-gray-100' }
+  const colors = { green: 'text-green-600', red: 'text-red-500', default: 'text-gray-800 dark:text-dm-primary' }
   return (
-    <div className="flex items-center justify-between bg-white dark:bg-gray-900 rounded-xl px-4 py-3 border border-gray-100 dark:border-gray-800">
+    <div className="flex items-center justify-between bg-white dark:bg-dm-card rounded-xl px-4 py-3 border border-gray-100 dark:border-dm-subtle">
       <div className="flex items-center gap-2">
         <span>{icon}</span>
-        <span className="text-sm text-gray-600 dark:text-gray-300">{label}</span>
+        <span className="text-sm text-gray-600 dark:text-dm-secondary">{label}</span>
       </div>
       <span className={`text-sm font-bold ${colors[color] || colors.default}`}>{value}</span>
     </div>
@@ -1096,7 +1096,7 @@ export default function Finance() {
     <div>
       {/* Header with month nav */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Finance</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-dm-primary">Finance</h1>
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => navigate('/finance/import')}
@@ -1111,39 +1111,39 @@ export default function Finance() {
               value={home}
               onChange={e => setHome(e.target.value)}
               title="Home currency (what your amounts are stored in)"
-              className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              className="text-xs border border-gray-200 dark:border-dm-border rounded-lg px-2 py-1.5 bg-white dark:bg-dm-card dark:text-dm-secondary focus:outline-none focus:ring-2 focus:ring-indigo-300"
             >
               {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <span className="text-gray-300 dark:text-gray-600 text-xs">→</span>
+            <span className="text-gray-300 dark:text-dm-muted text-xs">→</span>
             <select
               value={display}
               onChange={e => setDisplay(e.target.value)}
               title="Display currency"
-              className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-300 font-semibold text-indigo-700 dark:text-indigo-400"
+              className="text-xs border border-gray-200 dark:border-dm-border rounded-lg px-2 py-1.5 bg-white dark:bg-dm-card focus:outline-none focus:ring-2 focus:ring-indigo-300 font-semibold text-indigo-700 dark:text-indigo-400"
             >
               {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            {rateLoading && <span className="text-[10px] text-gray-400 dark:text-gray-500 animate-pulse">loading…</span>}
+            {rateLoading && <span className="text-[10px] text-gray-400 dark:text-dm-muted animate-pulse">loading…</span>}
             {rateError   && <span className="text-[10px] text-red-400" title={rateError}>rates unavailable</span>}
           </div>
 
           <div className="flex items-center gap-1">
             <button onClick={prevMonth}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-lg">‹</button>
-            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 w-28 text-center">{monthLabel(month)}</span>
+              className="text-gray-400 dark:text-dm-muted hover:text-gray-700 dark:hover:text-gray-300 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-dm-hover transition text-lg">‹</button>
+            <span className="text-sm font-semibold text-gray-700 dark:text-dm-secondary w-28 text-center">{monthLabel(month)}</span>
             <button onClick={nextMonth} disabled={isCurrentMonth}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-lg">›</button>
+              className="text-gray-400 dark:text-dm-muted hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-dm-hover transition text-lg">›</button>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-5 overflow-x-auto no-scrollbar">
+      <div className="flex gap-1 bg-gray-100 dark:bg-dm-input rounded-xl p-1 mb-5 overflow-x-auto no-scrollbar">
         {TABS.map(({ key, label }) => (
           <button key={key} onClick={() => setTab(key)}
             className={`shrink-0 flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              tab === key ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              tab === key ? 'bg-white dark:bg-dm-hover text-gray-900 dark:text-dm-primary shadow-sm' : 'text-gray-500 dark:text-dm-muted hover:text-gray-700 dark:hover:text-gray-300'
             }`}>
             {label}
           </button>

@@ -2,23 +2,26 @@ import { NavLink } from 'react-router-dom'
 import QuickAdd from './QuickAdd'
 import { useDarkMode } from '../hooks/useDarkMode'
 
-// Each route carries its own accent color for the active pill
+// ── Active pill colors ────────────────────────────────────────────────────────
+// Dark mode: use tighter /15 tint backgrounds so active pills don't compete
+// with each other or with the brand accent. Text uses -300 for AA contrast.
 const NAV = [
-  { to: '/',          label: 'Today',     emoji: '☀️',  pill: 'bg-indigo-100 dark:bg-indigo-900', text: 'text-indigo-600 dark:text-indigo-300'  },
-  { to: '/habits',    label: 'Habits',    emoji: '✅',  pill: 'bg-violet-100 dark:bg-violet-900', text: 'text-violet-600 dark:text-violet-300'  },
-  { to: '/training',  label: 'Training',  emoji: '💪',  pill: 'bg-orange-100 dark:bg-orange-900', text: 'text-orange-600 dark:text-orange-300'  },
-  { to: '/finance',   label: 'Finance',   emoji: '💰',  pill: 'bg-emerald-100 dark:bg-emerald-900', text: 'text-emerald-600 dark:text-emerald-300' },
-  { to: '/goals',     label: 'Goals',     emoji: '🎯',  pill: 'bg-blue-100 dark:bg-blue-900',   text: 'text-blue-600 dark:text-blue-300'    },
-  { to: '/education', label: 'Education', emoji: '📚',  pill: 'bg-amber-100 dark:bg-amber-900',  text: 'text-amber-600 dark:text-amber-300'   },
-  { to: '/review',    label: 'Review',    emoji: '📋',  pill: 'bg-sky-100 dark:bg-sky-900',     text: 'text-sky-600 dark:text-sky-300'      },
+  { to: '/',          label: 'Today',     emoji: '☀️',  pill: 'bg-indigo-100 dark:bg-indigo-400/15', text: 'text-indigo-600 dark:text-indigo-300'  },
+  { to: '/habits',    label: 'Habits',    emoji: '✅',  pill: 'bg-violet-100 dark:bg-violet-400/15', text: 'text-violet-600 dark:text-violet-300'  },
+  { to: '/training',  label: 'Training',  emoji: '💪',  pill: 'bg-orange-100 dark:bg-orange-400/15', text: 'text-orange-600 dark:text-orange-300'  },
+  { to: '/finance',   label: 'Finance',   emoji: '💰',  pill: 'bg-emerald-100 dark:bg-emerald-400/15', text: 'text-emerald-600 dark:text-emerald-300' },
+  { to: '/goals',     label: 'Goals',     emoji: '🎯',  pill: 'bg-blue-100 dark:bg-blue-400/15',   text: 'text-blue-600 dark:text-blue-300'    },
+  { to: '/education', label: 'Education', emoji: '📚',  pill: 'bg-amber-100 dark:bg-amber-400/15',  text: 'text-amber-600 dark:text-amber-300'   },
+  { to: '/review',    label: 'Review',    emoji: '📋',  pill: 'bg-sky-100 dark:bg-sky-400/15',     text: 'text-sky-600 dark:text-sky-300'      },
 ]
 
 function DarkToggle({ dark, setDark }) {
   return (
     <button
       onClick={() => setDark(d => !d)}
-      className="ml-auto text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      className="ml-auto text-gray-400 dark:text-dm-muted hover:text-gray-600 dark:hover:text-dm-secondary p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dm-hover transition-colors"
       title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       {dark ? '☀️' : '🌙'}
     </button>
@@ -29,11 +32,11 @@ export default function Layout({ children }) {
   const [dark, setDark] = useDarkMode()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-dm-page flex flex-col">
 
       {/* Top bar — desktop only */}
-      <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-0 z-30">
-        <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">Spora</span>
+      <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-white dark:bg-dm-card border-b border-gray-100 dark:border-dm-subtle sticky top-0 z-30 backdrop-blur-sm">
+        <span className="text-lg font-bold text-gray-900 dark:text-dm-primary tracking-tight">Spora</span>
         <nav className="flex gap-0.5 ml-6">
           {NAV.map(({ to, label, emoji, pill, text }) => (
             <NavLink
@@ -42,7 +45,9 @@ export default function Layout({ children }) {
               end={to === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
-                  isActive ? `${pill} ${text}` : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200'
+                  isActive
+                    ? `${pill} ${text}`
+                    : 'text-gray-500 dark:text-dm-secondary hover:bg-gray-100 dark:hover:bg-dm-hover hover:text-gray-700 dark:hover:text-dm-primary'
                 }`
               }
             >
@@ -62,7 +67,7 @@ export default function Layout({ children }) {
       <QuickAdd />
 
       {/* Bottom tab bar — mobile only */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex z-30 safe-area-pb">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-dm-card border-t border-gray-100 dark:border-dm-subtle flex z-30 safe-area-pb">
         {NAV.map(({ to, label, emoji, pill, text }) => (
           <NavLink
             key={to}
@@ -75,7 +80,7 @@ export default function Layout({ children }) {
                 <span className={`text-lg leading-none px-2.5 py-1 rounded-2xl transition-colors ${isActive ? pill : ''}`}>
                   {emoji}
                 </span>
-                <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-gray-400 dark:text-gray-500'}`}>
+                <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-gray-400 dark:text-dm-muted'}`}>
                   {label}
                 </span>
               </>
