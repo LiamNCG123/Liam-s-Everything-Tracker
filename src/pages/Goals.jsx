@@ -115,7 +115,7 @@ export default function Goals() {
                 className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   filter === f
                     ? 'bg-brand-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
               >
                 {f}
@@ -128,8 +128,8 @@ export default function Goals() {
               onClick={() => setCatFilter('All')}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 catFilter === 'All'
-                  ? 'bg-gray-700 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-gray-700 dark:bg-gray-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
               All categories
@@ -168,7 +168,7 @@ export default function Goals() {
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-gray-900">{goal.title}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{goal.title}</span>
                     <Badge color={STATUS_COLORS[goal.status]}>{goal.status}</Badge>
                     {goal.category && CATEGORY_META[goal.category] && (
                       <Badge color={CATEGORY_META[goal.category].color}>
@@ -177,7 +177,7 @@ export default function Goals() {
                     )}
                   </div>
                   {goal.description && (
-                    <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{goal.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{goal.description}</p>
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -187,20 +187,20 @@ export default function Goals() {
               </div>
 
               <div className="mt-3">
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                   <span>Progress</span>
                   <div className="flex items-center gap-2">
                     <span>{goal.progress ?? 0}%</span>
                     {goal.status === 'In Progress' && (goal.progress ?? 0) < 100 && (
                       <button
                         onClick={e => { e.stopPropagation(); update(goal.id, { progress: Math.min(100, (goal.progress ?? 0) + 10), status: 'In Progress' }) }}
-                        className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                        className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-700 rounded-full px-2 py-0.5 leading-none transition-colors"
                       >+10%</button>
                     )}
                     {goal.status === 'In Progress' && (goal.progress ?? 0) >= 100 && (
                       <button
                         onClick={e => { e.stopPropagation(); update(goal.id, { status: 'Completed' }); flashGoal(goal.id); triggerGoalToast() }}
-                        className="text-[10px] font-semibold text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                        className="text-[10px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-full px-2 py-0.5 leading-none transition-colors"
                       >✓ Mark complete</button>
                     )}
                   </div>
@@ -213,8 +213,8 @@ export default function Goals() {
                 const linked = habits.filter(h => h.goalId === goal.id)
                 if (!linked.length) return null
                 return (
-                  <div className="mt-3 pt-3 border-t border-gray-50">
-                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Supporting habits</div>
+                  <div className="mt-3 pt-3 border-t border-gray-50 dark:border-gray-800">
+                    <div className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-1.5">Supporting habits</div>
                     <div className="flex flex-wrap gap-1.5">
                       {linked.map(h => {
                         const streak = calcCurrentStreak(migrateCompletions(h.completions))
@@ -222,12 +222,12 @@ export default function Goals() {
                         return (
                           <span
                             key={h.id}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${atRisk ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'}`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${atRisk ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}
                           >
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
                             {h.name}
                             {streak > 0 && (
-                              <span className={`font-semibold ${streak >= 7 ? 'text-orange-500' : 'text-gray-400'}`}>
+                              <span className={`font-semibold ${streak >= 7 ? 'text-orange-500' : 'text-gray-400 dark:text-gray-500'}`}>
                                 {streak >= 7 ? '🔥' : ''}{streak}d
                               </span>
                             )}
@@ -239,7 +239,7 @@ export default function Goals() {
                 )
               })()}
 
-              <div className="flex gap-4 mt-3 text-xs text-gray-400">
+              <div className="flex gap-4 mt-3 text-xs text-gray-400 dark:text-gray-500">
                 {goal.targetDate && <span>🗓 {fmtDate(goal.targetDate)}</span>}
                 {goal.notes && <span className="truncate">📝 {goal.notes}</span>}
               </div>
@@ -289,7 +289,7 @@ export default function Goals() {
             onChange={e => setForm(f => ({ ...f, targetDate: e.target.value }))}
           />
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">Progress — {form.progress}%</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress — {form.progress}%</span>
             <input
               type="range" min="0" max="100" step="5"
               value={form.progress}

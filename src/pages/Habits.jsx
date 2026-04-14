@@ -114,14 +114,14 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
   return (
     <tr className="group">
       {/* Habit name — sticky left */}
-      <td className="sticky left-0 z-10 bg-white pr-3 py-1.5 min-w-[120px] max-w-[160px]">
+      <td className="sticky left-0 z-10 bg-white dark:bg-gray-900 pr-3 py-1.5 min-w-[120px] max-w-[160px]">
         <div className="flex items-center gap-2">
           <span
             className="w-3 h-3 rounded-full shrink-0 shadow-sm"
             style={{ backgroundColor: habit.color }}
           />
           <div className="flex flex-col min-w-0">
-            <span className="text-sm font-medium text-gray-800 truncate leading-tight">
+            <span className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate leading-tight">
               {habit.name}
             </span>
             {habit.cue && (
@@ -152,7 +152,7 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
       ))}
 
       {/* Streak stats — sticky right */}
-      <td className="sticky right-0 z-10 bg-white pl-3 py-1.5 whitespace-nowrap">
+      <td className="sticky right-0 z-10 bg-white dark:bg-gray-900 pl-3 py-1.5 whitespace-nowrap">
         {(() => {
           const doneToday  = set.has(todayStr)
           const atRisk     = !doneToday && current > 0
@@ -162,7 +162,7 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
             : current >= 14 ? 'text-orange-500'
             : current >= 7  ? 'text-orange-400'
             : current > 0   ? 'text-orange-300'
-            : 'text-gray-300'
+            : 'text-gray-300 dark:text-gray-600'
 
           return (
             <div className="flex flex-col gap-0.5 items-end">
@@ -173,7 +173,7 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
                   <span className="text-[9px] text-amber-500 font-semibold leading-none">!</span>
                 )}
               </div>
-              <div className="text-[10px] text-gray-400 leading-none">
+              <div className="text-[10px] text-gray-400 dark:text-gray-500 leading-none">
                 {atRisk
                   ? <span className="text-amber-500">do it today</span>
                   : `best ${longest} · ${doneThisMonth}d`
@@ -189,13 +189,13 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
         <div className="flex gap-1">
           <button
             onClick={() => onEdit(habit)}
-            className="text-xs text-gray-500 hover:text-gray-800 px-2 py-1 rounded hover:bg-gray-100"
+            className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             Edit
           </button>
           <button
             onClick={() => onDelete(habit.id)}
-            className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
+            className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
           >
             Delete
           </button>
@@ -212,10 +212,10 @@ function SlotHeader({ slot, habits, todayStr }) {
 
   return (
     <tr>
-      <td className="sticky left-0 z-10 bg-gray-50 px-3 pt-3.5 pb-1 min-w-[120px] max-w-[160px] border-t border-gray-100">
+      <td className="sticky left-0 z-10 bg-gray-50 dark:bg-gray-800 px-3 pt-3.5 pb-1 min-w-[120px] max-w-[160px] border-t border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-1.5">
           <span className="text-sm leading-none">{slot.icon}</span>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide leading-none">
+          <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-none">
             {slot.label}
           </span>
           <span className={`text-[10px] font-semibold leading-none ${allDone ? 'text-green-600' : 'text-gray-400'}`}>
@@ -224,7 +224,7 @@ function SlotHeader({ slot, habits, todayStr }) {
         </div>
       </td>
       {/* Fill remaining columns with the same background */}
-      <td colSpan={999} className="bg-gray-50 border-t border-gray-100" />
+      <td colSpan={999} className="bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700" />
     </tr>
   )
 }
@@ -232,7 +232,7 @@ function SlotHeader({ slot, habits, todayStr }) {
 function ColorPicker({ value, onChange }) {
   return (
     <div>
-      <span className="text-sm font-medium text-gray-700 block mb-2">Color</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Color</span>
       <div className="flex flex-wrap gap-2">
         {PALETTE.map(c => (
           <button
@@ -255,11 +255,11 @@ function GoalPicker({ value, onChange, goals }) {
   if (!active.length) return null
   return (
     <div>
-      <span className="text-sm font-medium text-gray-700 block mb-1">Contributing to goal (optional)</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-1">Contributing to goal (optional)</span>
       <select
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white transition"
+        className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 transition"
       >
         <option value="">— none —</option>
         {active.map(g => (
@@ -273,7 +273,7 @@ function GoalPicker({ value, onChange, goals }) {
 function TimeOfDayPicker({ value, onChange }) {
   return (
     <div>
-      <span className="text-sm font-medium text-gray-700 block mb-2">Time of day</span>
+      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block mb-2">Time of day</span>
       <div className="grid grid-cols-4 gap-1.5">
         {TIME_SLOTS.map(slot => (
           <button
@@ -283,7 +283,7 @@ function TimeOfDayPicker({ value, onChange }) {
             className={`flex flex-col items-center gap-1 py-2.5 rounded-xl text-xs font-medium transition-colors ${
               value === slot.key
                 ? 'bg-brand-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
             }`}
           >
             <span className="text-base leading-none">{slot.icon}</span>
@@ -412,13 +412,13 @@ export default function Habits() {
         <>
           {/* Summary bar */}
           <div className="flex items-center gap-4 mb-3 px-1">
-            <div className="text-sm text-gray-500">
-              <span className="font-semibold text-gray-900">{doneToday}</span>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="font-semibold text-gray-900 dark:text-white">{doneToday}</span>
               <span>/{habits.length} done today</span>
             </div>
             {topStreak > 0 && (
-              <div className="text-sm text-gray-500">
-                🔥 <span className="font-semibold text-gray-900">{topStreak}</span> day top streak
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                🔥 <span className="font-semibold text-gray-900 dark:text-white">{topStreak}</span> day top streak
               </div>
             )}
           </div>
@@ -436,14 +436,14 @@ export default function Habits() {
           <div className="flex items-center justify-between mb-3 px-1">
             <button
               onClick={prevMonth}
-              className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-lg"
             >
               ‹
             </button>
-            <span className="text-sm font-semibold text-gray-700">{monthLabel}</span>
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{monthLabel}</span>
             <button
               onClick={nextMonth}
-              className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition text-lg"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition text-lg"
               disabled={viewYear === now.getFullYear() && viewMonth === now.getMonth()}
             >
               ›
@@ -451,30 +451,30 @@ export default function Habits() {
           </div>
 
           {/* Calendar grid */}
-          <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-2xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
             <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-20 bg-white min-w-[120px] max-w-[160px]" />
+                  <th className="sticky left-0 z-20 bg-white dark:bg-gray-900 min-w-[120px] max-w-[160px]" />
                   {days.map(({ day, dateStr }) => (
                     <th
                       key={dateStr}
                       className={`p-0.5 text-center ${dateStr === todayStr ? 'relative' : ''}`}
                     >
                       <div className={`text-[10px] font-semibold w-7 mx-auto leading-none pt-2 pb-0.5 ${
-                        dateStr === todayStr ? 'text-brand-600' : 'text-gray-400'
+                        dateStr === todayStr ? 'text-brand-600' : 'text-gray-400 dark:text-gray-600'
                       }`}>
                         {day}
                       </div>
                       <div className={`text-[9px] w-7 mx-auto leading-none pb-2 ${
-                        dateStr === todayStr ? 'text-brand-400' : 'text-gray-300'
+                        dateStr === todayStr ? 'text-brand-400' : 'text-gray-300 dark:text-gray-600'
                       }`}>
                         {DAY_LABELS[new Date(viewYear, viewMonth, day).getDay()]}
                       </div>
                     </th>
                   ))}
-                  <th className="sticky right-0 z-20 bg-white min-w-[64px]">
-                    <div className="text-[10px] font-semibold text-gray-400 text-right pr-3 pt-2 pb-2">
+                  <th className="sticky right-0 z-20 bg-white dark:bg-gray-900 min-w-[64px]">
+                    <div className="text-[10px] font-semibold text-gray-400 dark:text-gray-600 text-right pr-3 pt-2 pb-2">
                       Streak
                     </div>
                   </th>
@@ -482,7 +482,7 @@ export default function Habits() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {useGroups
                   ? grouped.map(slot => (
                     <Fragment key={slot.key}>
@@ -498,12 +498,12 @@ export default function Habits() {
 
           {/* Legend */}
           <div className="flex items-center gap-3 mt-3 px-1">
-            <span className="text-xs text-gray-400">Less</span>
+            <span className="text-xs text-gray-400 dark:text-gray-600">Less</span>
             {[0.15, 0.4, 0.65, 0.85, 1].map(o => (
               <div key={o} className="w-3 h-3 rounded-sm" style={{ backgroundColor: `rgba(99,102,241,${o})` }} />
             ))}
             <span className="text-xs text-gray-400">More</span>
-            <span className="text-xs text-gray-300 ml-2">· Click any cell to toggle</span>
+            <span className="text-xs text-gray-300 dark:text-gray-600 ml-2">· Click any cell to toggle</span>
           </div>
         </>
       )}
@@ -549,10 +549,10 @@ export default function Habits() {
           />
           {/* Preview */}
           {form.name && (
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: form.color }} />
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-medium text-gray-800">{form.name}</span>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{form.name}</span>
                 {form.cue && (
                   <span className="text-xs text-gray-400">{form.cue}</span>
                 )}

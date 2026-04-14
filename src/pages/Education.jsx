@@ -80,7 +80,7 @@ export default function Education() {
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === f ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filter === f ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
             >
               {f}
@@ -106,7 +106,7 @@ export default function Education() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-base">{TYPE_EMOJI[item.type] ?? '📌'}</span>
-                    <span className="font-semibold text-gray-900">{item.title}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{item.title}</span>
                     <Badge color="indigo">{item.type}</Badge>
                     <Badge color={STATUS_COLORS[item.status]}>{item.status}</Badge>
                   </div>
@@ -122,20 +122,20 @@ export default function Education() {
 
               {item.status !== 'Not Started' && (
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
                     <span>Progress</span>
                     <div className="flex items-center gap-2">
                       <span>{item.progress ?? 0}%</span>
                       {item.status === 'In Progress' && (item.progress ?? 0) < 100 && (
                         <button
                           onClick={e => { e.stopPropagation(); update(item.id, { progress: Math.min(100, (item.progress ?? 0) + 10) }) }}
-                          className="text-[10px] font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                          className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-700 rounded-full px-2 py-0.5 leading-none transition-colors"
                         >+10%</button>
                       )}
                       {item.status === 'In Progress' && (item.progress ?? 0) >= 100 && (
                         <button
                           onClick={e => { e.stopPropagation(); update(item.id, { status: 'Completed', endDate: new Date().toISOString().slice(0, 10) }) }}
-                          className="text-[10px] font-semibold text-green-600 bg-green-50 hover:bg-green-100 border border-green-200 rounded-full px-2 py-0.5 leading-none transition-colors"
+                          className="text-[10px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-full px-2 py-0.5 leading-none transition-colors"
                         >✓ Mark complete</button>
                       )}
                     </div>
@@ -144,7 +144,7 @@ export default function Education() {
                 </div>
               )}
 
-              <div className="flex gap-4 mt-2 text-xs text-gray-400 flex-wrap">
+              <div className="flex gap-4 mt-2 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
                 {item.startDate && <span>▶ {fmtDate(item.startDate)}</span>}
                 {item.endDate   && <span>⏹ {fmtDate(item.endDate)}</span>}
               </div>
@@ -170,7 +170,7 @@ export default function Education() {
             </Select>
           </div>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700">Progress — {form.progress}%</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Progress — {form.progress}%</span>
             <input
               type="range" min="0" max="100" step="5"
               value={form.progress}

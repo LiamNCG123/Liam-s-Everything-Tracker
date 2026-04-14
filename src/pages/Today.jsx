@@ -67,8 +67,8 @@ function SectionHeader({ emoji, title, meta, action }) {
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
         <span className="text-base">{emoji}</span>
-        <span className="font-semibold text-gray-900 text-sm">{title}</span>
-        {meta && <span className="text-xs text-gray-400">{meta}</span>}
+        <span className="font-semibold text-gray-900 dark:text-white text-sm">{title}</span>
+        {meta && <span className="text-xs text-gray-400 dark:text-gray-500">{meta}</span>}
       </div>
       {action}
     </div>
@@ -115,13 +115,13 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
   const allDone = doneCount === total
 
   return (
-    <Card className={`p-4 transition-colors duration-500 ${allDone ? 'bg-green-50 border-green-100' : ''}`}>
+    <Card className={`p-4 transition-colors duration-500 ${allDone ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800' : ''}`}>
       <SectionHeader
         emoji="✅"
         title="Habits"
         meta={`${doneCount}/${total} today`}
         action={
-          <button onClick={() => navigate('/habits')} className="text-xs text-gray-400 hover:text-indigo-600">
+          <button onClick={() => navigate('/habits')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
             All habits →
           </button>
         }
@@ -137,16 +137,16 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
 
       {/* At-risk nudge */}
       {atRiskCount > 0 && !allDone && (
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-3">
+        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-2 mb-3">
           <span className="text-base">⚠️</span>
-          <span className="text-xs text-amber-800 font-medium">
+          <span className="text-xs text-amber-800 dark:text-amber-300 font-medium">
             {atRiskCount} streak{atRiskCount > 1 ? 's' : ''} at risk — complete before midnight
           </span>
         </div>
       )}
 
       {/* Habit rows */}
-      <div className="flex flex-col divide-y divide-gray-50">
+      <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
         {enriched.map(h => {
           const flashing = flashIds?.has(h.id)
           const tier = streakTier(h.streak)
@@ -167,7 +167,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
                     ? 'bg-green-500 border-green-500'
                     : h.atRisk
                       ? 'border-amber-400 bg-amber-50 animate-pulse'
-                      : 'border-gray-300'
+                      : 'border-gray-300 dark:border-gray-600'
               }`}>
                 {(h.done || flashing) && <span className="text-white text-xs font-bold">✓</span>}
               </span>
@@ -175,7 +175,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
               {/* Color dot + name + goal tag */}
               <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
               <span className="flex-1 flex flex-col min-w-0">
-                <span className={`text-sm font-medium ${h.done ? 'line-through text-gray-400' : 'text-gray-800'}`}>
+                <span className={`text-sm font-medium ${h.done ? 'line-through text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-100'}`}>
                   {h.name}
                 </span>
                 {h.goalId && goalMap[h.goalId] && (
@@ -203,7 +203,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
                 <span className="text-[10px] text-amber-500 shrink-0">today</span>
               )}
               {h.broken && (
-                <span className="text-[10px] text-gray-400 italic shrink-0">restart today</span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 italic shrink-0">restart today</span>
               )}
             </button>
           )
@@ -211,7 +211,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
       </div>
 
       {allDone && (
-        <div className="mt-3 text-center text-sm font-semibold text-green-600">
+        <div className="mt-3 text-center text-sm font-semibold text-green-600 dark:text-green-400">
           All habits done today 🎉
         </div>
       )}
@@ -231,42 +231,42 @@ function TrainingSection({ programmes, sessions, todayStr }) {
     : null
 
   return (
-    <Card className={`p-4 ${workoutDoneToday ? 'bg-green-50 border-green-100' : ''}`}>
+    <Card className={`p-4 ${workoutDoneToday ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800' : ''}`}>
       <SectionHeader
         emoji="💪"
         title="Training"
         meta={workoutDoneToday ? `${todaySessions.length} session${todaySessions.length > 1 ? 's' : ''} logged` : null}
         action={
-          <button onClick={() => navigate('/training')} className="text-xs text-gray-400 hover:text-indigo-600">
+          <button onClick={() => navigate('/training')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
             Open →
           </button>
         }
       />
 
       {workoutDoneToday ? (
-        <div className="text-sm text-green-700 font-medium">
+        <div className="text-sm text-green-700 dark:text-green-400 font-medium">
           ✓ Workout logged today
           {todaySessions.map(s => (
-            <div key={s.id} className="text-xs text-green-600 font-normal mt-0.5">{s.dayTitle || s.programmeName}</div>
+            <div key={s.id} className="text-xs text-green-600 dark:text-green-500 font-normal mt-0.5">{s.dayTitle || s.programmeName}</div>
           ))}
         </div>
       ) : activeProg && suggestedDay ? (
         <div>
-          <div className="text-xs text-gray-400 mb-1">
+          <div className="text-xs text-gray-400 dark:text-gray-500 mb-1">
             {activeProg.name} · {lastSession ? `Last: ${fmtDate(lastSession.date)}` : 'No sessions yet'}
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold text-gray-900">{suggestedDay.title}</div>
+              <div className="text-sm font-semibold text-gray-900 dark:text-white">{suggestedDay.title}</div>
               {suggestedDay.items?.slice(0, 3).map(ex => (
-                <div key={ex.id} className="text-xs text-gray-500 mt-0.5">
+                <div key={ex.id} className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   {ex.name}
                   {ex.targetSets && ex.targetReps ? ` · ${ex.targetSets}×${ex.targetReps}` : ''}
                   {ex.targetWeight && ex.unit !== 'NA' ? ` @ ${ex.targetWeight}${ex.unit}` : ''}
                 </div>
               ))}
               {(suggestedDay.items?.length || 0) > 3 && (
-                <div className="text-xs text-gray-400 mt-0.5">+{suggestedDay.items.length - 3} more</div>
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">+{suggestedDay.items.length - 3} more</div>
               )}
             </div>
             <Button variant="primary" size="sm" onClick={() => navigate('/training')}>
@@ -306,7 +306,7 @@ function FinanceSection({ transactions }) {
         title="Finance"
         meta={monthLabel()}
         action={
-          <button onClick={() => navigate('/finance')} className="text-xs text-gray-400 hover:text-indigo-600">
+          <button onClick={() => navigate('/finance')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
             Open →
           </button>
         }
@@ -321,17 +321,17 @@ function FinanceSection({ transactions }) {
         <>
           {/* Month summary */}
           <div className="grid grid-cols-3 gap-2 mb-3">
-            <div className="bg-green-50 rounded-xl p-2 text-center">
-              <div className="text-xs text-green-600 font-medium">Income</div>
-              <div className="text-sm font-bold text-green-700">{fmt(income)}</div>
+            <div className="bg-green-50 dark:bg-green-900/30 rounded-xl p-2 text-center">
+              <div className="text-xs text-green-600 dark:text-green-400 font-medium">Income</div>
+              <div className="text-sm font-bold text-green-700 dark:text-green-300">{fmt(income)}</div>
             </div>
-            <div className="bg-red-50 rounded-xl p-2 text-center">
-              <div className="text-xs text-red-500 font-medium">Spent</div>
-              <div className="text-sm font-bold text-red-600">{fmt(expense)}</div>
+            <div className="bg-red-50 dark:bg-red-900/30 rounded-xl p-2 text-center">
+              <div className="text-xs text-red-500 dark:text-red-400 font-medium">Spent</div>
+              <div className="text-sm font-bold text-red-600 dark:text-red-400">{fmt(expense)}</div>
             </div>
-            <div className={`rounded-xl p-2 text-center ${income - expense >= 0 ? 'bg-gray-50' : 'bg-orange-50'}`}>
-              <div className="text-xs text-gray-500 font-medium">Net</div>
-              <div className={`text-sm font-bold ${income - expense >= 0 ? 'text-gray-700' : 'text-orange-600'}`}>
+            <div className={`rounded-xl p-2 text-center ${income - expense >= 0 ? 'bg-gray-50 dark:bg-gray-800' : 'bg-orange-50 dark:bg-orange-900/30'}`}>
+              <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">Net</div>
+              <div className={`text-sm font-bold ${income - expense >= 0 ? 'text-gray-700 dark:text-gray-200' : 'text-orange-600 dark:text-orange-400'}`}>
                 {income - expense >= 0 ? '+' : ''}{fmt(income - expense)}
               </div>
             </div>
@@ -341,25 +341,25 @@ function FinanceSection({ transactions }) {
           {uncategorized.length > 0 && (
             <button
               onClick={() => navigate('/finance/import')}
-              className="w-full flex items-center justify-between bg-yellow-50 border border-yellow-100 rounded-xl px-3 py-2 mb-3 text-left hover:bg-yellow-100 transition-colors"
+              className="w-full flex items-center justify-between bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-100 dark:border-yellow-800 rounded-xl px-3 py-2 mb-3 text-left hover:bg-yellow-100 dark:hover:bg-yellow-900/50 transition-colors"
             >
-              <span className="text-xs font-semibold text-yellow-700">
+              <span className="text-xs font-semibold text-yellow-700 dark:text-yellow-400">
                 ⚠ {uncategorized.length} uncategorized transaction{uncategorized.length > 1 ? 's' : ''}
               </span>
-              <span className="text-xs text-yellow-600">Review →</span>
+              <span className="text-xs text-yellow-600 dark:text-yellow-500">Review →</span>
             </button>
           )}
 
           {/* Recent transactions */}
           {recent.length > 0 && (
-            <div className="flex flex-col divide-y divide-gray-50">
+            <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
               {recent.map(t => (
                 <div key={t.id} className="flex items-center gap-2 py-2">
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-medium text-gray-800 truncate">{t.description || '—'}</div>
-                    <div className="text-[10px] text-gray-400">{t.category} · {fmtDate(t.date)}</div>
+                    <div className="text-xs font-medium text-gray-800 dark:text-gray-100 truncate">{t.description || '—'}</div>
+                    <div className="text-[10px] text-gray-400 dark:text-gray-500">{t.category} · {fmtDate(t.date)}</div>
                   </div>
-                  <span className={`text-xs font-semibold shrink-0 ${t.type === 'income' ? 'text-green-600' : 'text-gray-700'}`}>
+                  <span className={`text-xs font-semibold shrink-0 ${t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>
                     {t.type === 'income' ? '+' : '-'}{fmt(t.amount)}
                   </span>
                 </div>
@@ -383,7 +383,7 @@ function GoalsSection({ goals }) {
         title="Goals"
         meta={active.length ? `${active.length} in progress` : null}
         action={
-          <button onClick={() => navigate('/goals')} className="text-xs text-gray-400 hover:text-indigo-600">
+          <button onClick={() => navigate('/goals')} className="text-xs text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">
             All goals →
           </button>
         }
@@ -399,15 +399,15 @@ function GoalsSection({ goals }) {
           {active.slice(0, 4).map(g => (
             <div key={g.id}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-gray-800 truncate flex-1 mr-2">{g.title}</span>
-                <span className="text-xs text-gray-400 shrink-0">{g.progress ?? 0}%</span>
+                <span className="text-sm font-medium text-gray-800 dark:text-gray-100 truncate flex-1 mr-2">{g.title}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">{g.progress ?? 0}%</span>
               </div>
               <ProgressBar
                 value={g.progress ?? 0}
                 color={(g.progress ?? 0) >= 80 ? 'green' : 'indigo'}
               />
               {g.targetDate && (
-                <div className="text-[10px] text-gray-400 mt-0.5">Due {fmtDate(g.targetDate)}</div>
+                <div className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">Due {fmtDate(g.targetDate)}</div>
               )}
             </div>
           ))}
@@ -560,7 +560,7 @@ function InboxSection({ items }) {
   const dotColor = { 1: 'bg-red-400', 2: 'bg-amber-400', 3: 'bg-gray-300' }
 
   return (
-    <Card className="p-4 border-amber-100">
+    <Card className="p-4 border-amber-100 dark:border-amber-900">
       <SectionHeader
         emoji="📋"
         title="Needs Attention"
@@ -571,12 +571,12 @@ function InboxSection({ items }) {
           <button
             key={item.id}
             onClick={() => navigate(item.to)}
-            className="flex items-start gap-3 py-2.5 text-left w-full hover:bg-gray-50 rounded-lg transition-colors"
+            className="flex items-start gap-3 py-2.5 text-left w-full hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColor[item.priority]}`} />
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-gray-800">{item.label}</div>
-              {item.sub && <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>}
+              <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{item.label}</div>
+              {item.sub && <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{item.sub}</div>}
             </div>
             <span className="text-xs text-gray-400 shrink-0 mt-1">→</span>
           </button>
@@ -744,7 +744,7 @@ export default function Today() {
       {/* Date heading */}
       <div className="flex items-baseline justify-between">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Today</h1>
-        <span className="text-sm text-gray-400">{dateLabel}</span>
+        <span className="text-sm text-gray-400 dark:text-gray-500">{dateLabel}</span>
       </div>
 
       {/* Status bar */}

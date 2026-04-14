@@ -48,18 +48,18 @@ function describeItem(item) {
 
 function ItemRow({ item, onChange, onRemove }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-3 mb-2 flex flex-col gap-2">
+    <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-3 mb-2 flex flex-col gap-2">
       <div className="flex gap-2">
         <input
           value={item.name}
           onChange={e => onChange({ name: e.target.value })}
           placeholder="Exercise / activity name…"
-          className="flex-1 text-sm border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 focus:bg-white"
+          className="flex-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-700"
         />
         <select
           value={item.type}
           onChange={e => onChange({ type: e.target.value })}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 bg-gray-50 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500"
         >
           {ITEM_TYPES.map(t => <option key={t} value={t}>{TYPE_LABELS[t]}</option>)}
         </select>
@@ -70,17 +70,17 @@ function ItemRow({ item, onChange, onRemove }) {
         <div className="flex gap-1.5 flex-wrap items-center">
           <input value={item.targetSets} onChange={e => onChange({ targetSets: e.target.value })}
             placeholder="Sets" type="number" min="0"
-            className="w-14 text-xs text-center border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
-          <span className="text-gray-300 text-xs">×</span>
+            className="w-14 text-xs text-center border border-gray-200 dark:border-gray-700 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
+          <span className="text-gray-300 dark:text-gray-600 text-xs">×</span>
           <input value={item.targetReps} onChange={e => onChange({ targetReps: e.target.value })}
             placeholder="Reps"
-            className="w-16 text-xs text-center border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
-          <span className="text-gray-300 text-xs">@</span>
+            className="w-16 text-xs text-center border border-gray-200 dark:border-gray-700 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
+          <span className="text-gray-300 dark:text-gray-600 text-xs">@</span>
           <input value={item.targetWeight} onChange={e => onChange({ targetWeight: e.target.value })}
             placeholder="Weight"
-            className="w-16 text-xs text-center border border-gray-200 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
+            className="w-16 text-xs text-center border border-gray-200 dark:border-gray-700 rounded-lg px-1.5 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
           <select value={item.unit} onChange={e => onChange({ unit: e.target.value })}
-            className="text-xs border border-gray-200 rounded-lg px-1.5 py-1 bg-gray-50 focus:outline-none">
+            className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-1.5 py-1 bg-gray-50 dark:bg-gray-800 dark:text-white focus:outline-none">
             {UNITS.map(u => <option key={u}>{u}</option>)}
           </select>
         </div>
@@ -90,13 +90,13 @@ function ItemRow({ item, onChange, onRemove }) {
         <div className="flex gap-1.5 flex-wrap">
           <input value={item.duration} onChange={e => onChange({ duration: e.target.value })}
             placeholder="Duration (e.g. 30 min)"
-            className="flex-1 min-w-[90px] text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
+            className="flex-1 min-w-[90px] text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
           <input value={item.speed} onChange={e => onChange({ speed: e.target.value })}
             placeholder="Speed"
-            className="w-20 text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
+            className="w-20 text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
           <input value={item.incline} onChange={e => onChange({ incline: e.target.value })}
             placeholder="Incline %"
-            className="w-20 text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
+            className="w-20 text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
         </div>
       )}
 
@@ -104,16 +104,16 @@ function ItemRow({ item, onChange, onRemove }) {
         <div className="flex gap-1.5 flex-wrap">
           <input value={item.rounds} onChange={e => onChange({ rounds: e.target.value })}
             placeholder="Rounds"
-            className="w-20 text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
+            className="w-20 text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
           <input value={item.description} onChange={e => onChange({ description: e.target.value })}
             placeholder="Description (e.g. 10 burpees, 20 pushups…)"
-            className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50" />
+            className="flex-1 text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
         </div>
       )}
 
       <input value={item.notes} onChange={e => onChange({ notes: e.target.value })}
         placeholder="Notes (optional)"
-        className="text-xs text-gray-500 border border-gray-100 rounded-lg px-2 py-1 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:bg-white" />
+        className="text-xs text-gray-500 dark:text-gray-400 border border-gray-100 dark:border-gray-800 rounded-lg px-2 py-1 bg-gray-50 dark:bg-gray-800 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500 focus:bg-white dark:focus:bg-gray-700" />
     </div>
   )
 }
@@ -150,8 +150,8 @@ function ProgrammeEditor({ initial, onSave, onCancel }) {
   return (
     <div>
       <div className="flex items-center gap-3 mb-5">
-        <button onClick={onCancel} className="text-sm font-medium text-gray-400 hover:text-gray-700">← Back</button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">{initial ? 'Edit Programme' : 'New Programme'}</h1>
+        <button onClick={onCancel} className="text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Back</button>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white flex-1">{initial ? 'Edit Programme' : 'New Programme'}</h1>
         <Button onClick={() => form.name.trim() && onSave(form)} disabled={!form.name.trim()}>Save</Button>
       </div>
 
@@ -171,9 +171,9 @@ function ProgrammeEditor({ initial, onSave, onCancel }) {
               value={day.title}
               onChange={e => updateDay(day.id, { title: e.target.value })}
               placeholder={`Day ${i + 1} title…`}
-              className="flex-1 font-semibold text-gray-800 text-sm border-b border-gray-200 focus:border-brand-400 focus:outline-none pb-1 bg-transparent"
+              className="flex-1 font-semibold text-gray-800 dark:text-gray-100 text-sm border-b border-gray-200 dark:border-gray-700 focus:border-brand-400 focus:outline-none pb-1 bg-transparent"
             />
-            <label className="flex items-center gap-1 text-xs text-gray-400 cursor-pointer select-none whitespace-nowrap">
+            <label className="flex items-center gap-1 text-xs text-gray-400 dark:text-gray-500 cursor-pointer select-none whitespace-nowrap">
               <input type="checkbox" checked={day.isRest}
                 onChange={e => updateDay(day.id, { isRest: e.target.checked, items: [] })} />
               Rest day
@@ -185,13 +185,13 @@ function ProgrammeEditor({ initial, onSave, onCancel }) {
           </div>
 
           {day.isRest ? (
-            <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-400 italic">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-sm text-gray-400 dark:text-gray-500 italic">
               Rest or recovery — no exercises needed.
             </div>
           ) : (
-            <div className="bg-gray-50 rounded-xl p-3">
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
               {day.items.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-2 mb-1">No exercises yet.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-2 mb-1">No exercises yet.</p>
               )}
               {day.items.map(item => (
                 <ItemRow key={item.id} item={item}
@@ -208,7 +208,7 @@ function ProgrammeEditor({ initial, onSave, onCancel }) {
       ))}
 
       <button onClick={addDay}
-        className="w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-400 hover:border-brand-300 hover:text-brand-500 transition mb-8">
+        className="w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-400 dark:text-gray-500 hover:border-brand-300 hover:text-brand-500 transition mb-8">
         + Add day
       </button>
     </div>
@@ -230,19 +230,19 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
 
   return (
     <Card className="overflow-hidden">
-      <div className="px-4 py-3 bg-gray-50 border-b border-gray-100">
+      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-start justify-between gap-2">
-          <div className="font-semibold text-sm text-gray-900">{entry.name}</div>
+          <div className="font-semibold text-sm text-gray-900 dark:text-white">{entry.name}</div>
           {delta && <DeltaBadge delta={delta} />}
         </div>
         {target && <div className="text-xs text-brand-500 mt-0.5">Target: {target}</div>}
         {prevSummary && (
-          <div className="text-xs text-gray-400 mt-0.5">Last: {prevSummary}</div>
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Last: {prevSummary}</div>
         )}
-        {entry.notes && <div className="text-xs text-gray-400 mt-0.5 italic">{entry.notes}</div>}
+        {entry.notes && <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 italic">{entry.notes}</div>}
       </div>
       <div className="px-4 py-3">
-        <div className="grid grid-cols-[28px_1fr_1fr_24px] gap-2 mb-2 text-xs text-gray-400 font-medium text-center">
+        <div className="grid grid-cols-[28px_1fr_1fr_24px] gap-2 mb-2 text-xs text-gray-400 dark:text-gray-500 font-medium text-center">
           <div />
           <div>Reps</div>
           <div>Weight</div>
@@ -257,7 +257,7 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
                 className={`w-7 h-7 rounded-full border-2 text-xs flex items-center justify-center transition-all ${
                   set.done
                     ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-gray-300 text-gray-400 hover:border-green-400'
+                    : 'border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-green-400'
                 }`}
               >
                 {set.done ? '✓' : i + 1}
@@ -267,13 +267,13 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
                 value={set.reps}
                 onChange={e => onUpdateSet(i, { reps: e.target.value })}
                 onBlur={() => { if (set.reps && !set.done) onUpdateSet(i, { done: true }) }}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-700"
               />
               <input
                 placeholder={entry.unit === 'BW' ? 'BW' : (prevSet?.weight || entry.targetWeight || 'kg')}
                 value={set.weight}
                 onChange={e => onUpdateSet(i, { weight: e.target.value })}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 focus:bg-white"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-700"
               />
               <button onClick={() => onRemoveSet(i)} disabled={entry.sets.length <= 1}
                 className="text-red-300 hover:text-red-500 disabled:opacity-20 text-lg leading-none">×</button>
@@ -284,7 +284,7 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
           <button onClick={onAddSet} className="text-xs text-brand-500 hover:text-brand-700 font-medium">
             + Add set
           </button>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {doneSets.length}/{(entry.sets || []).length} logged
           </span>
         </div>
@@ -296,7 +296,7 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
 function CardioLogger({ entry, onChange }) {
   return (
     <Card className="p-4">
-      <div className="font-semibold text-sm text-gray-900 mb-0.5">{entry.name}</div>
+      <div className="font-semibold text-sm text-gray-900 dark:text-white mb-0.5">{entry.name}</div>
       {describeItem(entry) && <div className="text-xs text-brand-500 mb-3">Target: {describeItem(entry)}</div>}
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -305,14 +305,14 @@ function CardioLogger({ entry, onChange }) {
           { label: 'Incline %', key: 'actualIncline', ph: entry.incline || '—' },
         ].map(({ label, key, ph }) => (
           <div key={key} className="flex flex-col gap-1">
-            <span className="text-xs text-gray-400">{label}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">{label}</span>
             <input value={entry[key] || ''} onChange={e => onChange({ [key]: e.target.value })}
               placeholder={ph}
-              className="border border-gray-200 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 text-center" />
+              className="border border-gray-200 dark:border-gray-700 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 text-center" />
           </div>
         ))}
       </div>
-      {entry.notes && <p className="text-xs text-gray-400 mt-2">📝 {entry.notes}</p>}
+      {entry.notes && <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">📝 {entry.notes}</p>}
     </Card>
   )
 }
@@ -322,23 +322,23 @@ function CircuitLogger({ entry, onChange }) {
     <Card className="p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <div>
-          <div className="font-semibold text-sm text-gray-900">{entry.name}</div>
-          {entry.description && <p className="text-xs text-gray-500 mt-0.5">{entry.description}</p>}
+          <div className="font-semibold text-sm text-gray-900 dark:text-white">{entry.name}</div>
+          {entry.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{entry.description}</p>}
           {entry.rounds && <div className="text-xs text-brand-500 mt-0.5">Target: {entry.rounds} rounds</div>}
         </div>
         <label className="flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer">
           <input type="checkbox" checked={entry.completed || false}
             onChange={e => onChange({ completed: e.target.checked })} />
-          <span className="text-gray-600 text-sm">Done</span>
+          <span className="text-gray-600 dark:text-gray-300 text-sm">Done</span>
         </label>
       </div>
       <div className="flex gap-2">
         <input value={entry.actualRounds || ''} onChange={e => onChange({ actualRounds: e.target.value })}
           placeholder={entry.rounds ? `Target: ${entry.rounds}` : 'Rounds completed'}
-          className="w-36 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50" />
+          className="w-36 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
         <input value={entry.entryNotes || ''} onChange={e => onChange({ entryNotes: e.target.value })}
           placeholder="Notes…"
-          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50" />
+          className="flex-1 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-gray-50 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
       </div>
     </Card>
   )
@@ -346,13 +346,13 @@ function CircuitLogger({ entry, onChange }) {
 
 function NoteLogger({ entry, onChange }) {
   return (
-    <Card className="p-3 flex items-center gap-3 bg-amber-50 border-amber-100">
+    <Card className="p-3 flex items-center gap-3 bg-amber-50 dark:bg-amber-900/30 border-amber-100">
       <span className="text-lg">📝</span>
-      <span className="text-sm text-gray-600 flex-1 italic">{entry.name || entry.notes}</span>
+      <span className="text-sm text-gray-600 dark:text-gray-300 flex-1 italic">{entry.name || entry.notes}</span>
       <label className="flex items-center gap-1.5 cursor-pointer">
         <input type="checkbox" checked={entry.completed || false}
           onChange={e => onChange({ completed: e.target.checked })} />
-        <span className="text-xs text-gray-500">Done</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">Done</span>
       </label>
     </Card>
   )
@@ -422,10 +422,10 @@ function calcStrengthDelta(currentSets, prevSets) {
 function DeltaBadge({ delta }) {
   if (!delta) return null
   const cls = delta.dir === 'up'
-    ? 'text-green-700 bg-green-50 border-green-200'
+    ? 'text-green-700 bg-green-50 dark:bg-green-900/30 border-green-200'
     : delta.dir === 'down'
-    ? 'text-red-500 bg-red-50 border-red-200'
-    : 'text-gray-400 bg-gray-50 border-gray-200'
+    ? 'text-red-500 bg-red-50 dark:bg-red-900/30 border-red-200'
+    : 'text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
   const arrow = delta.dir === 'up' ? '↑' : delta.dir === 'down' ? '↓' : '→'
   return (
     <span className={`text-[10px] font-semibold border rounded-full px-2 py-0.5 whitespace-nowrap ${cls}`}>
@@ -511,13 +511,13 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
   return (
     <div>
       <div className="flex items-center gap-3 mb-5">
-        <button onClick={onCancel} className="text-sm font-medium text-gray-400 hover:text-gray-700">← Back</button>
+        <button onClick={onCancel} className="text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Back</button>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-gray-900 leading-tight">{day.title}</h1>
-          {programme && <div className="text-xs text-gray-400">{programme.name}</div>}
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">{day.title}</h1>
+          {programme && <div className="text-xs text-gray-400 dark:text-gray-500">{programme.name}</div>}
         </div>
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
-          className="text-xs border border-gray-200 rounded-xl px-2 py-1.5 bg-gray-50 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-xl px-2 py-1.5 bg-gray-50 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-brand-500" />
       </div>
 
       {/* Prefill notice */}
@@ -530,18 +530,18 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
 
       {/* Previous sessions for this day */}
       {prevSessions.length > 0 && (
-        <details className="mb-4 bg-gray-50 rounded-xl overflow-hidden">
-          <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 font-medium px-4 py-3 list-none flex items-center gap-1">
+        <details className="mb-4 bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
+          <summary className="text-xs text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 font-medium px-4 py-3 list-none flex items-center gap-1">
             <span>📊</span>
             <span>Previous sessions for this day ({prevSessions.length})</span>
           </summary>
           <div className="px-4 pb-3 flex flex-col gap-2">
             {prevSessions.map(s => (
-              <div key={s.id} className="bg-white rounded-xl px-3 py-2">
-                <div className="text-xs font-semibold text-gray-600 mb-1">{fmtDate(s.date)}</div>
+              <div key={s.id} className="bg-white dark:bg-gray-900 rounded-xl px-3 py-2">
+                <div className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">{fmtDate(s.date)}</div>
                 {(s.exercises || []).filter(e => e.type === 'strength').map((e, i) => (
-                  <div key={i} className="text-xs text-gray-400 leading-snug">
-                    <span className="font-medium text-gray-600">{e.name}:</span>{' '}
+                  <div key={i} className="text-xs text-gray-400 dark:text-gray-500 leading-snug">
+                    <span className="font-medium text-gray-600 dark:text-gray-300">{e.name}:</span>{' '}
                     {(e.sets || []).filter(s => s.reps).map(s => `${s.reps}×${s.weight || 'BW'}`).join(', ') || '—'}
                   </div>
                 ))}
@@ -599,29 +599,29 @@ function HistoryCard({ session, prevSession }) {
   return (
     <Card className="overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition">
+        className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition">
         <div>
-          <div className="font-semibold text-gray-900 text-sm">
+          <div className="font-semibold text-gray-900 dark:text-white text-sm">
             {session.dayTitle || fmtDate(session.date)}
           </div>
-          <div className="text-xs text-gray-400 mt-0.5">{subtitle}</div>
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{subtitle}</div>
         </div>
-        <span className="text-gray-400 text-xs ml-2">{open ? '▲' : '▼'}</span>
+        <span className="text-gray-400 dark:text-gray-500 text-xs ml-2">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 px-4 py-3">
+        <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
           {(session.exercises || []).map((ex, i) => {
             // Legacy format: sets/reps/weight are scalars (no type field)
             const isLegacy = !ex.type && (typeof ex.sets !== 'object')
             if (isLegacy) {
               return (
-                <div key={i} className="py-1.5 border-b border-gray-50 last:border-0 flex items-baseline gap-2">
-                  <span className="text-sm font-medium text-gray-800">{ex.name}</span>
-                  <span className="text-xs text-gray-400">
+                <div key={i} className="py-1.5 border-b border-gray-50 dark:border-gray-800 last:border-0 flex items-baseline gap-2">
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{ex.name}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
                     {[ex.sets && `${ex.sets} sets`, ex.reps && `${ex.reps} reps`, ex.weight && `@ ${ex.weight}kg`].filter(Boolean).join(' · ')}
                   </span>
-                  {ex.notes && <span className="text-xs text-gray-400 italic">— {ex.notes}</span>}
+                  {ex.notes && <span className="text-xs text-gray-400 dark:text-gray-500 italic">— {ex.notes}</span>}
                 </div>
               )
             }
@@ -630,27 +630,27 @@ function HistoryCard({ session, prevSession }) {
               const prev   = prevExData[ex.name?.toLowerCase()]
               const delta  = calcStrengthDelta(logged.map(s => ({ ...s, done: true })), prev)
               return (
-                <div key={i} className="py-1.5 border-b border-gray-50 last:border-0">
+                <div key={i} className="py-1.5 border-b border-gray-50 dark:border-gray-800 last:border-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="text-sm font-medium text-gray-800">{ex.name}</div>
+                    <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{ex.name}</div>
                     {delta && <DeltaBadge delta={delta} />}
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {logged.length > 0
                       ? logged.map((s, j) => (
-                        <span key={j} className="text-xs bg-gray-100 text-gray-600 rounded-lg px-2 py-0.5">
+                        <span key={j} className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg px-2 py-0.5">
                           {s.reps}{s.weight ? `×${s.weight}` : ''}
                         </span>
                       ))
-                      : <span className="text-xs text-gray-300">—</span>
+                      : <span className="text-xs text-gray-300 dark:text-gray-600">—</span>
                     }
                   </div>
                 </div>
               )
             }
             return (
-              <div key={i} className="py-1.5 border-b border-gray-50 last:border-0 flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{ex.name}</span>
+              <div key={i} className="py-1.5 border-b border-gray-50 dark:border-gray-800 last:border-0 flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{ex.name}</span>
                 <Badge color="gray">{ex.type}</Badge>
                 {(ex.completed || ex.actualRounds || ex.actualDuration) && (
                   <span className="text-xs text-green-600">
@@ -660,7 +660,7 @@ function HistoryCard({ session, prevSession }) {
               </div>
             )
           })}
-          {session.notes && <p className="text-xs text-gray-400 mt-3 italic">📝 {session.notes}</p>}
+          {session.notes && <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 italic">📝 {session.notes}</p>}
         </div>
       )}
     </Card>
@@ -679,33 +679,33 @@ function ProgrammeCard({ programme, sessions, isActive, onEdit, onDelete, onDupl
       <div className="px-4 py-3 flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-gray-900">{programme.name}</span>
+            <span className="font-bold text-gray-900 dark:text-white">{programme.name}</span>
             {isActive && <Badge color="indigo">Active</Badge>}
           </div>
           {programme.description && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{programme.description}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{programme.description}</p>
           )}
-          <div className="text-xs text-gray-400 mt-1">
+          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
             {programme.days.length} days · {progSessions.length} session{progSessions.length !== 1 ? 's' : ''} logged
             {lastSession && ` · Last: ${fmtDate(lastSession.date)}`}
           </div>
         </div>
-        <button onClick={() => setExpanded(e => !e)} className="text-gray-400 hover:text-gray-600 text-sm mt-1">
+        <button onClick={() => setExpanded(e => !e)} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 text-sm mt-1">
           {expanded ? '▲' : '▼'}
         </button>
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-gray-100 dark:border-gray-800">
           <div className="px-4 py-2">
             {programme.days.map(day => (
-              <div key={day.id} className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0">
+              <div key={day.id} className="flex items-center gap-3 py-2.5 border-b border-gray-50 dark:border-gray-800 last:border-0">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800">{day.title}</div>
+                  <div className="text-sm font-medium text-gray-800 dark:text-gray-100">{day.title}</div>
                   {day.isRest ? (
-                    <div className="text-xs text-gray-400">Rest / Recovery</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500">Rest / Recovery</div>
                   ) : (
-                    <div className="text-xs text-gray-400 truncate">
+                    <div className="text-xs text-gray-400 dark:text-gray-500 truncate">
                       {day.items.map(it => it.name).filter(Boolean).join(' · ').slice(0, 55) || 'No exercises added'}
                     </div>
                   )}
@@ -716,7 +716,7 @@ function ProgrammeCard({ programme, sessions, isActive, onEdit, onDelete, onDupl
               </div>
             ))}
           </div>
-          <div className="flex gap-2 px-4 py-3 bg-gray-50 border-t border-gray-100 flex-wrap">
+          <div className="flex gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-800 flex-wrap">
             {!isActive && (
               <Button size="sm" onClick={onSetActive}>Set active</Button>
             )}
@@ -747,18 +747,18 @@ function AdHocLogger({ onSave, onCancel }) {
   return (
     <div>
       <div className="flex items-center gap-3 mb-5">
-        <button onClick={onCancel} className="text-sm font-medium text-gray-400 hover:text-gray-700">← Back</button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Quick Log</h1>
+        <button onClick={onCancel} className="text-sm font-medium text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">← Back</button>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white flex-1">Quick Log</h1>
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
-          className="text-xs border border-gray-200 rounded-xl px-2 py-1.5 bg-gray-50 focus:outline-none" />
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-xl px-2 py-1.5 bg-gray-50 dark:bg-gray-800 dark:text-white focus:outline-none" />
       </div>
 
       {exercises.map((ex, idx) => (
-        <div key={ex._id} className="bg-gray-50 rounded-xl p-3 mb-2">
+        <div key={ex._id} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3 mb-2">
           <div className="flex gap-2 mb-2">
             <input value={ex.name} onChange={e => setEx(idx, 'name', e.target.value)}
               placeholder="Exercise name *" autoFocus={idx === 0}
-              className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white" />
+              className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white dark:bg-gray-900 dark:text-white dark:placeholder-gray-500" />
             {exercises.length > 1 && (
               <button onClick={() => setExercises(es => es.filter((_, i) => i !== idx))}
                 className="text-red-300 hover:text-red-500 text-xl leading-none">×</button>
@@ -769,7 +769,7 @@ function AdHocLogger({ onSave, onCancel }) {
               <input key={f} value={ex[f]} onChange={e => setEx(idx, f, e.target.value)}
                 placeholder={f.charAt(0).toUpperCase() + f.slice(1)}
                 type="number" min="0"
-                className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white" />
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5 text-sm text-center focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white dark:bg-gray-900 dark:text-white dark:placeholder-gray-500" />
             ))}
           </div>
         </div>
@@ -889,7 +889,7 @@ export default function Training() {
     <Toast message="Session logged." visible={sessionToast} />
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Training</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Training</h1>
         <div className="flex gap-2">
           <Button variant="secondary" size="sm" onClick={() => setView('adhoc')}>Quick log</Button>
           {tab === 'programmes' && (
@@ -906,11 +906,11 @@ export default function Training() {
         </div>
       )}
 
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-5">
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 mb-5">
         {[['programmes', 'Programmes'], ['history', 'History']].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              tab === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              tab === key ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}>
             {label}
           </button>
