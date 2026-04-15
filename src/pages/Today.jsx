@@ -106,7 +106,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
   if (!total) return (
     <Card className="p-4">
       <SectionHeader emoji="✅" title="Habits" />
-      <p className="text-sm text-gray-400">No habits yet.{' '}
+      <p className="text-sm text-gray-400 dark:text-dm-muted">No habits yet.{' '}
         <button onClick={() => navigate('/habits')} className="text-indigo-500 hover:underline">Add one →</button>
       </p>
     </Card>
@@ -167,7 +167,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
                     ? 'bg-green-500 border-green-500'
                     : h.atRisk
                       ? 'border-amber-400 bg-amber-50 animate-pulse'
-                      : 'border-gray-300 dark:border-gray-600'
+                      : 'border-gray-300 dark:border-dm-border'
               }`}>
                 {(h.done || flashing) && <span className="text-white text-xs font-bold">✓</span>}
               </span>
@@ -276,7 +276,7 @@ function TrainingSection({ programmes, sessions, todayStr }) {
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-dm-muted">
             {programmes.length === 0 ? 'No programme yet.' : 'No active programme.'}
           </p>
           <Button variant="secondary" size="sm" onClick={() => navigate('/training')}>
@@ -314,7 +314,7 @@ function FinanceSection({ transactions }) {
 
       {monthTx.length === 0 ? (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-400">No transactions this month.</p>
+          <p className="text-sm text-gray-400 dark:text-dm-muted">No transactions this month.</p>
           <Button variant="secondary" size="sm" onClick={() => navigate('/finance/import')}>Import CSV →</Button>
         </div>
       ) : (
@@ -390,7 +390,7 @@ function GoalsSection({ goals }) {
       />
 
       {active.length === 0 ? (
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 dark:text-dm-muted">
           No active goals.{' '}
           <button onClick={() => navigate('/goals')} className="text-indigo-500 hover:underline">Set one →</button>
         </p>
@@ -566,7 +566,7 @@ function InboxSection({ items }) {
         title="Needs Attention"
         meta={`${items.length} item${items.length > 1 ? 's' : ''}`}
       />
-      <div className="flex flex-col divide-y divide-gray-50">
+      <div className="flex flex-col divide-y divide-gray-50 dark:divide-dm-subtle">
         {visible.map(item => (
           <button
             key={item.id}
@@ -578,7 +578,7 @@ function InboxSection({ items }) {
               <div className="text-sm font-medium text-gray-800 dark:text-dm-primary">{item.label}</div>
               {item.sub && <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">{item.sub}</div>}
             </div>
-            <span className="text-xs text-gray-400 shrink-0 mt-1">→</span>
+            <span className="text-xs text-gray-400 dark:text-dm-muted shrink-0 mt-1">→</span>
           </button>
         ))}
       </div>
@@ -743,7 +743,7 @@ export default function Today() {
     <div className="flex flex-col gap-4">
       {/* Date heading */}
       <div className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Today</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-dm-primary">Today</h1>
         <span className="text-sm text-gray-400 dark:text-dm-muted">{dateLabel}</span>
       </div>
 
