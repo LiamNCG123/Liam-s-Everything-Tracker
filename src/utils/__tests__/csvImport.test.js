@@ -168,8 +168,7 @@ describe('autoDetectMapping (section 5d)', () => {
     const m = autoDetectMapping(['Transaction Date', 'Merchant', 'AUD Amount'])
     expect(m.date).toBe('Transaction Date')
     expect(m.description).toBe('Merchant')
-    // "AUD Amount" does not match any regex hint — auto-map leaves it undefined
-    // This is a known gap; see todo below
+    expect(m.amount).toBe('AUD Amount')
   })
 
   it('maps Debit / Credit split columns', () => {
@@ -185,11 +184,10 @@ describe('autoDetectMapping (section 5d)', () => {
     expect(autoDetectMapping(['Date', 'Narrative', 'Amount']).description).toBe('Narrative')
   })
 
-  it.todo(
-    '"AUD Amount" should auto-map to amount — ' +
-    'current regex hints require exact starts (^amount$) so "AUD Amount" is not matched. ' +
-    'Fix: add /aud.?amount/i or broaden hints to allow prefix words'
-  )
+  it('"Total Amount" and other prefixed variants also map to amount', () => {
+    expect(autoDetectMapping(['Date', 'Description', 'Total Amount']).amount).toBe('Total Amount')
+    expect(autoDetectMapping(['Date', 'Description', 'Net Amount']).amount).toBe('Net Amount')
+  })
 })
 
 // ─── parseCSV ─────────────────────────────────────────────────────────────────

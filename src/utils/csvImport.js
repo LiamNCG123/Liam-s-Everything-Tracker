@@ -26,7 +26,7 @@ const COLUMN_HINTS = {
   ],
   amount: [
     /^amount$/i, /^value$/i, /^sum$/i, /^transaction.?amount$/i, /^net.?amount$/i,
-    /^amt$/i,
+    /^amt$/i, /.+amount$/i,
   ],
   debit: [
     /^debit$/i, /^debit.?amount$/i, /^withdrawal$/i, /^money.?out$/i, /^dr\.?$/i,

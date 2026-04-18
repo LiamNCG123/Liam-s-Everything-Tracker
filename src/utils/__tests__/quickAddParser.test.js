@@ -154,11 +154,9 @@ describe('Education (section 1e)', () => {
     expect(parse('reading deep work').type).toBe(INTENT.EDUCATION)
   })
 
-  it.todo(
-    'chapter 3 deep work → education — ' +
-    'currently returns Finance because the bare number "3" is extracted as amount ' +
-    'before the education keyword check fires (hasEducKw && amountVal===null is false)'
-  )
+  it('chapter 3 deep work → education', () => {
+    expect(parse('chapter 3 deep work').type).toBe(INTENT.EDUCATION)
+  })
 })
 
 // ─── Section 1f: Habit / done keyword ────────────────────────────────────────
@@ -225,19 +223,16 @@ describe('Edge cases (section 1g)', () => {
     expect(parse('   ').type).toBe(INTENT.UNKNOWN)
   })
 
-  it.todo(
-    'run 5 → finance — ' +
-    'spec says Finance (no weight/duration), but "run" is in EXERCISE_KW so ' +
-    'the training branch fires first. Fix: exclude exercise keywords that also ' +
-    'take a bare dollar amount (e.g. run, bike, swim, cycle, jog)'
-  )
+  it('run 5 → finance (bare number, no weight/duration unit)', () => {
+    const result = parse('run 5')
+    expect(result.type).toBe(INTENT.FINANCE)
+  })
 
-  it.todo(
-    'gym 45min → training/cardio — ' +
-    '"gym" is absent from EXERCISE_KW so the training branch never fires; ' +
-    'the duration consumes 45 leaving amountVal=null, so Finance is also skipped → UNKNOWN. ' +
-    'Fix: add "gym" to EXERCISE_KW'
-  )
+  it('gym 45min → training/cardio', () => {
+    const { type, training } = parse('gym 45min')
+    expect(type).toBe(INTENT.TRAINING)
+    expect(training.isCardio).toBe(true)
+  })
 })
 
 // ─── Amount parsing edge cases ────────────────────────────────────────────────

@@ -30,7 +30,7 @@ const EXERCISE_KW = [
   'lunge', 'rdl', 'ohp', 'plank', 'pushup', 'push-up', 'push up',
   'situp', 'sit-up', 'crunch', 'leg press', 'lat pulldown',
   'incline', 'decline', 'fly', 'flye', 'shrug', 'extension',
-  'run', 'bike', 'cycle', 'swim', 'cardio', 'hiit', 'jog',
+  'run', 'bike', 'cycle', 'swim', 'cardio', 'hiit', 'jog', 'gym',
 ]
 
 const EDUCATION_KW = [
@@ -74,10 +74,12 @@ const INCOME_CATEGORY_MAP = [
 
 // ─── Regex patterns ───────────────────────────────────────────────────────────
 
-const WEIGHT_RE   = /(\d+(?:\.\d+)?)\s*(kg|lbs?|lb)\b/i
+const WEIGHT_RE    = /(\d+(?:\.\d+)?)\s*(kg|lbs?|lb)\b/i
 const SETS_REPS_RE = /(\d+)\s*[x×]\s*(\d+)/i
-const DURATION_RE = /(\d+)\s*(min(?:utes?)?|hr|hours?)/i
-const PAGES_RE    = /(\d+)\s*(pages?|p)\b/i
+const DURATION_RE  = /(\d+)\s*(min(?:utes?)?|hr|hours?)/i
+const DISTANCE_RE  = /(\d+(?:\.\d+)?)\s*(km|miles?|mi)\b/i
+const PAGES_RE     = /(\d+)\s*(pages?|p)\b/i
+const CHAPTER_RE   = /\b(chapter|lesson|episode|part|vol(?:ume)?|unit)\s+\d+/i
 
 // ─── Main parse function ──────────────────────────────────────────────────────
 
@@ -95,18 +97,21 @@ export function parse(input, context = {}) {
   const weightMatch    = WEIGHT_RE.exec(raw)
   const setsRepsMatch  = SETS_REPS_RE.exec(raw)
   const durationMatch  = DURATION_RE.exec(lower)
+  const distanceMatch  = DISTANCE_RE.exec(lower)
   const pagesMatch     = PAGES_RE.exec(lower)
   const hasDoneKw      = DONE_KW.some(k => lower.endsWith(k) || lower.includes(' ' + k))
   const hasExerciseKw  = EXERCISE_KW.some(k => lower.includes(k))
   const hasEducKw      = EDUCATION_KW.some(k => new RegExp(`\\b${k}\\b`).test(lower))
-  const amountVal      = extractAmount(raw, { weightMatch, setsRepsMatch, durationMatch, pagesMatch })
+  const hasChapterNum  = CHAPTER_RE.test(lower)
+  const amountVal      = extractAmount(raw, { weightMatch, setsRepsMatch, durationMatch, distanceMatch, pagesMatch })
 
   // ── 1. Training ─────────────────────────────────────────────────────────────
-  if (weightMatch || setsRepsMatch || (hasExerciseKw && !hasEducKw)) {
+  // Exercise keyword alone (no unit/sets/distance) loses to a bare amount or "done" keyword.
+  if (weightMatch || setsRepsMatch || distanceMatch || (hasExerciseKw && !hasEducKw && !amountVal && !hasDoneKw)) {
     return {
       type: INTENT.TRAINING,
       raw,
-      training: parseTraining(raw, lower, weightMatch, setsRepsMatch, durationMatch),
+      training: parseTraining(raw, lower, weightMatch, setsRepsMatch, durationMatch, distanceMatch),
     }
   }
 
@@ -126,7 +131,8 @@ export function parse(input, context = {}) {
   }
 
   // ── 3. Education ─────────────────────────────────────────────────────────────
-  if (pagesMatch || (hasEducKw && amountVal === null)) {
+  // hasChapterNum lets "chapter 3 deep work" route here even though 3 is an amountVal.
+  if (pagesMatch || (hasEducKw && (amountVal === null || hasChapterNum))) {
     return {
       type: INTENT.EDUCATION,
       raw,
@@ -158,11 +164,12 @@ export function parse(input, context = {}) {
 
 // ─── Sub-parsers ──────────────────────────────────────────────────────────────
 
-function parseTraining(raw, lower, weightMatch, setsRepsMatch, durationMatch) {
+function parseTraining(raw, lower, weightMatch, setsRepsMatch, durationMatch, distanceMatch) {
   const exercise = raw
     .replace(WEIGHT_RE, '')
     .replace(SETS_REPS_RE, '')
     .replace(DURATION_RE, '')
+    .replace(DISTANCE_RE, '')
     .trim().replace(/\s+/g, ' ')
 
   const isCardio = !weightMatch && !setsRepsMatch &&
@@ -215,11 +222,12 @@ function parseEducation(raw, lower, pagesMatch, durationMatch) {
  * Extract a standalone numeric amount, excluding numbers that are
  * already consumed by weight/setsReps/duration/pages patterns.
  */
-function extractAmount(raw, { weightMatch, setsRepsMatch, durationMatch, pagesMatch }) {
+function extractAmount(raw, { weightMatch, setsRepsMatch, durationMatch, distanceMatch, pagesMatch }) {
   let s = raw
   if (weightMatch)   s = s.replace(weightMatch[0], ' ')
   if (setsRepsMatch) s = s.replace(setsRepsMatch[0], ' ')
   if (durationMatch) s = s.replace(durationMatch[0], ' ')
+  if (distanceMatch) s = s.replace(distanceMatch[0], ' ')
   if (pagesMatch)    s = s.replace(pagesMatch[0], ' ')
 
   const m = /[$€£¥]?\s*(\d{1,8}(?:[.,]\d{1,2})?)\s*(?:kr|sek|aud|usd|gbp)?/i.exec(s)
