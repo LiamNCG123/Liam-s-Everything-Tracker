@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
-import { today, fmtDate } from '../utils/storage'
+import { today, fmtDate, load } from '../utils/storage'
 import { Card, ProgressBar, Button } from '../components/ui'
 
 // ─── Habit helpers (mirrored from Habits.jsx) ────────────────────────────────
@@ -721,6 +721,11 @@ export default function Today() {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
+  const userName = load('userName') || ''
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+  const greetingText = userName ? `${greeting}, ${userName}` : greeting
+
   // Micro-feedback: track which habit ids just got checked (brief flash)
   const [flashIds, setFlashIds] = useState(new Set())
 
@@ -743,7 +748,7 @@ export default function Today() {
     <div className="flex flex-col gap-4">
       {/* Date heading */}
       <div className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-dm-primary">Today</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-dm-primary">{greetingText}</h1>
         <span className="text-sm text-gray-400 dark:text-dm-muted">{dateLabel}</span>
       </div>
 

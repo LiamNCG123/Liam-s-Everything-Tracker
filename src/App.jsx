@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Today from './pages/Today'
@@ -8,8 +9,16 @@ import Education from './pages/Education'
 import Finance from './pages/Finance'
 import ImportCSV from './pages/ImportCSV'
 import WeeklyReview from './pages/WeeklyReview'
+import Onboarding from './components/Onboarding'
+import { load } from './utils/storage'
 
 export default function App() {
+  const [onboarded, setOnboarded] = useState(() => !!load('onboardingDone'))
+
+  if (!onboarded) {
+    return <Onboarding onComplete={() => setOnboarded(true)} />
+  }
+
   return (
     <BrowserRouter>
       <Layout>
