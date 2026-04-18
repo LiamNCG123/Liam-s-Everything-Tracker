@@ -218,7 +218,7 @@ function ProgrammeEditor({ initial, onSave, onCancel }) {
 
 // ─── Session Logger sub-components ───────────────────────────────────────────
 
-function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets }) {
+function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets, onRemove, onChangeName }) {
   const target = describeItem(entry)
   const doneSets = (entry.sets || []).filter(s => s.done || s.reps)
   const delta = doneSets.length ? calcStrengthDelta(entry.sets, prevSets) : null
@@ -232,8 +232,23 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
     <Card className="overflow-hidden">
       <div className="px-4 py-3 bg-gray-50 dark:bg-dm-input border-b border-gray-100 dark:border-dm-subtle">
         <div className="flex items-start justify-between gap-2">
-          <div className="font-semibold text-sm text-gray-900 dark:text-dm-primary">{entry.name}</div>
-          {delta && <DeltaBadge delta={delta} />}
+          {onChangeName ? (
+            <input
+              value={entry.name}
+              onChange={e => onChangeName(e.target.value)}
+              placeholder="Exercise name…"
+              autoFocus
+              className="flex-1 text-sm font-semibold border-0 border-b border-gray-300 dark:border-dm-border focus:outline-none focus:border-brand-400 bg-transparent dark:text-dm-primary placeholder-gray-400 dark:placeholder-dm-muted pb-0.5"
+            />
+          ) : (
+            <div className="font-semibold text-sm text-gray-900 dark:text-dm-primary flex-1">{entry.name}</div>
+          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {delta && <DeltaBadge delta={delta} />}
+            {onRemove && (
+              <button onClick={onRemove} title="Remove exercise" className="text-gray-300 dark:text-dm-muted hover:text-red-500 text-xl leading-none">×</button>
+            )}
+          </div>
         </div>
         {target && <div className="text-xs text-brand-500 mt-0.5">Target: {target}</div>}
         {prevSummary && (
@@ -293,10 +308,15 @@ function StrengthLogger({ entry, onUpdateSet, onAddSet, onRemoveSet, prevSets })
   )
 }
 
-function CardioLogger({ entry, onChange }) {
+function CardioLogger({ entry, onChange, onRemove }) {
   return (
     <Card className="p-4">
-      <div className="font-semibold text-sm text-gray-900 dark:text-dm-primary mb-0.5">{entry.name}</div>
+      <div className="flex items-start justify-between gap-2 mb-0.5">
+        <div className="font-semibold text-sm text-gray-900 dark:text-dm-primary">{entry.name}</div>
+        {onRemove && (
+          <button onClick={onRemove} title="Remove exercise" className="text-gray-300 dark:text-dm-muted hover:text-red-500 text-xl leading-none">×</button>
+        )}
+      </div>
       {describeItem(entry) && <div className="text-xs text-brand-500 mb-3">Target: {describeItem(entry)}</div>}
       <div className="grid grid-cols-3 gap-2">
         {[
@@ -317,7 +337,7 @@ function CardioLogger({ entry, onChange }) {
   )
 }
 
-function CircuitLogger({ entry, onChange }) {
+function CircuitLogger({ entry, onChange, onRemove }) {
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
@@ -326,11 +346,16 @@ function CircuitLogger({ entry, onChange }) {
           {entry.description && <p className="text-xs text-gray-500 dark:text-dm-muted mt-0.5">{entry.description}</p>}
           {entry.rounds && <div className="text-xs text-brand-500 mt-0.5">Target: {entry.rounds} rounds</div>}
         </div>
-        <label className="flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer">
-          <input type="checkbox" checked={entry.completed || false}
-            onChange={e => onChange({ completed: e.target.checked })} />
-          <span className="text-gray-600 dark:text-dm-secondary text-sm">Done</span>
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer">
+            <input type="checkbox" checked={entry.completed || false}
+              onChange={e => onChange({ completed: e.target.checked })} />
+            <span className="text-gray-600 dark:text-dm-secondary text-sm">Done</span>
+          </label>
+          {onRemove && (
+            <button onClick={onRemove} title="Remove exercise" className="text-gray-300 dark:text-dm-muted hover:text-red-500 text-xl leading-none">×</button>
+          )}
+        </div>
       </div>
       <div className="flex gap-2">
         <input value={entry.actualRounds || ''} onChange={e => onChange({ actualRounds: e.target.value })}
@@ -344,7 +369,7 @@ function CircuitLogger({ entry, onChange }) {
   )
 }
 
-function NoteLogger({ entry, onChange }) {
+function NoteLogger({ entry, onChange, onRemove }) {
   return (
     <Card className="p-3 flex items-center gap-3 bg-amber-50 dark:bg-amber-900/30 border-amber-100">
       <span className="text-lg">📝</span>
@@ -354,6 +379,9 @@ function NoteLogger({ entry, onChange }) {
           onChange={e => onChange({ completed: e.target.checked })} />
         <span className="text-xs text-gray-500 dark:text-dm-muted">Done</span>
       </label>
+      {onRemove && (
+        <button onClick={onRemove} title="Remove" className="text-gray-300 dark:text-dm-muted hover:text-red-500 text-xl leading-none ml-1">×</button>
+      )}
     </Card>
   )
 }
@@ -505,6 +533,20 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
   const removeSet = (eIdx, sIdx) =>
     updateEntry(eIdx, { sets: entries[eIdx].sets.filter((_, j) => j !== sIdx) })
 
+  const removeEntry = (idx) => setEntries(es => es.filter((_, i) => i !== idx))
+
+  const addAdhocEntry = () => setEntries(es => [...es, {
+    id: uid(),
+    type: 'strength',
+    name: '',
+    targetSets: '', targetReps: '', targetWeight: '', unit: 'kg',
+    duration: '', notes: '',
+    _prefilled: false,
+    _adhoc: true,
+    sets: [{ reps: '', weight: '', done: false }],
+    completed: false,
+  }])
+
   const loggedSets = entries.reduce((n, e) =>
     n + (e.sets ? e.sets.filter(s => s.done || s.reps).length : (e.completed ? 1 : 0)), 0)
 
@@ -551,26 +593,37 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
         </details>
       )}
 
-      <div className="flex flex-col gap-3 mb-4">
+      <div className="flex flex-col gap-3 mb-2">
         {entries.map((entry, idx) => {
           if (entry.type === 'strength') return (
             <StrengthLogger key={entry.id || idx} entry={entry}
               onUpdateSet={(si, p) => updateSet(idx, si, p)}
               onAddSet={() => addSet(idx)}
               onRemoveSet={(si) => removeSet(idx, si)}
-              prevSets={prevExData[entry.name?.toLowerCase()] || null} />
+              prevSets={prevExData[entry.name?.toLowerCase()] || null}
+              onRemove={() => removeEntry(idx)}
+              onChangeName={entry._adhoc ? (name) => updateEntry(idx, { name }) : undefined}
+            />
           )
           if (entry.type === 'cardio') return (
-            <CardioLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)} />
+            <CardioLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)}
+              onRemove={() => removeEntry(idx)} />
           )
           if (entry.type === 'circuit') return (
-            <CircuitLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)} />
+            <CircuitLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)}
+              onRemove={() => removeEntry(idx)} />
           )
           return (
-            <NoteLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)} />
+            <NoteLogger key={entry.id || idx} entry={entry} onChange={p => updateEntry(idx, p)}
+              onRemove={() => removeEntry(idx)} />
           )
         })}
       </div>
+
+      <button onClick={addAdhocEntry}
+        className="w-full text-sm text-brand-500 hover:text-brand-700 font-medium py-2 mb-4">
+        + Add exercise
+      </button>
 
       <Textarea label="Session notes" placeholder="How did it go? PRs, struggles, energy…"
         value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
@@ -589,8 +642,9 @@ function SessionLogger({ programme, day, sessions, onSave, onCancel }) {
 
 // ─── History card ─────────────────────────────────────────────────────────────
 
-function HistoryCard({ session, prevSession }) {
+function HistoryCard({ session, prevSession, onDelete }) {
   const [open, setOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const exCount = session.exercises?.length ?? 0
   const subtitle = [session.programmeName, fmtDate(session.date), `${exCount} exercise${exCount !== 1 ? 's' : ''}`]
     .filter(Boolean).join(' · ')
@@ -661,6 +715,20 @@ function HistoryCard({ session, prevSession }) {
             )
           })}
           {session.notes && <p className="text-xs text-gray-400 dark:text-dm-muted mt-3 italic">📝 {session.notes}</p>}
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-dm-subtle">
+            {confirmDelete ? (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-500 dark:text-dm-muted">Delete this session?</span>
+                <button onClick={onDelete} className="text-xs text-red-500 font-semibold hover:underline">Confirm</button>
+                <button onClick={() => setConfirmDelete(false)} className="text-xs text-gray-400 dark:text-dm-muted hover:underline">Cancel</button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)}
+                className="text-xs text-gray-400 dark:text-dm-muted hover:text-red-500 transition-colors">
+                Delete session
+              </button>
+            )}
+          </div>
         </div>
       )}
     </Card>
@@ -759,10 +827,12 @@ function AdHocLogger({ onSave, onCancel }) {
             <input value={ex.name} onChange={e => setEx(idx, 'name', e.target.value)}
               placeholder="Exercise name *" autoFocus={idx === 0}
               className="flex-1 border border-gray-200 dark:border-dm-border rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 bg-white dark:bg-dm-card dark:text-dm-primary dark:placeholder-dm-muted" />
-            {exercises.length > 1 && (
-              <button onClick={() => setExercises(es => es.filter((_, i) => i !== idx))}
-                className="text-red-300 hover:text-red-500 text-xl leading-none">×</button>
-            )}
+            <button
+              onClick={() => setExercises(es => {
+                const next = es.filter((_, i) => i !== idx)
+                return next.length ? next : [mkEx()]
+              })}
+              className="text-red-300 hover:text-red-500 text-xl leading-none">×</button>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {['sets', 'reps', 'weight'].map(f => (
@@ -799,7 +869,7 @@ function AdHocLogger({ onSave, onCancel }) {
 
 export default function Training() {
   const { items: programmes, add: addProg, update: updateProg, remove: removeProg } = useStore('programmes')
-  const { items: sessions, add: addSession } = useStore('training')
+  const { items: sessions, add: addSession, remove: removeSession } = useStore('training')
 
   const [tab, setTab] = useState('programmes')
   const [view, setView] = useState('main')       // 'main' | 'editor' | 'logger' | 'adhoc'
@@ -958,7 +1028,7 @@ export default function Training() {
                     x.date < s.date
                   ).sort((a, b) => b.date.localeCompare(a.date))[0] ?? null
                 : null
-              return <HistoryCard key={s.id} session={s} prevSession={prev} />
+              return <HistoryCard key={s.id} session={s} prevSession={prev} onDelete={() => removeSession(s.id)} />
             })}
           </div>
         )
