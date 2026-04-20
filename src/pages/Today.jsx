@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
+import { useModules } from '../hooks/useModules'
 import { today, fmtDate, load } from '../utils/storage'
 import { Card, ProgressBar, Button } from '../components/ui'
 
@@ -422,6 +423,56 @@ function GoalsSection({ goals }) {
   )
 }
 
+// ─── Education section ────────────────────────────────────────────────────────
+
+function EducationSection({ eduItems }) {
+  const navigate = useNavigate()
+  const active = eduItems.filter(i => i.status === 'In Progress')
+
+  const TYPE_EMOJI = { Book: '📖', Course: '🎓', Podcast: '🎧', Article: '📰', Video: '🎬', Other: '📌' }
+
+  return (
+    <Card className="p-4">
+      <SectionHeader
+        emoji="📚"
+        title="Learning"
+        meta={active.length ? `${active.length} in progress` : null}
+        action={
+          <button onClick={() => navigate('/education')} className="text-xs text-gray-400 dark:text-dm-muted hover:text-indigo-600 dark:hover:text-indigo-400">
+            All items →
+          </button>
+        }
+      />
+
+      {active.length === 0 ? (
+        <p className="text-sm text-gray-400 dark:text-dm-muted">
+          Nothing in progress.{' '}
+          <button onClick={() => navigate('/education')} className="text-indigo-500 hover:underline">Add something →</button>
+        </p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {active.slice(0, 3).map(item => (
+            <div key={item.id}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium text-gray-800 dark:text-dm-primary truncate flex-1 mr-2">
+                  {TYPE_EMOJI[item.type] ?? '📌'} {item.title}
+                </span>
+                <span className="text-xs text-gray-400 dark:text-dm-muted shrink-0">{item.progress ?? 0}%</span>
+              </div>
+              <ProgressBar value={item.progress ?? 0} color="amber" />
+            </div>
+          ))}
+          {active.length > 3 && (
+            <button onClick={() => navigate('/education')} className="text-xs text-indigo-500 hover:underline text-center">
+              +{active.length - 3} more →
+            </button>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 // ─── Needs Attention inbox ────────────────────────────────────────────────────
 
 function generateInboxItems({ habits, sessions, transactions, goals, eduItems, budgets, todayStr }) {
@@ -744,6 +795,19 @@ export default function Today() {
     updateHabit(id, { completions: next })
   }, [todayStr, updateHabit])
 
+  const { modules } = useModules()
+
+  const sectionFor = (key) => {
+    switch (key) {
+      case 'habits':    return <HabitsSection key="habits" habits={habits} todayStr={todayStr} onToggle={handleHabitToggle} flashIds={flashIds} goals={goals} />
+      case 'training':  return <TrainingSection key="training" programmes={programmes} sessions={sessions} todayStr={todayStr} />
+      case 'finance':   return <FinanceSection key="finance" transactions={transactions} />
+      case 'goals':     return <GoalsSection key="goals" goals={goals} />
+      case 'education': return <EducationSection key="education" eduItems={eduItems} />
+      default:          return null
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Date heading */}
@@ -766,25 +830,8 @@ export default function Today() {
         items={generateInboxItems({ habits, sessions, transactions, goals, eduItems, budgets, todayStr })}
       />
 
-      {/* Module sections */}
-      <HabitsSection
-        habits={habits}
-        todayStr={todayStr}
-        onToggle={handleHabitToggle}
-        flashIds={flashIds}
-        goals={goals}
-      />
-      <TrainingSection
-        programmes={programmes}
-        sessions={sessions}
-        todayStr={todayStr}
-      />
-      <FinanceSection
-        transactions={transactions}
-      />
-      <GoalsSection
-        goals={goals}
-      />
+      {/* Module sections — ordered and filtered by user settings */}
+      {modules.filter(m => m.enabled).map(m => sectionFor(m.key))}
     </div>
   )
 }

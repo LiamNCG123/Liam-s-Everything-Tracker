@@ -1,18 +1,22 @@
 import { NavLink } from 'react-router-dom'
 import QuickAdd from './QuickAdd'
 import { useDarkMode } from '../hooks/useDarkMode'
+import { useModules } from '../hooks/useModules'
 
 // ── Active pill colors ────────────────────────────────────────────────────────
-// Dark mode: use tighter /15 tint backgrounds so active pills don't compete
-// with each other or with the brand accent. Text uses -300 for AA contrast.
-const NAV = [
+const NAV_STATIC = [
   { to: '/',          label: 'Today',     emoji: '☀️',  pill: 'bg-indigo-100 dark:bg-indigo-400/15', text: 'text-indigo-600 dark:text-indigo-300'  },
-  { to: '/habits',    label: 'Habits',    emoji: '✅',  pill: 'bg-violet-100 dark:bg-violet-400/15', text: 'text-violet-600 dark:text-violet-300'  },
-  { to: '/training',  label: 'Training',  emoji: '💪',  pill: 'bg-orange-100 dark:bg-orange-400/15', text: 'text-orange-600 dark:text-orange-300'  },
-  { to: '/finance',   label: 'Finance',   emoji: '💰',  pill: 'bg-emerald-100 dark:bg-emerald-400/15', text: 'text-emerald-600 dark:text-emerald-300' },
-  { to: '/goals',     label: 'Goals',     emoji: '🎯',  pill: 'bg-blue-100 dark:bg-blue-400/15',   text: 'text-blue-600 dark:text-blue-300'    },
-  { to: '/education', label: 'Education', emoji: '📚',  pill: 'bg-amber-100 dark:bg-amber-400/15',  text: 'text-amber-600 dark:text-amber-300'   },
-  { to: '/review',    label: 'Review',    emoji: '📋',  pill: 'bg-sky-100 dark:bg-sky-400/15',     text: 'text-sky-600 dark:text-sky-300'      },
+]
+const NAV_MODULE_STYLES = {
+  habits:    { pill: 'bg-violet-100 dark:bg-violet-400/15', text: 'text-violet-600 dark:text-violet-300'   },
+  training:  { pill: 'bg-orange-100 dark:bg-orange-400/15', text: 'text-orange-600 dark:text-orange-300'   },
+  finance:   { pill: 'bg-emerald-100 dark:bg-emerald-400/15', text: 'text-emerald-600 dark:text-emerald-300' },
+  goals:     { pill: 'bg-blue-100 dark:bg-blue-400/15',     text: 'text-blue-600 dark:text-blue-300'       },
+  education: { pill: 'bg-amber-100 dark:bg-amber-400/15',   text: 'text-amber-600 dark:text-amber-300'     },
+}
+const NAV_TAIL = [
+  { to: '/review',   label: 'Review',   emoji: '📋', pill: 'bg-sky-100 dark:bg-sky-400/15',  text: 'text-sky-600 dark:text-sky-300'    },
+  { to: '/settings', label: 'Settings', emoji: '⚙️',  pill: 'bg-gray-100 dark:bg-gray-400/15', text: 'text-gray-600 dark:text-gray-300' },
 ]
 
 function DarkToggle({ dark, setDark }) {
@@ -30,6 +34,15 @@ function DarkToggle({ dark, setDark }) {
 
 export default function Layout({ children }) {
   const [dark, setDark] = useDarkMode()
+  const { modules } = useModules()
+
+  const nav = [
+    ...NAV_STATIC,
+    ...modules
+      .filter(m => m.enabled)
+      .map(m => ({ to: m.path, label: m.label, emoji: m.emoji, ...NAV_MODULE_STYLES[m.key] })),
+    ...NAV_TAIL,
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dm-page flex flex-col">
@@ -38,7 +51,7 @@ export default function Layout({ children }) {
       <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-white dark:bg-dm-card border-b border-gray-100 dark:border-dm-subtle sticky top-0 z-30 backdrop-blur-sm">
         <span className="text-lg font-bold text-gray-900 dark:text-dm-primary tracking-tight">Spora</span>
         <nav className="flex gap-0.5 ml-6">
-          {NAV.map(({ to, label, emoji, pill, text }) => (
+          {nav.map(({ to, label, emoji, pill, text }) => (
             <NavLink
               key={to}
               to={to}
@@ -68,7 +81,7 @@ export default function Layout({ children }) {
 
       {/* Bottom tab bar — mobile only */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-dm-card border-t border-gray-100 dark:border-dm-subtle flex z-30 safe-area-pb">
-        {NAV.map(({ to, label, emoji, pill, text }) => (
+        {nav.map(({ to, label, emoji, pill, text }) => (
           <NavLink
             key={to}
             to={to}
