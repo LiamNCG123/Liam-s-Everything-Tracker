@@ -1,6 +1,7 @@
 import { Component, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
+import { dateToStr } from '../utils/storage'
 
 // ─── Error boundary ───────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ class ErrorBoundary extends Component {
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-function toStr(d) { return d.toISOString().slice(0, 10) }
+function toStr(d) { return dateToStr(d) }
 
 function getWeekRange() {
   const now = new Date()

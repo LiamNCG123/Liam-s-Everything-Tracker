@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { load, today } from '../utils/storage'
+import { load, today, dateToStr } from '../utils/storage'
 import { StatCard, Card, CompletionBanner } from '../components/ui'
 
 function loadStats() {
@@ -22,7 +22,7 @@ function loadStats() {
 
   // Training: sessions this week
   const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7)
-  const weekAgoStr = weekAgo.toISOString().slice(0, 10)
+  const weekAgoStr = dateToStr(weekAgo)
   const trainingSessions = training.filter(s => s.date >= weekAgoStr).length
 
   // Education: in-progress items

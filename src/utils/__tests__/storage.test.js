@@ -2,16 +2,15 @@
  * Storage utilities — unit tests for pure helper functions.
  */
 import { describe, it, expect } from 'vitest'
-import { fmtDate, daysBetween, today, uid } from '../storage.js'
+import { fmtDate, daysBetween, today, uid, dateToStr } from '../storage.js'
 
 describe('today()', () => {
   it('returns a string matching YYYY-MM-DD', () => {
     expect(today()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
-  it('matches the current date', () => {
-    const expected = new Date().toISOString().slice(0, 10)
-    expect(today()).toBe(expected)
+  it('matches the current local date', () => {
+    expect(today()).toBe(dateToStr(new Date()))
   })
 })
 

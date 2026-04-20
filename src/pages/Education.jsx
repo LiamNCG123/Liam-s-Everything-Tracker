@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
-import { fmtDate, today } from '../utils/storage'
+import { fmtDate, today, dateToStr } from '../utils/storage'
 import {
   PageHeader, Button, Card, Badge, Modal,
   Input, Textarea, Select, EmptyState, ProgressBar, StatCard,
@@ -134,7 +134,7 @@ export default function Education() {
                       )}
                       {item.status === 'In Progress' && (item.progress ?? 0) >= 100 && (
                         <button
-                          onClick={e => { e.stopPropagation(); update(item.id, { status: 'Completed', endDate: new Date().toISOString().slice(0, 10) }) }}
+                          onClick={e => { e.stopPropagation(); update(item.id, { status: 'Completed', endDate: dateToStr(new Date()) }) }}
                           className="text-[10px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 border border-green-200 dark:border-green-700 rounded-full px-2 py-0.5 leading-none transition-colors"
                         >✓ Mark complete</button>
                       )}

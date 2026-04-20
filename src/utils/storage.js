@@ -27,13 +27,17 @@ export function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
 }
 
-// Today as YYYY-MM-DD string in local time
-export function today() {
-  const d = new Date()
+// Convert a Date object to YYYY-MM-DD in local time (never use toISOString — that's UTC)
+export function dateToStr(d) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+// Today as YYYY-MM-DD string in local time
+export function today() {
+  return dateToStr(new Date())
 }
 
 // Format a date string for display

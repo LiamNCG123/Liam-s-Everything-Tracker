@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { useModules } from '../hooks/useModules'
-import { today, fmtDate, load } from '../utils/storage'
+import { today, fmtDate, load, dateToStr } from '../utils/storage'
 import { Card, ProgressBar, Button } from '../components/ui'
 
 // ─── Habit helpers (mirrored from Habits.jsx) ────────────────────────────────
@@ -19,8 +19,8 @@ function calcCurrentStreak(completions) {
   let streak = 0
   const d = new Date()
   // don't penalise for today not yet done
-  if (!set.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1)
-  while (set.has(d.toISOString().slice(0, 10))) {
+  if (!set.has(dateToStr(d))) d.setDate(d.getDate() - 1)
+  while (set.has(dateToStr(d))) {
     streak++
     d.setDate(d.getDate() - 1)
   }
@@ -652,7 +652,7 @@ function InboxSection({ items }) {
 function weekStr() {
   const d = new Date()
   d.setDate(d.getDate() - 6)
-  return d.toISOString().slice(0, 10)
+  return dateToStr(d)
 }
 
 function getStatusSignals({ habits, todayStr, sessions, transactions, eduItems }) {

@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react'
 import { useStore } from '../hooks/useStore'
-import { today } from '../utils/storage'
+import { today, dateToStr } from '../utils/storage'
 import { PageHeader, Button, Modal, Input, EmptyState, CompletionBanner } from '../components/ui'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -23,7 +23,7 @@ const TIME_SLOTS = [
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function toStr(date) {
-  return date.toISOString().slice(0, 10)
+  return dateToStr(date)
 }
 
 // Migrate old format [{date, done}] → string[]

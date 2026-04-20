@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
-import { fmtDate } from '../utils/storage'
+import { fmtDate, dateToStr } from '../utils/storage'
 
 // Minimal streak helpers (mirrored from Habits.jsx)
 function migrateCompletions(raw) {
@@ -11,9 +11,9 @@ function migrateCompletions(raw) {
 function calcCurrentStreak(completions) {
   const set = new Set(completions)
   const d = new Date()
-  if (!set.has(d.toISOString().slice(0, 10))) d.setDate(d.getDate() - 1)
+  if (!set.has(dateToStr(d))) d.setDate(d.getDate() - 1)
   let streak = 0
-  while (set.has(d.toISOString().slice(0, 10))) { streak++; d.setDate(d.getDate() - 1) }
+  while (set.has(dateToStr(d))) { streak++; d.setDate(d.getDate() - 1) }
   return streak
 }
 import { useFlash } from '../utils/microReward'
@@ -218,7 +218,7 @@ export default function Goals() {
                     <div className="flex flex-wrap gap-1.5">
                       {linked.map(h => {
                         const streak = calcCurrentStreak(migrateCompletions(h.completions))
-                        const atRisk = streak > 0 && !migrateCompletions(h.completions).includes(new Date().toISOString().slice(0, 10))
+                        const atRisk = streak > 0 && !migrateCompletions(h.completions).includes(dateToStr(new Date()))
                         return (
                           <span
                             key={h.id}

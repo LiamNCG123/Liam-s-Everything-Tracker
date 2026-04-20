@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useStore } from '../hooks/useStore'
-import { today, uid, fmtDate } from '../utils/storage'
+import { today, uid, fmtDate, dateToStr } from '../utils/storage'
 import { useFlash } from '../utils/microReward'
 import {
   Button, Card, Badge, Input, Textarea, EmptyState, StatCard, Toast,
@@ -920,7 +920,7 @@ export default function Training() {
   // Stats
   const weekAgo = new Date()
   weekAgo.setDate(weekAgo.getDate() - 7)
-  const weekStr = weekAgo.toISOString().slice(0, 10)
+  const weekStr = dateToStr(weekAgo)
   const thisWeek = sessions.filter(s => s.date >= weekStr).length
   const activeProgrammes = programmes.filter(p => !p.isArchived)
   const sortedSessions = [...sessions].sort((a, b) => b.date.localeCompare(a.date))
