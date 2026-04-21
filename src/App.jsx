@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import Today from './pages/Today'
 import Habits from './pages/Habits'
@@ -38,6 +39,7 @@ export default function App() {
           </Routes>
         </Layout>
       </BrowserRouter>
+      <Analytics />
     </ModulesProvider>
   )
 }
