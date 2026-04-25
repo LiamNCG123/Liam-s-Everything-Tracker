@@ -8,24 +8,24 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode surfaces */
-  --bg-page:    #f9fafb; /* gray-50  */
-  --bg-card:    #ffffff;
-  --bg-input:   #f9fafb; /* gray-50  */
-  --bg-hover:   #f3f4f6; /* gray-100 */
+  /* Light mode surfaces — indigo theme defaults (will be overridden by useTheme) */
+  --bg-page:    #ffffff;
+  --bg-card:    #f8fafc;
+  --bg-input:   #f1f5f9;
+  --bg-hover:   #e2e8f0;
 
   /* Light mode borders */
-  --border-card:   #f3f4f6; /* gray-100 */
-  --border-input:  #e5e7eb; /* gray-200 */
-  --border-strong: #d1d5db; /* gray-300 */
+  --border-card:   #e2e8f0;
+  --border-input:  #e2e8f0;
+  --border-strong: #cbd5e1;
 
   /* Light mode text */
-  --text-primary:   #111827; /* gray-900 */
-  --text-secondary: #6b7280; /* gray-500 */
-  --text-muted:     #9ca3af; /* gray-400 */
-  --text-placeholder: #9ca3af;
+  --text-primary:   #1e293b;
+  --text-secondary: #64748b;
+  --text-muted:     #94a3b8;
+  --text-placeholder: #94a3b8;
 
-  /* Brand */
+  /* Brand — indigo */
   --brand-500: #6366f1;
   --brand-400: #818cf8;
   --brand-ring: rgba(99, 102, 241, 0.3);
