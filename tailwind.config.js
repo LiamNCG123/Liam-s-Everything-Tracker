@@ -33,28 +33,28 @@ export default {
           600: 'var(--brand-brand600, #4f46e5)',
           700: 'var(--brand-brand700, #4338ca)',
         },
-        // ── Dark mode design tokens ──────────────────────────────────────────
-        // These reference CSS variables defined in index.css.
-        // Usage: dark:bg-dm-card, dark:text-dm-secondary, dark:border-dm-border
-        // This keeps the palette in one place — change vars to retheme globally.
+        // ── Theme-aware design tokens ────────────────────────────────────
+        // These reference CSS variables in index.css that change based on theme.
+        // Light mode backgrounds and text respond to theme automatically.
+        // Dark mode uses dm-* prefix for backwards compatibility.
         dm: {
           // Backgrounds (elevation stack)
-          page:    'var(--bg-page)',      // Deepest — #0d1117 in dark
-          card:    'var(--bg-card)',      // Cards / panels — #161b22
-          input:   'var(--bg-input)',     // Inputs / insets — #1c2128
-          hover:   'var(--bg-hover)',     // Hover — #21262d
-          active:  'var(--bg-active)',    // Pressed / selected — #2d333b
+          page:    'var(--bg-page)',      // Theme-aware
+          card:    'var(--bg-card)',      // Theme-aware
+          input:   'var(--bg-input)',     // Theme-aware
+          hover:   'var(--bg-hover)',     // Theme-aware
+          active:  'var(--bg-active)',    // Pressed / selected
           // Borders
-          border:  'var(--border-input)', // Standard border — #30363d
-          subtle:  'var(--border-card)',  // Subtle divider — #21262d
-          strong:  'var(--border-strong)',// Emphasis / focus — #484f58
+          border:  'var(--border-input)', // Theme-aware
+          subtle:  'var(--border-card)',  // Theme-aware
+          strong:  'var(--border-strong)',// Emphasis / focus
           // Text
-          primary:   'var(--text-primary)',   // #e6edf3 — 14.9:1 AAA
-          secondary: 'var(--text-secondary)', // #8b949e — 6.1:1 AA
-          muted:     'var(--text-muted)',     // #6e7681 — 4.6:1 AA
-          disabled:  'var(--text-disabled)',  // #484f58 — disabled only
+          primary:   'var(--text-primary)',   // Theme-aware
+          secondary: 'var(--text-secondary)', // Theme-aware
+          muted:     'var(--text-muted)',     // Theme-aware
+          disabled:  'var(--text-disabled)',  // Disabled only
           // Brand
-          brand:     'var(--brand-400)',      // #818cf8 — 6.8:1 AA on dark card
+          brand:     'var(--brand-400)',      // Theme-aware
         },
       },
     },

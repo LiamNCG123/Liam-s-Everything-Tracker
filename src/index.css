@@ -8,24 +8,24 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode surfaces */
-  --bg-page:    #f9fafb; /* gray-50  */
-  --bg-card:    #ffffff;
-  --bg-input:   #f9fafb; /* gray-50  */
-  --bg-hover:   #f3f4f6; /* gray-100 */
+  /* Light mode surfaces — theme-aware */
+  --bg-page:    #ffffff;
+  --bg-card:    #f9fafb;
+  --bg-input:   #f3f4f6;
+  --bg-hover:   #e5e7eb;
 
   /* Light mode borders */
-  --border-card:   #f3f4f6; /* gray-100 */
-  --border-input:  #e5e7eb; /* gray-200 */
-  --border-strong: #d1d5db; /* gray-300 */
+  --border-card:   #e5e7eb;
+  --border-input:  #d1d5db;
+  --border-strong: #9ca3af;
 
   /* Light mode text */
-  --text-primary:   #111827; /* gray-900 */
-  --text-secondary: #6b7280; /* gray-500 */
-  --text-muted:     #9ca3af; /* gray-400 */
+  --text-primary:   #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted:     #9ca3af;
   --text-placeholder: #9ca3af;
 
-  /* Brand */
+  /* Brand — will be overridden by theme */
   --brand-500: #6366f1;
   --brand-400: #818cf8;
   --brand-ring: rgba(99, 102, 241, 0.3);
@@ -35,52 +35,27 @@ html.dark {
   /* Activate native dark mode for browser chrome (scrollbars, inputs, etc.) */
   color-scheme: dark;
 
-  /* ── Elevation stack ────────────────────────────────────────────────────
-     Inspired by GitHub Dark — slightly blue-tinted for brand coherence.
-     Each level is visibly distinct without extreme contrast jumps.
-     Rationale: avoid pure black (#000) — it's harsh and flat. A slight
-     indigo-shift ties the palette to the brand and feels intentional.
-  ─────────────────────────────────────────────────────────────────────── */
-  --bg-page:   #0d1117; /* L≈5   — deepest, page canvas */
-  --bg-card:   #161b22; /* L≈9   — cards, sheets, panels */
-  --bg-input:  #1c2128; /* L≈12  — inputs, dropdowns, inset areas */
-  --bg-hover:  #21262d; /* L≈14  — hover state */
-  --bg-active: #2d333b; /* L≈19  — pressed / selected */
+  /* Dark mode surfaces — theme-aware, set by useTheme hook */
+  --bg-page:   var(--dark-bg-page, #0d1117);
+  --bg-card:   var(--dark-bg-card, #161b22);
+  --bg-input:  var(--dark-bg-input, #1c2128);
+  --bg-hover:  var(--dark-bg-hover, #21262d);
+  --bg-active: #2d333b;
 
-  /* ── Borders ────────────────────────────────────────────────────────────
-     Visible but not aggressive. Use --border-card for cards, --border-input
-     for form elements that need a bit more definition.
-  ─────────────────────────────────────────────────────────────────────── */
-  --border-card:   #21262d; /* subtle — card outlines */
-  --border-input:  #30363d; /* standard — input borders */
-  --border-strong: #484f58; /* emphasis — focused elements */
+  /* Dark mode borders */
+  --border-card:   var(--dark-border, #21262d);
+  --border-input:  var(--dark-border, #30363d);
+  --border-strong: #484f58;
 
-  /* ── Text hierarchy ──────────────────────────────────────────────────────
-     Contrast ratios calculated against --bg-page (#0d1117, L≈0.006):
-       --text-primary:   #e6edf3  →  14.9:1  AAA
-       --text-secondary: #8b949e  →   6.1:1  AA
-       --text-muted:     #6e7681  →   4.6:1  AA   (≥4.5 required)
-       --text-disabled:  #484f58  →   2.7:1  below AA — for disabled only
-     Against --bg-card (#161b22, L≈0.011):
-       --text-primary:   14.9:1  AAA ✓
-       --text-secondary:  5.8:1  AA  ✓
-       --text-muted:      4.4:1  borderline (acceptable for large/bold text)
-  ─────────────────────────────────────────────────────────────────────── */
-  --text-primary:     #e6edf3;
-  --text-secondary:   #8b949e;
-  --text-muted:       #6e7681;
+  /* Dark mode text — theme-aware */
+  --text-primary:     var(--dark-text-primary, #e6edf3);
+  --text-secondary:   var(--dark-text-secondary, #8b949e);
+  --text-muted:       var(--dark-text-muted, #6e7681);
   --text-disabled:    #484f58;
   --text-placeholder: #484f58;
 
-  /* ── Brand in dark mode ──────────────────────────────────────────────────
-     brand-500 (#6366f1) with white text = 4.46:1 (borderline AA).
-     We shift to brand-400 (#818cf8) for text/icon uses where it needs to
-     stand out. Primary buttons keep brand-500 bg since label readability
-     is the critical path, not the bg itself.
-
-     brand-400 (#818cf8) on bg-card (#161b22) = 6.8:1 AA ✓
-  ─────────────────────────────────────────────────────────────────────── */
-  --brand-500: #6366f1;
+  /* Dark brand — will be overridden by theme */
+  --brand-500: var(--dark-brand-500, #6366f1);
   --brand-400: #818cf8;
   --brand-ring: rgba(129, 140, 248, 0.25);
 }
