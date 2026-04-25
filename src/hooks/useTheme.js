@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { load, save } from '../utils/storage'
 
 // Each theme uses neutral surfaces with a single brand accent color.
-// This keeps the UI clean and modern while the brand color carries
-// the theme personality (buttons, links, focus rings, toggles).
+// In dark mode, surfaces have a subtle tint matching the theme's brand,
+// while text remains high-contrast (WCAG AA+) for readability.
 export const THEMES = [
   {
     key: 'slate',
@@ -21,15 +21,15 @@ export const THEMES = [
       border:      '#d0d7de',
       brand500:    '#0969da',
       brand600:    '#0550ae',
-      // Dark mode
+      // Dark mode — neutral charcoal
       darkBgPage:  '#0d1117',
       darkBgCard:  '#161b22',
-      darkBgInput: '#21262d',
+      darkBgInput: '#1c2128',
       darkBgHover: '#262c36',
-      darkTextPrimary: '#e6edf3',
-      darkTextSecondary: '#8b949e',
-      darkTextMuted: '#6e7681',
-      darkBorder:  '#30363d',
+      darkTextPrimary:   '#e6edf3', // 14.9:1 on bg-page (AAA)
+      darkTextSecondary: '#b1bac4', //  9.4:1 (AAA)
+      darkTextMuted:     '#7d8590', //  5.0:1 (AA)
+      darkBorder:  '#373e47',
       darkBrand500: '#58a6ff',
     },
   },
@@ -49,15 +49,15 @@ export const THEMES = [
       border:      '#e5e0d4',
       brand500:    '#d97706',
       brand600:    '#b45309',
-      // Dark mode
-      darkBgPage:  '#16130d',
-      darkBgCard:  '#1f1b14',
-      darkBgInput: '#28231a',
-      darkBgHover: '#2e2820',
-      darkTextPrimary: '#f5f1e8',
-      darkTextSecondary: '#a8a092',
-      darkTextMuted: '#7d756a',
-      darkBorder:  '#3a3328',
+      // Dark mode — warm sepia tones
+      darkBgPage:  '#1a1610',
+      darkBgCard:  '#221d15',
+      darkBgInput: '#2a241b',
+      darkBgHover: '#332c22',
+      darkTextPrimary:   '#f5ebd5', // warm off-white, AAA on bg-page
+      darkTextSecondary: '#ccbe9f', // ~7.7:1 (AAA)
+      darkTextMuted:     '#9b8d72', // ~4.6:1 (AA)
+      darkBorder:  '#3f372a',
       darkBrand500: '#fbbf24',
     },
   },
@@ -77,15 +77,15 @@ export const THEMES = [
       border:      '#dde6e0',
       brand500:    '#059669',
       brand600:    '#047857',
-      // Dark mode
-      darkBgPage:  '#0d1411',
-      darkBgCard:  '#141c18',
-      darkBgInput: '#1a2520',
-      darkBgHover: '#1f2c26',
-      darkTextPrimary: '#e6f0eb',
-      darkTextSecondary: '#8b9c93',
-      darkTextMuted: '#6e7d75',
-      darkBorder:  '#2a3a31',
+      // Dark mode — deep forest tones
+      darkBgPage:  '#0e1612',
+      darkBgCard:  '#161e1a',
+      darkBgInput: '#1d2722',
+      darkBgHover: '#25302a',
+      darkTextPrimary:   '#e6f0eb', // AAA on bg-page
+      darkTextSecondary: '#b3c2b9', // ~8.2:1 (AAA)
+      darkTextMuted:     '#85928a', // ~4.7:1 (AA)
+      darkBorder:  '#2f3c34',
       darkBrand500: '#34d399',
     },
   },
@@ -105,15 +105,15 @@ export const THEMES = [
       border:      '#e1dce8',
       brand500:    '#7c3aed',
       brand600:    '#6d28d9',
-      // Dark mode
-      darkBgPage:  '#100d18',
-      darkBgCard:  '#1a1622',
-      darkBgInput: '#221d2c',
-      darkBgHover: '#2a2338',
-      darkTextPrimary: '#ebe6f2',
-      darkTextSecondary: '#9690a0',
-      darkTextMuted: '#726d7d',
-      darkBorder:  '#332d40',
+      // Dark mode — rich purple tones
+      darkBgPage:  '#15111d',
+      darkBgCard:  '#1d1828',
+      darkBgInput: '#251f33',
+      darkBgHover: '#2e2740',
+      darkTextPrimary:   '#ebe5f3', // AAA on bg-page
+      darkTextSecondary: '#b8b0c5', // ~7.6:1 (AAA)
+      darkTextMuted:     '#8c8398', // ~4.6:1 (AA)
+      darkBorder:  '#38304a',
       darkBrand500: '#a78bfa',
     },
   },
