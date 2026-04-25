@@ -8,11 +8,12 @@ const NAV_STATIC = [
   { to: '/',          label: 'Today',     emoji: '☀️',  pill: 'bg-indigo-100 dark:bg-indigo-400/15', text: 'text-indigo-600 dark:text-indigo-300'  },
 ]
 const NAV_MODULE_STYLES = {
-  habits:    { pill: 'bg-violet-100 dark:bg-violet-400/15', text: 'text-violet-600 dark:text-violet-300'   },
-  training:  { pill: 'bg-orange-100 dark:bg-orange-400/15', text: 'text-orange-600 dark:text-orange-300'   },
+  habits:    { pill: 'bg-violet-100 dark:bg-violet-400/15',  text: 'text-violet-600 dark:text-violet-300'   },
+  training:  { pill: 'bg-orange-100 dark:bg-orange-400/15',  text: 'text-orange-600 dark:text-orange-300'   },
   finance:   { pill: 'bg-emerald-100 dark:bg-emerald-400/15', text: 'text-emerald-600 dark:text-emerald-300' },
-  goals:     { pill: 'bg-blue-100 dark:bg-blue-400/15',     text: 'text-blue-600 dark:text-blue-300'       },
-  education: { pill: 'bg-amber-100 dark:bg-amber-400/15',   text: 'text-amber-600 dark:text-amber-300'     },
+  goals:     { pill: 'bg-blue-100 dark:bg-blue-400/15',      text: 'text-blue-600 dark:text-blue-300'       },
+  education: { pill: 'bg-amber-100 dark:bg-amber-400/15',    text: 'text-amber-600 dark:text-amber-300'     },
+  business:  { pill: 'bg-purple-100 dark:bg-purple-400/15',  text: 'text-purple-600 dark:text-purple-300'   },
 }
 const NAV_TAIL = [
   { to: '/review',   label: 'Review',   emoji: '📋', pill: 'bg-sky-100 dark:bg-sky-400/15',  text: 'text-sky-600 dark:text-sky-300'    },

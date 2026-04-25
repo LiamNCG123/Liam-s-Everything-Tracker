@@ -55,16 +55,16 @@ export default function Business() {
     setModal(null)
   }
 
-  // This month summary
   const monthStr = today().slice(0, 7)
   const thisMonth = items.filter(i => i.date?.startsWith(monthStr))
-  const income  = thisMonth.filter(i => i.type === 'Income').reduce((s, i) => s + Number(i.amount || 0), 0)
-  const expense = thisMonth.filter(i => i.type === 'Expense').reduce((s, i) => s + Number(i.amount || 0), 0)
+  const income     = thisMonth.filter(i => i.type === 'Income').reduce((s, i) => s + Number(i.amount || 0), 0)
+  const expense    = thisMonth.filter(i => i.type === 'Expense').reduce((s, i) => s + Number(i.amount || 0), 0)
   const taxPending = items.filter(i => i.type === 'Tax Task' && i.status !== 'Done').length
+  const net        = income - expense
 
   const filterOptions = ['All', ...TYPES]
   const visible = filter === 'All' ? items : items.filter(i => i.type === filter)
-  const sorted = [...visible].sort((a, b) => b.date.localeCompare(a.date))
+  const sorted  = [...visible].sort((a, b) => b.date.localeCompare(a.date))
 
   return (
     <div>
@@ -81,14 +81,15 @@ export default function Business() {
         </div>
       )}
 
-      {/* Net this month */}
       {items.length > 0 && (income > 0 || expense > 0) && (
-        <div className={`rounded-2xl px-4 py-3 mb-5 flex items-center justify-between ${
-          income - expense >= 0 ? 'bg-green-50 border border-green-100' : 'bg-red-50 border border-red-100'
+        <div className={`rounded-2xl px-4 py-3 mb-5 flex items-center justify-between border ${
+          net >= 0
+            ? 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800'
+            : 'bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800'
         }`}>
-          <span className="text-sm font-medium text-gray-600">Net this month</span>
-          <span className={`text-lg font-bold ${income - expense >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-            {income - expense >= 0 ? '+' : ''}${(income - expense).toLocaleString()}
+          <span className="text-sm font-medium text-gray-600 dark:text-dm-secondary">Net this month</span>
+          <span className={`text-lg font-bold ${net >= 0 ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+            {net >= 0 ? '+' : ''}${net.toLocaleString()}
           </span>
         </div>
       )}
@@ -100,7 +101,9 @@ export default function Business() {
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === f ? 'bg-brand-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                filter === f
+                  ? 'bg-brand-500 text-white'
+                  : 'bg-gray-100 dark:bg-dm-hover text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-border'
               }`}
             >
               {f}
@@ -126,20 +129,24 @@ export default function Business() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span>{TYPE_EMOJI[item.type] ?? '📌'}</span>
-                    <span className="font-semibold text-gray-900">{item.title}</span>
+                    <span className="font-semibold text-gray-900 dark:text-dm-primary">{item.title}</span>
                     <Badge color={TYPE_COLORS[item.type]}>{item.type}</Badge>
                     <Badge color={STATUS_COLORS[item.status]}>{item.status}</Badge>
                   </div>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-400 dark:text-dm-muted">
                     <span>{fmtDate(item.date)}</span>
                     {item.amount != null && item.amount !== '' && (
-                      <span className={`font-medium ${item.type === 'Income' ? 'text-green-600' : item.type === 'Expense' ? 'text-red-500' : 'text-gray-600'}`}>
+                      <span className={`font-medium ${
+                        item.type === 'Income'  ? 'text-green-600 dark:text-green-400' :
+                        item.type === 'Expense' ? 'text-red-500 dark:text-red-400' :
+                        'text-gray-600 dark:text-dm-secondary'
+                      }`}>
                         {item.type === 'Income' ? '+' : item.type === 'Expense' ? '-' : ''}${Number(item.amount).toLocaleString()}
                       </span>
                     )}
                   </div>
                   {item.notes && (
-                    <p className="text-xs text-gray-400 mt-1 line-clamp-2">{item.notes}</p>
+                    <p className="text-xs text-gray-400 dark:text-dm-muted mt-1 line-clamp-2">{item.notes}</p>
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
