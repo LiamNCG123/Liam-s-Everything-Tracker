@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from '../hooks/useStore'
 import { useDarkMode } from '../hooks/useDarkMode'
+import { useTheme, THEMES } from '../hooks/useTheme'
 import { save, today } from '../utils/storage'
 import { CURRENCIES } from '../hooks/useCurrency'
 
@@ -99,9 +100,11 @@ const textInput = 'w-full border border-gray-200 dark:border-dm-border rounded-2
 
 export default function Onboarding({ onComplete }) {
   useDarkMode() // ensure html.dark class is applied without Layout
+  const { setTheme } = useTheme()
 
   const [step, setStep]       = useState(1)
   const [name, setName]       = useState('')
+  const [theme, setThemeLocal] = useState('indigo')
   const [focuses, setFocuses] = useState([])
 
   // Step 3 form fields
@@ -146,6 +149,7 @@ export default function Onboarding({ onComplete }) {
   const finish = () => {
     save('userName', name.trim())
     save('userFocuses', focuses.length ? focuses : MODULES.map(m => m.key))
+    setTheme(theme)
     save('onboardingDone', true)
     onComplete()
   }
@@ -195,13 +199,38 @@ export default function Onboarding({ onComplete }) {
           </div>
         )}
 
-        {/* ── Step 2: What matters? ──────────────────────────────────────── */}
+        {/* ── Step 2: Theme & Focus ───────────────────────────────────────── */}
         {step === 2 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-1 text-center">
               {displayName ? `Nice to meet you, ${displayName}!` : 'Welcome!'}
             </h2>
             <p className="text-gray-400 dark:text-dm-muted text-sm text-center mb-6">
+              Pick your style, then tell us what you're working on.
+            </p>
+
+            {/* Theme selector */}
+            <div className="mb-6">
+              <label className="block text-xs font-semibold text-gray-600 dark:text-dm-secondary uppercase tracking-wide mb-2">Theme</label>
+              <div className="grid grid-cols-2 gap-2">
+                {THEMES.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setThemeLocal(t.key)}
+                    className={`p-2 rounded-xl border-2 transition-all text-left text-xs ${
+                      theme === t.key
+                        ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
+                        : 'border-gray-200 dark:border-dm-border hover:border-gray-300 dark:hover:border-dm-border'
+                    }`}
+                  >
+                    <span className="text-lg">{t.emoji}</span>
+                    <div className="font-medium text-gray-900 dark:text-dm-primary">{t.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-gray-400 dark:text-dm-muted text-sm text-center mb-4">
               What are you working on right now?
               <br />
               <span className="text-xs">Pick whatever's on your mind — you can always change this.</span>

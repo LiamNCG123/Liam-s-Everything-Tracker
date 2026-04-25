@@ -25,13 +25,13 @@ export default {
       },
       colors: {
         brand: {
-          50:  '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
+          50:  'var(--brand-brand50, #eef2ff)',
+          100: 'var(--brand-brand100, #e0e7ff)',
+          200: 'var(--brand-brand200, #c7d2fe)',
+          400: 'var(--brand-brand400, #818cf8)',
+          500: 'var(--brand-brand500, #6366f1)',
+          600: 'var(--brand-brand600, #4f46e5)',
+          700: 'var(--brand-brand700, #4338ca)',
         },
         // ── Dark mode design tokens ──────────────────────────────────────────
         // These reference CSS variables defined in index.css.

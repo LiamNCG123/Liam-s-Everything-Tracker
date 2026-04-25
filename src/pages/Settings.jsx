@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useModules } from '../hooks/useModules'
+import { useTheme, THEMES } from '../hooks/useTheme'
 import { load, save } from '../utils/storage'
 import { Card } from '../components/ui'
 
 export default function Settings() {
   const { modules, toggle, moveUp, moveDown, reset } = useModules()
+  const { theme, setTheme } = useTheme()
   const [name, setName] = useState(() => load('userName') || '')
   const [savedFlash, setSavedFlash] = useState(false)
 
@@ -37,6 +39,33 @@ export default function Settings() {
           >
             {savedFlash ? '✓ Saved' : 'Save'}
           </button>
+        </div>
+      </Card>
+
+      {/* Theme */}
+      <Card className="p-4">
+        <h2 className="font-semibold text-gray-900 dark:text-dm-primary mb-3">Theme</h2>
+        <p className="text-xs text-gray-400 dark:text-dm-muted mb-4">
+          Choose your preferred color scheme.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {THEMES.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTheme(t.key)}
+              className={`p-3 rounded-xl border-2 transition-all text-left ${
+                theme === t.key
+                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
+                  : 'border-gray-100 dark:border-dm-border hover:border-gray-300 dark:hover:border-dm-border'
+              }`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl">{t.emoji}</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-dm-primary">{t.label}</span>
+              </div>
+              <p className="text-xs text-gray-500 dark:text-dm-muted">{t.desc}</p>
+            </button>
+          ))}
         </div>
       </Card>
 
