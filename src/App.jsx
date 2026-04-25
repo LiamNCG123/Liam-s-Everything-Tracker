@@ -10,7 +10,6 @@ import Finance from './pages/Finance'
 import ImportCSV from './pages/ImportCSV'
 import WeeklyReview from './pages/WeeklyReview'
 import Settings from './pages/Settings'
-import Business from './pages/Business'
 import Onboarding from './components/Onboarding'
 import { ModulesProvider } from './hooks/useModules'
 import { load } from './utils/storage'
@@ -35,7 +34,6 @@ export default function App() {
             <Route path="/finance"        element={<Finance />} />
             <Route path="/finance/import" element={<ImportCSV />} />
             <Route path="/review"         element={<WeeklyReview />} />
-            <Route path="/business"       element={<Business />} />
             <Route path="/settings"       element={<Settings />} />
           </Routes>
         </Layout>
