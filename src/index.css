@@ -37,33 +37,6 @@
 html.dark {
   /* Activate native dark mode for browser chrome (scrollbars, inputs, etc.) */
   color-scheme: dark;
-
-  /* Dark mode surfaces — read from theme variables set by useTheme(), with defaults */
-  --bg-page:   var(--dark-bg-page,  #0a0e14);
-  --bg-card:   var(--dark-bg-card,  #111820);
-  --bg-input:  var(--dark-bg-input, #192030);
-  --bg-hover:  var(--dark-bg-hover, #202a3c);
-  --bg-active: #28374a;
-
-  /* Dark mode borders */
-  --border-card:   var(--dark-border, #2a3848);
-  --border-input:  var(--dark-border, #2a3848);
-  --border-strong: #3d5068;
-
-  /* Dark mode text — read from theme variables set by useTheme(), with defaults */
-  --text-primary:     var(--dark-text-primary,   #e2eaf5);
-  --text-secondary:   var(--dark-text-secondary, #94aabf);
-  --text-muted:       var(--dark-text-muted,     #627485);
-  --text-disabled:    #3d5068;
-  --text-placeholder: #3d5068;
-
-  /* Dark brand — read from theme variables set by useTheme(), with defaults */
-  --brand-50:  #1e3a5f;
-  --brand-100: #1e4080;
-  --brand-400: #60a5fa;
-  --brand-500: var(--dark-brand-500, #60a5fa);
-  --brand-600: #2563eb;
-  --brand-ring: rgba(96, 165, 250, 0.25);
 }
 
 /* ─── Base styles ──────────────────────────────────────────────────────────── */
