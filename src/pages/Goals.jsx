@@ -115,7 +115,7 @@ export default function Goals() {
                 className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   filter === f
                     ? 'bg-brand-500 text-white'
-                    : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
+                    : 'bg-theme-input text-theme-secondary hover:bg-gray-200 hover:bg-theme-hover'
                 }`}
               >
                 {f}
@@ -129,7 +129,7 @@ export default function Goals() {
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 catFilter === 'All'
                   ? 'bg-gray-700 dark:bg-gray-600 text-white'
-                  : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
+                  : 'bg-theme-input text-theme-secondary hover:bg-gray-200 hover:bg-theme-hover'
               }`}
             >
               All categories
@@ -168,7 +168,7 @@ export default function Goals() {
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold text-gray-900 dark:text-dm-primary">{goal.title}</span>
+                    <span className="font-semibold text-theme-primary">{goal.title}</span>
                     <Badge color={STATUS_COLORS[goal.status]}>{goal.status}</Badge>
                     {goal.category && CATEGORY_META[goal.category] && (
                       <Badge color={CATEGORY_META[goal.category].color}>
@@ -177,7 +177,7 @@ export default function Goals() {
                     )}
                   </div>
                   {goal.description && (
-                    <p className="text-sm text-gray-500 dark:text-dm-muted mt-0.5 line-clamp-2">{goal.description}</p>
+                    <p className="text-sm text-theme-muted mt-0.5 line-clamp-2">{goal.description}</p>
                   )}
                 </div>
                 <div className="flex gap-1 shrink-0">
@@ -187,7 +187,7 @@ export default function Goals() {
               </div>
 
               <div className="mt-3">
-                <div className="flex justify-between text-xs text-gray-500 dark:text-dm-muted mb-1">
+                <div className="flex justify-between text-xs text-theme-muted mb-1">
                   <span>Progress</span>
                   <div className="flex items-center gap-2">
                     <span>{goal.progress ?? 0}%</span>
@@ -213,8 +213,8 @@ export default function Goals() {
                 const linked = habits.filter(h => h.goalId === goal.id)
                 if (!linked.length) return null
                 return (
-                  <div className="mt-3 pt-3 border-t border-gray-50 dark:border-dm-subtle">
-                    <div className="text-[10px] font-semibold text-gray-400 dark:text-dm-muted uppercase tracking-wide mb-1.5">Supporting habits</div>
+                  <div className="mt-3 pt-3 border-t border-gray-50 border-theme-subtle">
+                    <div className="text-[10px] font-semibold text-theme-muted uppercase tracking-wide mb-1.5">Supporting habits</div>
                     <div className="flex flex-wrap gap-1.5">
                       {linked.map(h => {
                         const streak = calcCurrentStreak(migrateCompletions(h.completions))
@@ -222,12 +222,12 @@ export default function Goals() {
                         return (
                           <span
                             key={h.id}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${atRisk ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-muted'}`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${atRisk ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-theme-input text-gray-600 text-theme-muted'}`}
                           >
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
                             {h.name}
                             {streak > 0 && (
-                              <span className={`font-semibold ${streak >= 7 ? 'text-orange-500' : 'text-gray-400 dark:text-dm-muted'}`}>
+                              <span className={`font-semibold ${streak >= 7 ? 'text-orange-500' : 'text-theme-muted'}`}>
                                 {streak >= 7 ? '🔥' : ''}{streak}d
                               </span>
                             )}
@@ -239,7 +239,7 @@ export default function Goals() {
                 )
               })()}
 
-              <div className="flex gap-4 mt-3 text-xs text-gray-400 dark:text-dm-muted">
+              <div className="flex gap-4 mt-3 text-xs text-theme-muted">
                 {goal.targetDate && <span>🗓 {fmtDate(goal.targetDate)}</span>}
                 {goal.notes && <span className="truncate">📝 {goal.notes}</span>}
               </div>
@@ -289,7 +289,7 @@ export default function Goals() {
             onChange={e => setForm(f => ({ ...f, targetDate: e.target.value }))}
           />
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700 dark:text-dm-secondary">Progress — {form.progress}%</span>
+            <span className="text-sm font-medium text-theme-secondary">Progress — {form.progress}%</span>
             <input
               type="range" min="0" max="100" step="5"
               value={form.progress}

@@ -80,7 +80,7 @@ export default function Education() {
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === f ? 'bg-brand-500 text-white' : 'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-secondary hover:bg-gray-200 dark:hover:bg-dm-hover'
+                filter === f ? 'bg-brand-500 text-white' : 'bg-theme-input text-theme-secondary hover:bg-gray-200 hover:bg-theme-hover'
               }`}
             >
               {f}
@@ -106,7 +106,7 @@ export default function Education() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-base">{TYPE_EMOJI[item.type] ?? '📌'}</span>
-                    <span className="font-semibold text-gray-900 dark:text-dm-primary">{item.title}</span>
+                    <span className="font-semibold text-theme-primary">{item.title}</span>
                     <Badge color="indigo">{item.type}</Badge>
                     <Badge color={STATUS_COLORS[item.status]}>{item.status}</Badge>
                   </div>
@@ -122,7 +122,7 @@ export default function Education() {
 
               {item.status !== 'Not Started' && (
                 <div className="mt-3">
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-dm-muted mb-1">
+                  <div className="flex justify-between text-xs text-theme-muted mb-1">
                     <span>Progress</span>
                     <div className="flex items-center gap-2">
                       <span>{item.progress ?? 0}%</span>
@@ -144,7 +144,7 @@ export default function Education() {
                 </div>
               )}
 
-              <div className="flex gap-4 mt-2 text-xs text-gray-400 dark:text-dm-muted flex-wrap">
+              <div className="flex gap-4 mt-2 text-xs text-theme-muted flex-wrap">
                 {item.startDate && <span>▶ {fmtDate(item.startDate)}</span>}
                 {item.endDate   && <span>⏹ {fmtDate(item.endDate)}</span>}
               </div>
@@ -170,7 +170,7 @@ export default function Education() {
             </Select>
           </div>
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-gray-700 dark:text-dm-secondary">Progress — {form.progress}%</span>
+            <span className="text-sm font-medium text-theme-secondary">Progress — {form.progress}%</span>
             <input
               type="range" min="0" max="100" step="5"
               value={form.progress}

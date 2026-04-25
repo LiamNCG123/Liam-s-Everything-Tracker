@@ -8,36 +8,36 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode surfaces — theme-aware */
-  --bg-page:    #ffffff;
-  --bg-card:    #f9fafb;
-  --bg-input:   #f3f4f6;
-  --bg-hover:   #e5e7eb;
+  /* Light mode surfaces — slate theme defaults (will be overridden by useTheme) */
+  --bg-page:    #fafbfc;
+  --bg-card:    #ffffff;
+  --bg-input:   #f6f8fa;
+  --bg-hover:   #eaeef2;
 
   /* Light mode borders */
-  --border-card:   #e5e7eb;
-  --border-input:  #d1d5db;
-  --border-strong: #9ca3af;
+  --border-card:   #d0d7de;
+  --border-input:  #d0d7de;
+  --border-strong: #b1bac4;
 
   /* Light mode text */
-  --text-primary:   #1f2937;
-  --text-secondary: #6b7280;
-  --text-muted:     #9ca3af;
-  --text-placeholder: #9ca3af;
+  --text-primary:   #24292f;
+  --text-secondary: #57606a;
+  --text-muted:     #848d97;
+  --text-placeholder: #848d97;
 
-  /* Brand — will be overridden by theme */
-  --brand-500: #6366f1;
-  --brand-400: #818cf8;
-  --brand-ring: rgba(99, 102, 241, 0.3);
+  /* Brand — slate */
+  --brand-500: #0969da;
+  --brand-400: #54aeff;
+  --brand-ring: rgba(9, 105, 218, 0.3);
 }
 
 html.dark {
   /* Activate native dark mode for browser chrome (scrollbars, inputs, etc.) */
   color-scheme: dark;
 
-  /* Dark mode surfaces — theme-aware, set by useTheme hook */
-  --bg-page:   var(--dark-bg-page, #0d1117);
-  --bg-card:   var(--dark-bg-card, #161b22);
+  /* Dark mode surfaces — read from theme variables set by useTheme(), with defaults */
+  --bg-page:   var(--dark-bg-page,  #0d1117);
+  --bg-card:   var(--dark-bg-card,  #161b22);
   --bg-input:  var(--dark-bg-input, #1c2128);
   --bg-hover:  var(--dark-bg-hover, #21262d);
   --bg-active: #2d333b;
@@ -47,14 +47,14 @@ html.dark {
   --border-input:  var(--dark-border, #30363d);
   --border-strong: #484f58;
 
-  /* Dark mode text — theme-aware */
-  --text-primary:     var(--dark-text-primary, #e6edf3);
+  /* Dark mode text — read from theme variables set by useTheme(), with defaults */
+  --text-primary:     var(--dark-text-primary,   #e6edf3);
   --text-secondary:   var(--dark-text-secondary, #8b949e);
-  --text-muted:       var(--dark-text-muted, #6e7681);
+  --text-muted:       var(--dark-text-muted,     #6e7681);
   --text-disabled:    #484f58;
   --text-placeholder: #484f58;
 
-  /* Dark brand — will be overridden by theme */
+  /* Dark brand — read from theme variables set by useTheme(), with defaults */
   --brand-500: var(--dark-brand-500, #6366f1);
   --brand-400: #818cf8;
   --brand-ring: rgba(129, 140, 248, 0.25);
@@ -146,7 +146,24 @@ html.dark {
     overflow: hidden;
   }
 
-  /* Dark mode elevation helpers */
+  /* ── Theme-aware utilities ─────────────────────────────────────────────────
+     Use these instead of hardcoded bg-white / text-gray-900 / etc.
+     They read from CSS variables set by useTheme() so they respond to
+     both theme changes and dark mode automatically.
+  ───────────────────────────────────────────────────────────────────────── */
+  .bg-theme-page   { background-color: var(--bg-page); }
+  .bg-theme-card   { background-color: var(--bg-card); }
+  .bg-theme-input  { background-color: var(--bg-input); }
+  .bg-theme-hover  { background-color: var(--bg-hover); }
+  .text-theme-primary   { color: var(--text-primary); }
+  .text-theme-secondary { color: var(--text-secondary); }
+  .text-theme-muted     { color: var(--text-muted); }
+  .border-theme        { border-color: var(--border-input); }
+  .border-theme-subtle { border-color: var(--border-card); }
+  .placeholder-theme-muted::placeholder { color: var(--text-muted); }
+  .divide-theme-subtle > * + * { border-color: var(--border-card); }
+
+  /* Dark mode elevation helpers (legacy) */
   .dark .elevated-1 { background-color: var(--bg-card); }
   .dark .elevated-2 { background-color: var(--bg-input); }
   .dark .elevated-hover:hover { background-color: var(--bg-hover); }

@@ -23,7 +23,7 @@ function DarkToggle({ dark, setDark }) {
   return (
     <button
       onClick={() => setDark(d => !d)}
-      className="ml-auto text-gray-400 dark:text-dm-muted hover:text-gray-600 dark:hover:text-dm-secondary p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-dm-hover transition-colors"
+      className="ml-auto text-theme-muted hover:text-theme-secondary p-1.5 rounded-lg hover:bg-theme-hover transition-colors"
       title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
@@ -45,11 +45,11 @@ export default function Layout({ children }) {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dm-page flex flex-col">
+    <div className="min-h-screen bg-theme-page flex flex-col">
 
       {/* Top bar — desktop only */}
-      <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-white dark:bg-dm-card border-b border-gray-100 dark:border-dm-subtle sticky top-0 z-30 backdrop-blur-sm">
-        <span className="text-lg font-bold text-gray-900 dark:text-dm-primary tracking-tight">Spora</span>
+      <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-theme-card border-b border-theme-subtle sticky top-0 z-30 backdrop-blur-sm">
+        <span className="text-lg font-bold text-theme-primary tracking-tight">Spora</span>
         <nav className="flex gap-0.5 ml-6">
           {nav.map(({ to, label, emoji, pill, text }) => (
             <NavLink
@@ -60,7 +60,7 @@ export default function Layout({ children }) {
                 `flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive
                     ? `${pill} ${text}`
-                    : 'text-gray-500 dark:text-dm-secondary hover:bg-gray-100 dark:hover:bg-dm-hover hover:text-gray-700 dark:hover:text-dm-primary'
+                    : 'text-theme-secondary hover:bg-theme-hover hover:text-theme-primary'
                 }`
               }
             >
@@ -80,7 +80,7 @@ export default function Layout({ children }) {
       <QuickAdd />
 
       {/* Bottom tab bar — mobile only */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-dm-card border-t border-gray-100 dark:border-dm-subtle flex z-30 safe-area-pb">
+      <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-theme-card border-t border-theme-subtle flex z-30 safe-area-pb">
         {nav.map(({ to, label, emoji, pill, text }) => (
           <NavLink
             key={to}
@@ -93,7 +93,7 @@ export default function Layout({ children }) {
                 <span className={`text-lg leading-none px-2.5 py-1 rounded-2xl transition-colors ${isActive ? pill : ''}`}>
                   {emoji}
                 </span>
-                <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-gray-400 dark:text-dm-muted'}`}>
+                <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-theme-muted'}`}>
                   {label}
                 </span>
               </>
