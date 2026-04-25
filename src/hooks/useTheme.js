@@ -137,14 +137,10 @@ export function useTheme() {
 
 function applyTheme(themeKey) {
   const themeObj = THEMES.find(t => t.key === themeKey)
-  if (!themeObj) {
-    console.warn('Theme not found:', themeKey)
-    return
-  }
+  if (!themeObj) return
 
   const root = document.documentElement
   const c = themeObj.colors
-  console.log('Applying theme:', themeKey, 'colors:', c)
 
   // Light mode CSS variables
   root.style.setProperty('--bg-page',  c.bgPage)

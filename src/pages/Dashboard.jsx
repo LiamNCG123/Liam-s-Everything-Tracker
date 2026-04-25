@@ -76,12 +76,12 @@ export default function Dashboard() {
           <Link
             key={m.to}
             to={m.to}
-            className="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 hover:border-brand-200 hover:shadow transition-all"
+            className="flex items-center gap-4 bg-theme-card rounded-2xl border border-theme-subtle shadow-sm px-4 py-4 hover:border-brand-200 hover:shadow transition-all"
           >
             <span className="text-3xl">{m.emoji}</span>
             <div>
-              <div className="font-semibold text-gray-800">{m.label}</div>
-              <div className="text-xs text-gray-400">{m.desc}</div>
+              <div className="font-semibold text-theme-primary">{m.label}</div>
+              <div className="text-xs text-theme-muted">{m.desc}</div>
             </div>
           </Link>
         ))}
