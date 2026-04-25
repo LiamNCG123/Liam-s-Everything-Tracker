@@ -135,7 +135,7 @@ export default function Onboarding({ onComplete }) {
     } else if (topFocus === 'training' && text) {
       addSession({ date: today(), exercises: [{ name: text, sets, reps, weight }] })
     } else if (topFocus === 'learning' && text) {
-      addEdu({ title: text, type: 'book', status: 'In Progress', progress: 0 })
+      addEdu({ title: text, type: 'Book', status: 'In Progress', progress: 0 })
     } else if (topFocus === 'money') {
       save('currencyHome', currency)
       save('currencyDisplay', currency)
