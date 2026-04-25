@@ -85,19 +85,17 @@ export default function Settings() {
           {modules.map((mod, idx) => (
             <div
               key={mod.key}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                mod.enabled
-                  ? 'border-theme-subtle bg-theme-hover'
-                  : 'border-theme-subtle bg-theme-card opacity-50'
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border border-theme-subtle transition-colors ${
+                mod.enabled ? 'bg-theme-card' : 'bg-theme-card opacity-50'
               }`}
             >
               {/* Up / down reorder */}
-              <div className="flex flex-col gap-0.5 shrink-0">
+              <div className="flex flex-col shrink-0">
                 <button
                   onClick={() => moveUp(mod.key)}
                   disabled={idx === 0}
                   aria-label={`Move ${mod.label} up`}
-                  className="text-theme-muted hover:text-theme-primary disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none px-1"
+                  className="w-6 h-5 flex items-center justify-center text-theme-muted hover:text-theme-primary disabled:opacity-20 disabled:cursor-not-allowed text-[10px] rounded hover:bg-theme-hover transition-colors"
                 >
                   ▲
                 </button>
@@ -105,31 +103,33 @@ export default function Settings() {
                   onClick={() => moveDown(mod.key)}
                   disabled={idx === modules.length - 1}
                   aria-label={`Move ${mod.label} down`}
-                  className="text-theme-muted hover:text-theme-primary disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none px-1"
+                  className="w-6 h-5 flex items-center justify-center text-theme-muted hover:text-theme-primary disabled:opacity-20 disabled:cursor-not-allowed text-[10px] rounded hover:bg-theme-hover transition-colors"
                 >
                   ▼
                 </button>
               </div>
 
-              <div className="flex-1">
-                <p className="text-sm font-medium text-theme-primary">
-                  {mod.label}
-                </p>
-              </div>
+              <p className="flex-1 text-sm font-medium text-theme-primary">
+                {mod.label}
+              </p>
 
               {/* Toggle switch */}
               <button
                 role="switch"
                 aria-checked={mod.enabled}
                 onClick={() => toggle(mod.key)}
-                className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
-                  mod.enabled ? 'bg-brand-500' : 'bg-theme-input'
+                style={{ width: '36px', height: '20px' }}
+                className={`relative inline-flex items-center rounded-full transition-colors shrink-0 ${
+                  mod.enabled ? 'bg-brand-500' : 'bg-theme-input border border-theme'
                 }`}
               >
                 <span
-                  className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                    mod.enabled ? 'translate-x-5' : 'translate-x-1'
-                  }`}
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    transform: mod.enabled ? 'translateX(19px)' : 'translateX(3px)',
+                  }}
+                  className="inline-block rounded-full bg-white shadow transition-transform"
                 />
               </button>
             </div>
