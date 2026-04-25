@@ -50,17 +50,24 @@ export default function Settings() {
             <button
               key={t.key}
               onClick={() => setTheme(t.key)}
-              className={`relative p-4 rounded-lg border-2 transition-all text-left ${
+              className={`relative p-4 rounded-xl border-2 transition-all text-left ${
                 theme === t.key
-                  ? 'border-brand-500 bg-brand-500/5'
-                  : 'border-theme hover:border-theme-secondary'
+                  ? 'border-brand-500 bg-brand-50'
+                  : 'border-theme-subtle hover:border-brand-500'
               }`}
             >
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-full shadow-sm" style={{ background: t.colors.brand500 }} />
+                <div className="w-6 h-6 rounded-full shadow-sm border border-black/10" style={{ background: t.colors.bgPage }} />
+                <div className="w-6 h-6 rounded-full shadow-sm" style={{ background: t.colors.darkBgPage }} />
+              </div>
               {theme === t.key && (
-                <div className="absolute top-2 right-2 w-2 h-2 bg-brand-500 rounded-full" />
+                <div className="absolute top-3 right-3 w-4 h-4 bg-brand-500 rounded-full flex items-center justify-center">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="white"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/></svg>
+                </div>
               )}
-              <div className="font-medium text-theme-primary text-sm">{t.label}</div>
-              <p className="text-xs text-theme-muted mt-1">{t.desc}</p>
+              <div className="font-semibold text-theme-primary text-sm">{t.label}</div>
+              <p className="text-xs text-theme-muted mt-0.5">{t.desc}</p>
             </button>
           ))}
         </div>

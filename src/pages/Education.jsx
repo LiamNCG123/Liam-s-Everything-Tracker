@@ -80,7 +80,7 @@ export default function Education() {
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === f ? 'bg-brand-500 text-white' : 'bg-theme-input text-theme-secondary hover:bg-gray-200 hover:bg-theme-hover'
+                filter === f ? 'bg-brand-500 text-white' : 'bg-theme-input text-theme-secondary hover:bg-theme-hover'
               }`}
             >
               {f}

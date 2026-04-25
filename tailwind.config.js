@@ -25,13 +25,11 @@ export default {
       },
       colors: {
         brand: {
-          50:  'var(--brand-brand50, #eef2ff)',
-          100: 'var(--brand-brand100, #e0e7ff)',
-          200: 'var(--brand-brand200, #c7d2fe)',
-          400: 'var(--brand-brand400, #818cf8)',
-          500: 'var(--brand-brand500, #6366f1)',
-          600: 'var(--brand-brand600, #4f46e5)',
-          700: 'var(--brand-brand700, #4338ca)',
+          50:  'var(--brand-50, #eff6ff)',
+          100: 'var(--brand-100, #dbeafe)',
+          400: 'var(--brand-400, #60a5fa)',
+          500: 'var(--brand-500, #2563eb)',
+          600: 'var(--brand-600, #1d4ed8)',
         },
         // ── Theme-aware design tokens ────────────────────────────────────
         // These reference CSS variables in index.css that change based on theme.

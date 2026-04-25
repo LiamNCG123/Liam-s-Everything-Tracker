@@ -115,7 +115,7 @@ export default function Goals() {
                 className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   filter === f
                     ? 'bg-brand-500 text-white'
-                    : 'bg-theme-input text-theme-secondary hover:bg-gray-200 hover:bg-theme-hover'
+                    : 'bg-theme-input text-theme-secondary hover:bg-theme-hover'
                 }`}
               >
                 {f}
@@ -129,7 +129,7 @@ export default function Goals() {
               className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                 catFilter === 'All'
                   ? 'bg-gray-700 dark:bg-gray-600 text-white'
-                  : 'bg-theme-input text-theme-secondary hover:bg-gray-200 hover:bg-theme-hover'
+                  : 'bg-theme-input text-theme-secondary hover:bg-theme-hover'
               }`}
             >
               All categories
@@ -140,8 +140,8 @@ export default function Goals() {
                 onClick={() => setCatFilter(c.name)}
                 className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   catFilter === c.name
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    ? 'bg-theme-primary text-brand-50'
+                    : 'bg-theme-input text-theme-secondary hover:bg-theme-hover'
                 }`}
               >
                 {c.icon} {c.name}

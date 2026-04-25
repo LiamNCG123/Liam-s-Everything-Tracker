@@ -219,10 +219,15 @@ export default function Onboarding({ onComplete }) {
                     onClick={() => setThemeLocal(t.key)}
                     className={`relative p-2.5 rounded-lg border-2 transition-all text-left text-xs ${
                       theme === t.key
-                        ? 'border-brand-500 bg-brand-500/5'
-                        : 'border-theme hover:border-theme-secondary'
+                        ? 'border-brand-500 bg-brand-50'
+                        : 'border-theme-subtle hover:border-brand-500'
                     }`}
                   >
+                    <div className="flex gap-1 mb-1.5">
+                      <div className="w-3.5 h-3.5 rounded-full" style={{ background: t.colors.brand500 }} />
+                      <div className="w-3.5 h-3.5 rounded-full border border-black/10" style={{ background: t.colors.bgPage }} />
+                      <div className="w-3.5 h-3.5 rounded-full" style={{ background: t.colors.darkBgPage }} />
+                    </div>
                     {theme === t.key && (
                       <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-brand-500 rounded-full" />
                     )}
