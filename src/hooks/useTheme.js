@@ -7,7 +7,6 @@ export const THEMES = [
     label: 'Slate',
     desc: 'Clean & professional',
     colors: {
-      // Light — cool blue-tinted surfaces
       bgPage:      '#f4f7fb',
       bgCard:      '#ffffff',
       bgInput:     '#edf1f8',
@@ -21,16 +20,6 @@ export const THEMES = [
       brand400:    '#60a5fa',
       brand500:    '#2563eb',
       brand600:    '#1d4ed8',
-      // Dark — deep charcoal, truly dark
-      darkBgPage:  '#0a0e14',
-      darkBgCard:  '#111820',
-      darkBgInput: '#192030',
-      darkBgHover: '#202a3c',
-      darkTextPrimary:   '#e2eaf5',
-      darkTextSecondary: '#94aabf',
-      darkTextMuted:     '#627485',
-      darkBorder:  '#2a3848',
-      darkBrand500: '#60a5fa',
     },
   },
   {
@@ -38,7 +27,6 @@ export const THEMES = [
     label: 'Amber',
     desc: 'Warm & inviting',
     colors: {
-      // Light — warm parchment/cream surfaces
       bgPage:      '#fdf6e4',
       bgCard:      '#fffbf0',
       bgInput:     '#f8edd8',
@@ -52,16 +40,6 @@ export const THEMES = [
       brand400:    '#fbbf24',
       brand500:    '#d97706',
       brand600:    '#b45309',
-      // Dark — deep warm dark, truly dark
-      darkBgPage:  '#120d04',
-      darkBgCard:  '#1c140a',
-      darkBgInput: '#261c10',
-      darkBgHover: '#302416',
-      darkTextPrimary:   '#f5e8cc',
-      darkTextSecondary: '#c8a872',
-      darkTextMuted:     '#8a6e42',
-      darkBorder:  '#3a2c18',
-      darkBrand500: '#fbbf24',
     },
   },
   {
@@ -69,7 +47,6 @@ export const THEMES = [
     label: 'Emerald',
     desc: 'Natural & calm',
     colors: {
-      // Light — fresh mint/sage surfaces
       bgPage:      '#ecf7f2',
       bgCard:      '#f5fdf9',
       bgInput:     '#daeee6',
@@ -83,16 +60,6 @@ export const THEMES = [
       brand400:    '#34d399',
       brand500:    '#059669',
       brand600:    '#047857',
-      // Dark — deep forest, truly dark
-      darkBgPage:  '#060f0a',
-      darkBgCard:  '#0d1c14',
-      darkBgInput: '#14261c',
-      darkBgHover: '#1b3025',
-      darkTextPrimary:   '#ceeee0',
-      darkTextSecondary: '#72b092',
-      darkTextMuted:     '#468060',
-      darkBorder:  '#1e3828',
-      darkBrand500: '#34d399',
     },
   },
   {
@@ -100,7 +67,6 @@ export const THEMES = [
     label: 'Violet',
     desc: 'Creative & modern',
     colors: {
-      // Light — soft lavender surfaces
       bgPage:      '#f3eefa',
       bgCard:      '#f9f6fe',
       bgInput:     '#e8ddf5',
@@ -114,16 +80,26 @@ export const THEMES = [
       brand400:    '#a78bfa',
       brand500:    '#7c3aed',
       brand600:    '#6d28d9',
-      // Dark — deep purple, truly dark
-      darkBgPage:  '#0c0818',
-      darkBgCard:  '#141026',
-      darkBgInput: '#1c1832',
-      darkBgHover: '#24203e',
-      darkTextPrimary:   '#e8d8ff',
-      darkTextSecondary: '#b090d8',
-      darkTextMuted:     '#7a5aa8',
-      darkBorder:  '#2c2448',
-      darkBrand500: '#a78bfa',
+    },
+  },
+  {
+    key: 'dark',
+    label: 'Dark',
+    desc: 'Black & grey',
+    colors: {
+      bgPage:      '#111111',
+      bgCard:      '#1c1c1c',
+      bgInput:     '#252525',
+      bgHover:     '#2e2e2e',
+      textPrimary: '#efefef',
+      textSecondary: '#a0a0a0',
+      textMuted:   '#6b6b6b',
+      border:      '#383838',
+      brand50:     '#1e2d40',
+      brand100:    '#1e3a5f',
+      brand400:    '#60a5fa',
+      brand500:    '#3b82f6',
+      brand600:    '#2563eb',
     },
   },
 ]
@@ -150,7 +126,14 @@ function applyTheme(themeKey) {
   const root = document.documentElement
   const c = themeObj.colors
 
-  // Light mode CSS variables
+  // Dark theme activates html.dark so Tailwind dark: utilities work
+  if (themeKey === 'dark') {
+    root.classList.add('dark')
+  } else {
+    root.classList.remove('dark')
+  }
+
+  // Inline styles always override html.dark stylesheet rules
   root.style.setProperty('--bg-page',  c.bgPage)
   root.style.setProperty('--bg-card',  c.bgCard)
   root.style.setProperty('--bg-input', c.bgInput)
@@ -165,20 +148,9 @@ function applyTheme(themeKey) {
   root.style.setProperty('--brand-400', c.brand400)
   root.style.setProperty('--brand-500', c.brand500)
   root.style.setProperty('--brand-600', c.brand600)
-
-  // Dark mode CSS variables (read by html.dark via var(--dark-*))
-  root.style.setProperty('--dark-bg-page',  c.darkBgPage)
-  root.style.setProperty('--dark-bg-card',  c.darkBgCard)
-  root.style.setProperty('--dark-bg-input', c.darkBgInput)
-  root.style.setProperty('--dark-bg-hover', c.darkBgHover)
-  root.style.setProperty('--dark-text-primary',   c.darkTextPrimary)
-  root.style.setProperty('--dark-text-secondary', c.darkTextSecondary)
-  root.style.setProperty('--dark-text-muted',     c.darkTextMuted)
-  root.style.setProperty('--dark-border',         c.darkBorder)
-  root.style.setProperty('--dark-brand-500',      c.darkBrand500)
 }
 
-// Initialize theme on app load (called in main.jsx before React hydration)
+// Called in main.jsx before React hydration to prevent flash
 export function initTheme() {
   const theme = load('theme') || 'slate'
   applyTheme(theme)
