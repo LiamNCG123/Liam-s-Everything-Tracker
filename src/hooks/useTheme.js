@@ -1,36 +1,36 @@
 import { useState, useEffect } from 'react'
 import { load, save } from '../utils/storage'
 
-// Each theme uses neutral surfaces with a single brand accent color.
-// In dark mode, surfaces have a subtle tint matching the theme's brand,
-// while text remains high-contrast (WCAG AA+) for readability.
 export const THEMES = [
   {
     key: 'slate',
     label: 'Slate',
     desc: 'Clean & professional',
     colors: {
-      // Light mode — neutral grays
-      bgPage:      '#fafbfc',
+      // Light — cool blue-tinted surfaces
+      bgPage:      '#f4f7fb',
       bgCard:      '#ffffff',
-      bgInput:     '#f6f8fa',
-      bgHover:     '#f0f3f6',
-      textPrimary: '#1f2328',
-      textSecondary: '#656d76',
-      textMuted:   '#8c959f',
-      border:      '#d0d7de',
-      brand500:    '#0969da',
-      brand600:    '#0550ae',
-      // Dark mode — neutral charcoal
-      darkBgPage:  '#0d1117',
-      darkBgCard:  '#161b22',
-      darkBgInput: '#1c2128',
-      darkBgHover: '#262c36',
-      darkTextPrimary:   '#e6edf3', // 14.9:1 on bg-page (AAA)
-      darkTextSecondary: '#b1bac4', //  9.4:1 (AAA)
-      darkTextMuted:     '#7d8590', //  5.0:1 (AA)
-      darkBorder:  '#373e47',
-      darkBrand500: '#58a6ff',
+      bgInput:     '#edf1f8',
+      bgHover:     '#e4eaf4',
+      textPrimary: '#1a2332',
+      textSecondary: '#455469',
+      textMuted:   '#5a6a80',
+      border:      '#c5d0dd',
+      brand50:     '#eff6ff',
+      brand100:    '#dbeafe',
+      brand400:    '#60a5fa',
+      brand500:    '#2563eb',
+      brand600:    '#1d4ed8',
+      // Dark — deep charcoal, truly dark
+      darkBgPage:  '#0a0e14',
+      darkBgCard:  '#111820',
+      darkBgInput: '#192030',
+      darkBgHover: '#202a3c',
+      darkTextPrimary:   '#e2eaf5',
+      darkTextSecondary: '#94aabf',
+      darkTextMuted:     '#627485',
+      darkBorder:  '#2a3848',
+      darkBrand500: '#60a5fa',
     },
   },
   {
@@ -38,26 +38,29 @@ export const THEMES = [
     label: 'Amber',
     desc: 'Warm & inviting',
     colors: {
-      // Light mode — neutral surfaces with amber accent
-      bgPage:      '#fcfbf8',
-      bgCard:      '#ffffff',
-      bgInput:     '#f8f6f1',
-      bgHover:     '#f3eee5',
-      textPrimary: '#1f2328',
-      textSecondary: '#656d76',
-      textMuted:   '#8c959f',
-      border:      '#e5e0d4',
+      // Light — warm parchment/cream surfaces
+      bgPage:      '#fdf6e4',
+      bgCard:      '#fffbf0',
+      bgInput:     '#f8edd8',
+      bgHover:     '#f2e0c0',
+      textPrimary: '#1e1409',
+      textSecondary: '#5c4422',
+      textMuted:   '#7a5c32',
+      border:      '#d4b87a',
+      brand50:     '#fffbeb',
+      brand100:    '#fef3c7',
+      brand400:    '#fbbf24',
       brand500:    '#d97706',
       brand600:    '#b45309',
-      // Dark mode — warm sepia tones
-      darkBgPage:  '#1a1610',
-      darkBgCard:  '#221d15',
-      darkBgInput: '#2a241b',
-      darkBgHover: '#332c22',
-      darkTextPrimary:   '#f5ebd5', // warm off-white, AAA on bg-page
-      darkTextSecondary: '#ccbe9f', // ~7.7:1 (AAA)
-      darkTextMuted:     '#9b8d72', // ~4.6:1 (AA)
-      darkBorder:  '#3f372a',
+      // Dark — deep warm dark, truly dark
+      darkBgPage:  '#120d04',
+      darkBgCard:  '#1c140a',
+      darkBgInput: '#261c10',
+      darkBgHover: '#302416',
+      darkTextPrimary:   '#f5e8cc',
+      darkTextSecondary: '#c8a872',
+      darkTextMuted:     '#8a6e42',
+      darkBorder:  '#3a2c18',
       darkBrand500: '#fbbf24',
     },
   },
@@ -66,26 +69,29 @@ export const THEMES = [
     label: 'Emerald',
     desc: 'Natural & calm',
     colors: {
-      // Light mode — neutral surfaces with emerald accent
-      bgPage:      '#fafcfb',
-      bgCard:      '#ffffff',
-      bgInput:     '#f4f8f6',
-      bgHover:     '#eaf3ee',
-      textPrimary: '#1f2328',
-      textSecondary: '#656d76',
-      textMuted:   '#8c959f',
-      border:      '#dde6e0',
+      // Light — fresh mint/sage surfaces
+      bgPage:      '#ecf7f2',
+      bgCard:      '#f5fdf9',
+      bgInput:     '#daeee6',
+      bgHover:     '#c5e4d4',
+      textPrimary: '#0a1e16',
+      textSecondary: '#2e5c45',
+      textMuted:   '#3d7256',
+      border:      '#a8ccba',
+      brand50:     '#ecfdf5',
+      brand100:    '#d1fae5',
+      brand400:    '#34d399',
       brand500:    '#059669',
       brand600:    '#047857',
-      // Dark mode — deep forest tones
-      darkBgPage:  '#0e1612',
-      darkBgCard:  '#161e1a',
-      darkBgInput: '#1d2722',
-      darkBgHover: '#25302a',
-      darkTextPrimary:   '#e6f0eb', // AAA on bg-page
-      darkTextSecondary: '#b3c2b9', // ~8.2:1 (AAA)
-      darkTextMuted:     '#85928a', // ~4.7:1 (AA)
-      darkBorder:  '#2f3c34',
+      // Dark — deep forest, truly dark
+      darkBgPage:  '#060f0a',
+      darkBgCard:  '#0d1c14',
+      darkBgInput: '#14261c',
+      darkBgHover: '#1b3025',
+      darkTextPrimary:   '#ceeee0',
+      darkTextSecondary: '#72b092',
+      darkTextMuted:     '#468060',
+      darkBorder:  '#1e3828',
       darkBrand500: '#34d399',
     },
   },
@@ -94,26 +100,29 @@ export const THEMES = [
     label: 'Violet',
     desc: 'Creative & modern',
     colors: {
-      // Light mode — neutral surfaces with violet accent
-      bgPage:      '#fbfafc',
-      bgCard:      '#ffffff',
-      bgInput:     '#f6f4f9',
-      bgHover:     '#eee9f4',
-      textPrimary: '#1f2328',
-      textSecondary: '#656d76',
-      textMuted:   '#8c959f',
-      border:      '#e1dce8',
+      // Light — soft lavender surfaces
+      bgPage:      '#f3eefa',
+      bgCard:      '#f9f6fe',
+      bgInput:     '#e8ddf5',
+      bgHover:     '#d8ccec',
+      textPrimary: '#180e2e',
+      textSecondary: '#4a386a',
+      textMuted:   '#7a6298',
+      border:      '#c0aed8',
+      brand50:     '#f5f3ff',
+      brand100:    '#ede9fe',
+      brand400:    '#a78bfa',
       brand500:    '#7c3aed',
       brand600:    '#6d28d9',
-      // Dark mode — rich purple tones
-      darkBgPage:  '#15111d',
-      darkBgCard:  '#1d1828',
-      darkBgInput: '#251f33',
-      darkBgHover: '#2e2740',
-      darkTextPrimary:   '#ebe5f3', // AAA on bg-page
-      darkTextSecondary: '#b8b0c5', // ~7.6:1 (AAA)
-      darkTextMuted:     '#8c8398', // ~4.6:1 (AA)
-      darkBorder:  '#38304a',
+      // Dark — deep purple, truly dark
+      darkBgPage:  '#0c0818',
+      darkBgCard:  '#141026',
+      darkBgInput: '#1c1832',
+      darkBgHover: '#24203e',
+      darkTextPrimary:   '#e8d8ff',
+      darkTextSecondary: '#b090d8',
+      darkTextMuted:     '#7a5aa8',
+      darkBorder:  '#2c2448',
       darkBrand500: '#a78bfa',
     },
   },
@@ -151,10 +160,13 @@ function applyTheme(themeKey) {
   root.style.setProperty('--text-muted',     c.textMuted)
   root.style.setProperty('--border-input',   c.border)
   root.style.setProperty('--border-card',    c.border)
-  root.style.setProperty('--brand-500',      c.brand500)
-  root.style.setProperty('--brand-600',      c.brand600)
+  root.style.setProperty('--brand-50',  c.brand50)
+  root.style.setProperty('--brand-100', c.brand100)
+  root.style.setProperty('--brand-400', c.brand400)
+  root.style.setProperty('--brand-500', c.brand500)
+  root.style.setProperty('--brand-600', c.brand600)
 
-  // Dark mode CSS variables (read by html.dark via var(--dark-bg-page, fallback))
+  // Dark mode CSS variables (read by html.dark via var(--dark-*))
   root.style.setProperty('--dark-bg-page',  c.darkBgPage)
   root.style.setProperty('--dark-bg-card',  c.darkBgCard)
   root.style.setProperty('--dark-bg-input', c.darkBgInput)
