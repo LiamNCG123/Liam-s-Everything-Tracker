@@ -8,27 +8,27 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode surfaces — indigo theme defaults (will be overridden by useTheme) */
-  --bg-page:    #ffffff;
-  --bg-card:    #f8fafc;
-  --bg-input:   #f1f5f9;
-  --bg-hover:   #e2e8f0;
+  /* Light mode surfaces — slate theme defaults (will be overridden by useTheme) */
+  --bg-page:    #fafbfc;
+  --bg-card:    #ffffff;
+  --bg-input:   #f6f8fa;
+  --bg-hover:   #eaeef2;
 
   /* Light mode borders */
-  --border-card:   #e2e8f0;
-  --border-input:  #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border-card:   #d0d7de;
+  --border-input:  #d0d7de;
+  --border-strong: #b1bac4;
 
   /* Light mode text */
-  --text-primary:   #1e293b;
-  --text-secondary: #64748b;
-  --text-muted:     #94a3b8;
-  --text-placeholder: #94a3b8;
+  --text-primary:   #24292f;
+  --text-secondary: #57606a;
+  --text-muted:     #848d97;
+  --text-placeholder: #848d97;
 
-  /* Brand — indigo */
-  --brand-500: #6366f1;
-  --brand-400: #818cf8;
-  --brand-ring: rgba(99, 102, 241, 0.3);
+  /* Brand — slate */
+  --brand-500: #0969da;
+  --brand-400: #54aeff;
+  --brand-ring: rgba(9, 105, 218, 0.3);
 }
 
 html.dark {

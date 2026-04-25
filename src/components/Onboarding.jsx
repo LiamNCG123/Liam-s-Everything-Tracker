@@ -211,20 +211,23 @@ export default function Onboarding({ onComplete }) {
 
             {/* Theme selector */}
             <div className="mb-6">
-              <label className="block text-xs font-semibold text-theme-secondary uppercase tracking-wide mb-2">Theme</label>
+              <label className="block text-xs font-semibold text-theme-secondary uppercase tracking-wide mb-2">Color Scheme</label>
               <div className="grid grid-cols-2 gap-2">
                 {THEMES.map(t => (
                   <button
                     key={t.key}
                     onClick={() => setThemeLocal(t.key)}
-                    className={`p-2 rounded-xl border-2 transition-all text-left text-xs ${
+                    className={`relative p-2.5 rounded-lg border-2 transition-all text-left text-xs ${
                       theme === t.key
-                        ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
-                        : 'border-theme hover:border-gray-300 hover:border-theme'
+                        ? 'border-brand-500 bg-brand-500/5'
+                        : 'border-theme hover:border-theme-secondary'
                     }`}
                   >
-                    <span className="text-lg">{t.emoji}</span>
-                    <div className="font-medium text-theme-primary">{t.label}</div>
+                    {theme === t.key && (
+                      <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-brand-500 rounded-full" />
+                    )}
+                    <div className="font-medium text-theme-primary text-xs">{t.label}</div>
+                    <div className="text-xs text-theme-muted mt-0.5">{t.desc}</div>
                   </button>
                 ))}
               </div>
