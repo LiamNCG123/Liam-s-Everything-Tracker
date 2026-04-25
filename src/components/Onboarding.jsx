@@ -63,7 +63,7 @@ function Dots({ step, total = 4 }) {
               ? 'w-6 h-2 bg-brand-500'
               : i + 1 < step
               ? 'w-2 h-2 bg-brand-400'
-              : 'w-2 h-2 bg-gray-200 dark:bg-dm-input'
+              : 'w-2 h-2 bg-gray-200 bg-theme-input'
           }`}
         />
       ))}
@@ -87,14 +87,14 @@ function SkipLink({ label = 'Skip for now', onClick }) {
   return (
     <button
       onClick={onClick}
-      className="block w-full text-center text-sm text-gray-400 dark:text-dm-muted hover:text-gray-600 dark:hover:text-dm-secondary mt-3 py-1 transition-colors"
+      className="block w-full text-center text-sm text-theme-muted hover:text-gray-600 hover:text-theme-secondary mt-3 py-1 transition-colors"
     >
       {label}
     </button>
   )
 }
 
-const textInput = 'w-full border border-gray-200 dark:border-dm-border rounded-2xl px-4 py-3 text-sm text-gray-900 dark:text-dm-primary bg-white dark:bg-dm-card placeholder-gray-300 dark:placeholder-dm-muted focus:outline-none focus:ring-2 focus:ring-brand-500/25 focus:border-brand-500 dark:focus:border-brand-400 dark:focus:bg-dm-input transition'
+const textInput = 'w-full border border-theme rounded-2xl px-4 py-3 text-sm text-theme-primary bg-theme-card placeholder-gray-300 placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-brand-500/25 focus:border-brand-500  focus:bg-theme-input transition'
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -157,7 +157,7 @@ export default function Onboarding({ onComplete }) {
   const displayName = name.trim()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dm-page flex flex-col items-center justify-center px-5 py-12">
+    <div className="min-h-screen bg-theme-page flex flex-col items-center justify-center px-5 py-12">
       {/*
         key={step} causes React to unmount + remount the content div on each step,
         which re-triggers the animate-fade-in-up entrance.
@@ -169,15 +169,15 @@ export default function Onboarding({ onComplete }) {
         {step === 1 && (
           <div className="text-center">
             <span className="text-6xl mb-5 inline-block animate-pop">🌱</span>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+            <h1 className="text-3xl font-bold text-theme-primary mb-2">
               Hey, I'm Spora.
             </h1>
-            <p className="text-gray-400 dark:text-dm-muted text-sm mb-8">
+            <p className="text-theme-muted text-sm mb-8">
               Your personal everything tracker.
             </p>
 
             <div className="text-left mb-6">
-              <label className="block text-sm font-medium text-gray-600 dark:text-dm-secondary mb-2">
+              <label className="block text-sm font-medium text-theme-secondary mb-2">
                 What do your friends call you?
               </label>
               <input
@@ -188,7 +188,7 @@ export default function Onboarding({ onComplete }) {
                 placeholder="Just a first name is fine"
                 className={textInput}
               />
-              <p className="text-xs text-gray-300 dark:text-dm-muted mt-2 text-center">
+              <p className="text-xs text-gray-300 text-theme-muted mt-2 text-center">
                 Stays on your device. Never leaves.
               </p>
             </div>
@@ -202,16 +202,16 @@ export default function Onboarding({ onComplete }) {
         {/* ── Step 2: Theme & Focus ───────────────────────────────────────── */}
         {step === 2 && (
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-1 text-center">
+            <h2 className="text-2xl font-bold text-theme-primary mb-1 text-center">
               {displayName ? `Nice to meet you, ${displayName}!` : 'Welcome!'}
             </h2>
-            <p className="text-gray-400 dark:text-dm-muted text-sm text-center mb-6">
+            <p className="text-theme-muted text-sm text-center mb-6">
               Pick your style, then tell us what you're working on.
             </p>
 
             {/* Theme selector */}
             <div className="mb-6">
-              <label className="block text-xs font-semibold text-gray-600 dark:text-dm-secondary uppercase tracking-wide mb-2">Theme</label>
+              <label className="block text-xs font-semibold text-theme-secondary uppercase tracking-wide mb-2">Theme</label>
               <div className="grid grid-cols-2 gap-2">
                 {THEMES.map(t => (
                   <button
@@ -220,17 +220,17 @@ export default function Onboarding({ onComplete }) {
                     className={`p-2 rounded-xl border-2 transition-all text-left text-xs ${
                       theme === t.key
                         ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
-                        : 'border-gray-200 dark:border-dm-border hover:border-gray-300 dark:hover:border-dm-border'
+                        : 'border-theme hover:border-gray-300 hover:border-theme'
                     }`}
                   >
                     <span className="text-lg">{t.emoji}</span>
-                    <div className="font-medium text-gray-900 dark:text-dm-primary">{t.label}</div>
+                    <div className="font-medium text-theme-primary">{t.label}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            <p className="text-gray-400 dark:text-dm-muted text-sm text-center mb-4">
+            <p className="text-theme-muted text-sm text-center mb-4">
               What are you working on right now?
               <br />
               <span className="text-xs">Pick whatever's on your mind — you can always change this.</span>
@@ -248,15 +248,15 @@ export default function Onboarding({ onComplete }) {
                     className={`${isWide ? 'col-span-2' : ''} rounded-2xl border-2 p-4 text-left transition-all duration-150 active:scale-95 ${
                       selected
                         ? mod.sel
-                        : 'bg-white dark:bg-dm-card border-gray-100 dark:border-dm-subtle hover:border-gray-200 dark:hover:border-dm-border'
+                        : 'bg-theme-card border-theme-subtle hover:border-gray-200 hover:border-theme'
                     }`}
                   >
                     {isWide ? (
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{mod.emoji}</span>
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-gray-900 dark:text-dm-primary">{mod.label}</div>
-                          <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5">{mod.desc}</div>
+                          <div className="text-sm font-semibold text-theme-primary">{mod.label}</div>
+                          <div className="text-xs text-theme-muted mt-0.5">{mod.desc}</div>
                         </div>
                         {selected && <span className={`text-base ${mod.check}`}>✓</span>}
                       </div>
@@ -266,8 +266,8 @@ export default function Onboarding({ onComplete }) {
                           <span className="text-2xl">{mod.emoji}</span>
                           {selected && <span className={`text-sm font-bold ${mod.check}`}>✓</span>}
                         </div>
-                        <div className="text-sm font-semibold text-gray-900 dark:text-dm-primary leading-snug">{mod.label}</div>
-                        <div className="text-xs text-gray-400 dark:text-dm-muted mt-0.5 leading-snug">{mod.desc}</div>
+                        <div className="text-sm font-semibold text-theme-primary leading-snug">{mod.label}</div>
+                        <div className="text-xs text-theme-muted mt-0.5 leading-snug">{mod.desc}</div>
                       </>
                     )}
                   </button>
@@ -290,10 +290,10 @@ export default function Onboarding({ onComplete }) {
               <>
                 <div className="text-center mb-6">
                   <span className="text-5xl mb-4 inline-block animate-pop">✅</span>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+                  <h2 className="text-2xl font-bold text-theme-primary mb-2">
                     Let's add your first habit.
                   </h2>
-                  <p className="text-sm text-gray-400 dark:text-dm-muted">
+                  <p className="text-sm text-theme-muted">
                     Even one tracked habit is a win. What's something you want to do every day?
                   </p>
                 </div>
@@ -314,10 +314,10 @@ export default function Onboarding({ onComplete }) {
               <>
                 <div className="text-center mb-6">
                   <span className="text-5xl mb-4 inline-block animate-pop">🎯</span>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+                  <h2 className="text-2xl font-bold text-theme-primary mb-2">
                     What's one thing you're working toward?
                   </h2>
-                  <p className="text-sm text-gray-400 dark:text-dm-muted">
+                  <p className="text-sm text-theme-muted">
                     No deadlines, no pressure. Just name it.
                   </p>
                 </div>
@@ -338,10 +338,10 @@ export default function Onboarding({ onComplete }) {
               <>
                 <div className="text-center mb-6">
                   <span className="text-5xl mb-4 inline-block animate-pop">💪</span>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+                  <h2 className="text-2xl font-bold text-theme-primary mb-2">
                     Did you work out recently?
                   </h2>
-                  <p className="text-sm text-gray-400 dark:text-dm-muted">
+                  <p className="text-sm text-theme-muted">
                     Log it in 10 seconds — no programme needed.
                   </p>
                 </div>
@@ -364,7 +364,7 @@ export default function Onboarding({ onComplete }) {
                       value={val}
                       onChange={e => setter(e.target.value)}
                       placeholder={label}
-                      className="border border-gray-200 dark:border-dm-border rounded-xl px-3 py-2 text-sm text-center text-gray-900 dark:text-dm-primary bg-white dark:bg-dm-card placeholder-gray-300 dark:placeholder-dm-muted focus:outline-none focus:ring-2 focus:ring-brand-500/25 dark:bg-dm-input"
+                      className="border border-theme rounded-xl px-3 py-2 text-sm text-center text-theme-primary bg-theme-card placeholder-gray-300 placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-brand-500/25 bg-theme-input"
                     />
                   ))}
                 </div>
@@ -377,10 +377,10 @@ export default function Onboarding({ onComplete }) {
               <>
                 <div className="text-center mb-6">
                   <span className="text-5xl mb-4 inline-block animate-pop">💰</span>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+                  <h2 className="text-2xl font-bold text-theme-primary mb-2">
                     Quick — what currency do you use?
                   </h2>
-                  <p className="text-sm text-gray-400 dark:text-dm-muted">
+                  <p className="text-sm text-theme-muted">
                     So your numbers look right from day one.
                   </p>
                 </div>
@@ -392,14 +392,14 @@ export default function Onboarding({ onComplete }) {
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                         currency === c
                           ? 'bg-emerald-100 dark:bg-emerald-400/15 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-300 dark:ring-emerald-400/30'
-                          : 'bg-white dark:bg-dm-card text-gray-600 dark:text-dm-secondary border border-gray-200 dark:border-dm-border hover:border-emerald-300 dark:hover:border-emerald-400/40'
+                          : 'bg-theme-card text-theme-secondary border border-theme hover:border-emerald-300 dark:hover:border-emerald-400/40'
                       }`}
                     >
                       {c}
                     </button>
                   ))}
                 </div>
-                <p className="text-xs text-gray-300 dark:text-dm-muted text-center mb-4">
+                <p className="text-xs text-gray-300 text-theme-muted text-center mb-4">
                   No account needed — just for formatting.
                 </p>
                 <PrimaryBtn onClick={submitStep3}>That's mine →</PrimaryBtn>
@@ -411,10 +411,10 @@ export default function Onboarding({ onComplete }) {
               <>
                 <div className="text-center mb-6">
                   <span className="text-5xl mb-4 inline-block animate-pop">📚</span>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+                  <h2 className="text-2xl font-bold text-theme-primary mb-2">
                     What are you reading right now?
                   </h2>
-                  <p className="text-sm text-gray-400 dark:text-dm-muted">
+                  <p className="text-sm text-theme-muted">
                     A book, podcast, course — anything counts.
                   </p>
                 </div>
@@ -438,10 +438,10 @@ export default function Onboarding({ onComplete }) {
         {step === 4 && (
           <div className="text-center">
             <span className="text-6xl mb-5 inline-block animate-pop">✨</span>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-dm-primary mb-2">
+            <h2 className="text-2xl font-bold text-theme-primary mb-2">
               {displayName ? `You're all set, ${displayName}.` : "You're all set."}
             </h2>
-            <p className="text-gray-400 dark:text-dm-muted text-sm mb-8">
+            <p className="text-theme-muted text-sm mb-8">
               Spora is ready when you are. Your Today page is live.
             </p>
             <PrimaryBtn onClick={finish}>Let's see it →</PrimaryBtn>

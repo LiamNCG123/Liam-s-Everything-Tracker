@@ -18,12 +18,12 @@ export default function Settings() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-dm-primary">Settings</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-theme-primary">Settings</h1>
 
       {/* Profile */}
       <Card className="p-4">
-        <h2 className="font-semibold text-gray-900 dark:text-dm-primary mb-3">Profile</h2>
-        <label className="block text-sm text-gray-500 dark:text-dm-secondary mb-1.5">Your name</label>
+        <h2 className="font-semibold text-theme-primary mb-3">Profile</h2>
+        <label className="block text-sm text-theme-secondary mb-1.5">Your name</label>
         <div className="flex gap-2">
           <input
             type="text"
@@ -31,7 +31,7 @@ export default function Settings() {
             onChange={e => setName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && saveName()}
             placeholder="Enter your name"
-            className="flex-1 border border-gray-200 dark:border-dm-border bg-white dark:bg-dm-input rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-dm-primary placeholder-gray-300 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-indigo-400 transition"
+            className="flex-1 border border-theme bg-theme-input rounded-xl px-3 py-2 text-sm text-theme-primary placeholder-gray-300 placeholder-theme-muted outline-none focus:ring-2 focus:ring-indigo-400 transition"
           />
           <button
             onClick={saveName}
@@ -44,8 +44,8 @@ export default function Settings() {
 
       {/* Theme */}
       <Card className="p-4">
-        <h2 className="font-semibold text-gray-900 dark:text-dm-primary mb-3">Theme</h2>
-        <p className="text-xs text-gray-400 dark:text-dm-muted mb-4">
+        <h2 className="font-semibold text-theme-primary mb-3">Theme</h2>
+        <p className="text-xs text-theme-muted mb-4">
           Choose your preferred color scheme.
         </p>
         <div className="grid grid-cols-2 gap-3">
@@ -56,14 +56,14 @@ export default function Settings() {
               className={`p-3 rounded-xl border-2 transition-all text-left ${
                 theme === t.key
                   ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
-                  : 'border-gray-100 dark:border-dm-border hover:border-gray-300 dark:hover:border-dm-border'
+                  : 'border-theme hover:border-gray-300 hover:border-theme'
               }`}
             >
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xl">{t.emoji}</span>
-                <span className="text-sm font-semibold text-gray-900 dark:text-dm-primary">{t.label}</span>
+                <span className="text-sm font-semibold text-theme-primary">{t.label}</span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-dm-muted">{t.desc}</p>
+              <p className="text-xs text-theme-muted">{t.desc}</p>
             </button>
           ))}
         </div>
@@ -72,15 +72,15 @@ export default function Settings() {
       {/* Modules */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="font-semibold text-gray-900 dark:text-dm-primary">Modules</h2>
+          <h2 className="font-semibold text-theme-primary">Modules</h2>
           <button
             onClick={reset}
-            className="text-xs text-gray-400 dark:text-dm-muted hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            className="text-xs text-theme-muted hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
           >
             Reset to defaults
           </button>
         </div>
-        <p className="text-xs text-gray-400 dark:text-dm-muted mb-4">
+        <p className="text-xs text-theme-muted mb-4">
           Toggle modules on or off, and reorder your dashboard with the arrows.
         </p>
 
@@ -90,8 +90,8 @@ export default function Settings() {
               key={mod.key}
               className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                 mod.enabled
-                  ? 'border-gray-100 dark:border-dm-border bg-gray-50 dark:bg-dm-hover'
-                  : 'border-gray-100 dark:border-dm-border bg-white dark:bg-dm-card opacity-40'
+                  ? 'border-theme bg-theme-hover'
+                  : 'border-theme bg-theme-card opacity-40'
               }`}
             >
               {/* Up / down reorder */}
@@ -100,19 +100,19 @@ export default function Settings() {
                   onClick={() => moveUp(mod.key)}
                   disabled={idx === 0}
                   aria-label={`Move ${mod.label} up`}
-                  className="text-gray-300 dark:text-dm-muted hover:text-gray-600 dark:hover:text-dm-primary disabled:opacity-20 disabled:cursor-not-allowed text-[10px] leading-none"
+                  className="text-gray-300 text-theme-muted hover:text-gray-600 hover:text-theme-primary disabled:opacity-20 disabled:cursor-not-allowed text-[10px] leading-none"
                 >▲</button>
                 <button
                   onClick={() => moveDown(mod.key)}
                   disabled={idx === modules.length - 1}
                   aria-label={`Move ${mod.label} down`}
-                  className="text-gray-300 dark:text-dm-muted hover:text-gray-600 dark:hover:text-dm-primary disabled:opacity-20 disabled:cursor-not-allowed text-[10px] leading-none"
+                  className="text-gray-300 text-theme-muted hover:text-gray-600 hover:text-theme-primary disabled:opacity-20 disabled:cursor-not-allowed text-[10px] leading-none"
                 >▼</button>
               </div>
 
               <span className="text-xl shrink-0">{mod.emoji}</span>
 
-              <p className="flex-1 text-sm font-medium text-gray-800 dark:text-dm-primary">
+              <p className="flex-1 text-sm font-medium text-theme-primary">
                 {mod.label}
               </p>
 
@@ -122,7 +122,7 @@ export default function Settings() {
                 aria-checked={mod.enabled}
                 onClick={() => toggle(mod.key)}
                 className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
-                  mod.enabled ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-dm-border'
+                  mod.enabled ? 'bg-indigo-500' : 'bg-theme-input'
                 }`}
               >
                 <span

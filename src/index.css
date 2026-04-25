@@ -35,52 +35,27 @@ html.dark {
   /* Activate native dark mode for browser chrome (scrollbars, inputs, etc.) */
   color-scheme: dark;
 
-  /* ── Elevation stack ────────────────────────────────────────────────────
-     Inspired by GitHub Dark — slightly blue-tinted for brand coherence.
-     Each level is visibly distinct without extreme contrast jumps.
-     Rationale: avoid pure black (#000) — it's harsh and flat. A slight
-     indigo-shift ties the palette to the brand and feels intentional.
-  ─────────────────────────────────────────────────────────────────────── */
-  --bg-page:   #0d1117; /* L≈5   — deepest, page canvas */
-  --bg-card:   #161b22; /* L≈9   — cards, sheets, panels */
-  --bg-input:  #1c2128; /* L≈12  — inputs, dropdowns, inset areas */
-  --bg-hover:  #21262d; /* L≈14  — hover state */
-  --bg-active: #2d333b; /* L≈19  — pressed / selected */
+  /* Dark mode surfaces — read from theme variables set by useTheme(), with defaults */
+  --bg-page:   var(--dark-bg-page,  #0d1117);
+  --bg-card:   var(--dark-bg-card,  #161b22);
+  --bg-input:  var(--dark-bg-input, #1c2128);
+  --bg-hover:  var(--dark-bg-hover, #21262d);
+  --bg-active: #2d333b;
 
-  /* ── Borders ────────────────────────────────────────────────────────────
-     Visible but not aggressive. Use --border-card for cards, --border-input
-     for form elements that need a bit more definition.
-  ─────────────────────────────────────────────────────────────────────── */
-  --border-card:   #21262d; /* subtle — card outlines */
-  --border-input:  #30363d; /* standard — input borders */
-  --border-strong: #484f58; /* emphasis — focused elements */
+  /* Dark mode borders */
+  --border-card:   var(--dark-border, #21262d);
+  --border-input:  var(--dark-border, #30363d);
+  --border-strong: #484f58;
 
-  /* ── Text hierarchy ──────────────────────────────────────────────────────
-     Contrast ratios calculated against --bg-page (#0d1117, L≈0.006):
-       --text-primary:   #e6edf3  →  14.9:1  AAA
-       --text-secondary: #8b949e  →   6.1:1  AA
-       --text-muted:     #6e7681  →   4.6:1  AA   (≥4.5 required)
-       --text-disabled:  #484f58  →   2.7:1  below AA — for disabled only
-     Against --bg-card (#161b22, L≈0.011):
-       --text-primary:   14.9:1  AAA ✓
-       --text-secondary:  5.8:1  AA  ✓
-       --text-muted:      4.4:1  borderline (acceptable for large/bold text)
-  ─────────────────────────────────────────────────────────────────────── */
-  --text-primary:     #e6edf3;
-  --text-secondary:   #8b949e;
-  --text-muted:       #6e7681;
+  /* Dark mode text — read from theme variables set by useTheme(), with defaults */
+  --text-primary:     var(--dark-text-primary,   #e6edf3);
+  --text-secondary:   var(--dark-text-secondary, #8b949e);
+  --text-muted:       var(--dark-text-muted,     #6e7681);
   --text-disabled:    #484f58;
   --text-placeholder: #484f58;
 
-  /* ── Brand in dark mode ──────────────────────────────────────────────────
-     brand-500 (#6366f1) with white text = 4.46:1 (borderline AA).
-     We shift to brand-400 (#818cf8) for text/icon uses where it needs to
-     stand out. Primary buttons keep brand-500 bg since label readability
-     is the critical path, not the bg itself.
-
-     brand-400 (#818cf8) on bg-card (#161b22) = 6.8:1 AA ✓
-  ─────────────────────────────────────────────────────────────────────── */
-  --brand-500: #6366f1;
+  /* Dark brand — read from theme variables set by useTheme(), with defaults */
+  --brand-500: var(--dark-brand-500, #6366f1);
   --brand-400: #818cf8;
   --brand-ring: rgba(129, 140, 248, 0.25);
 }
@@ -171,7 +146,24 @@ html.dark {
     overflow: hidden;
   }
 
-  /* Dark mode elevation helpers */
+  /* ── Theme-aware utilities ─────────────────────────────────────────────────
+     Use these instead of hardcoded bg-white / text-gray-900 / etc.
+     They read from CSS variables set by useTheme() so they respond to
+     both theme changes and dark mode automatically.
+  ───────────────────────────────────────────────────────────────────────── */
+  .bg-theme-page   { background-color: var(--bg-page); }
+  .bg-theme-card   { background-color: var(--bg-card); }
+  .bg-theme-input  { background-color: var(--bg-input); }
+  .bg-theme-hover  { background-color: var(--bg-hover); }
+  .text-theme-primary   { color: var(--text-primary); }
+  .text-theme-secondary { color: var(--text-secondary); }
+  .text-theme-muted     { color: var(--text-muted); }
+  .border-theme        { border-color: var(--border-input); }
+  .border-theme-subtle { border-color: var(--border-card); }
+  .placeholder-theme-muted::placeholder { color: var(--text-muted); }
+  .divide-theme-subtle > * + * { border-color: var(--border-card); }
+
+  /* Dark mode elevation helpers (legacy) */
   .dark .elevated-1 { background-color: var(--bg-card); }
   .dark .elevated-2 { background-color: var(--bg-input); }
   .dark .elevated-hover:hover { background-color: var(--bg-hover); }

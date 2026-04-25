@@ -81,10 +81,10 @@ function calcStreak(completions) {
 
 function Section({ emoji, title, children }) {
   return (
-    <div className="bg-white dark:bg-dm-card rounded-2xl border border-gray-100 dark:border-dm-subtle shadow-sm overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 dark:border-dm-subtle">
+    <div className="bg-theme-card rounded-2xl border border-theme-subtle shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-theme-subtle">
         <span className="text-lg">{emoji}</span>
-        <h2 className="font-semibold text-gray-900 dark:text-dm-primary text-base">{title}</h2>
+        <h2 className="font-semibold text-theme-primary text-base">{title}</h2>
       </div>
       <div className="px-5 py-4 flex flex-col gap-3">{children}</div>
     </div>
@@ -92,10 +92,10 @@ function Section({ emoji, title, children }) {
 }
 
 function StatRow({ label, value, color = 'gray' }) {
-  const cls = { green: 'text-green-600 dark:text-green-400', red: 'text-red-500 dark:text-red-400', amber: 'text-amber-600 dark:text-amber-400', indigo: 'text-indigo-600 dark:text-indigo-400', gray: 'text-gray-700 dark:text-dm-secondary' }
+  const cls = { green: 'text-green-600 dark:text-green-400', red: 'text-red-500 dark:text-red-400', amber: 'text-amber-600 dark:text-amber-400', indigo: 'text-indigo-600 dark:text-indigo-400', gray: 'text-theme-secondary' }
   return (
     <div className="flex items-baseline justify-between gap-2">
-      <span className="text-sm text-gray-500 dark:text-dm-muted">{label}</span>
+      <span className="text-sm text-theme-muted">{label}</span>
       <span className={`text-sm font-semibold ${cls[color] || cls.gray} text-right`}>{value}</span>
     </div>
   )
@@ -105,7 +105,7 @@ function MiniBar({ value, max, color = 'indigo' }) {
   const pct = max ? Math.min(100, Math.round(((Number(value) || 0) / max) * 100)) : 0
   const bg  = { indigo: 'bg-indigo-500', green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-400' }
   return (
-    <div className="h-1.5 bg-gray-100 dark:bg-dm-input rounded-full overflow-hidden">
+    <div className="h-1.5 bg-theme-input rounded-full overflow-hidden">
       <div className={`h-full rounded-full ${bg[color] || bg.indigo} transition-all`} style={{ width: `${pct}%` }} />
     </div>
   )
@@ -121,10 +121,10 @@ function WeekDots({ days, completedSet }) {
         return (
           <div key={d} className="flex flex-col items-center gap-1">
             <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold
-              ${future ? 'bg-gray-50 dark:bg-dm-input text-gray-300 dark:text-dm-muted' : done ? 'bg-green-500 text-white' : 'bg-red-100 dark:bg-red-900/40 text-red-400'}`}>
+              ${future ? 'bg-theme-input text-gray-300 text-theme-muted' : done ? 'bg-green-500 text-white' : 'bg-red-100 dark:bg-red-900/40 text-red-400'}`}>
               {future ? '·' : done ? '✓' : '✗'}
             </div>
-            <span className="text-[9px] text-gray-400 dark:text-dm-muted">{DOW[i]}</span>
+            <span className="text-[9px] text-theme-muted">{DOW[i]}</span>
           </div>
         )
       })}
@@ -138,7 +138,7 @@ function Pill({ children, color = 'gray' }) {
     red:    'bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800',
     amber:  'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800',
     indigo: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800',
-    gray:   'bg-gray-100 dark:bg-dm-input text-gray-600 dark:text-dm-muted',
+    gray:   'bg-theme-input text-gray-600 text-theme-muted',
   }
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls[color] || cls.gray}`}>{children}</span>
 }
@@ -175,7 +175,7 @@ function HabitSectionInner({ habits, week }) {
       <div className="flex flex-col gap-2 mt-1">
         {rows.map(r => (
           <div key={r.id} className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-600 dark:text-dm-muted truncate max-w-[90px]">{r.name}</span>
+            <span className="text-xs text-gray-600 text-theme-muted truncate max-w-[90px]">{r.name}</span>
             <div className="flex items-center gap-2 shrink-0">
               {r.streak >= 3 && <span className="text-xs">🔥{r.streak}</span>}
               <WeekDots days={week.days} completedSet={r.compSet} />
@@ -186,7 +186,7 @@ function HabitSectionInner({ habits, week }) {
 
       {missed.length > 0 && daysSoFar > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-1">
-          <span className="text-xs text-gray-400 dark:text-dm-muted self-center">Missed:</span>
+          <span className="text-xs text-theme-muted self-center">Missed:</span>
           {missed.map(r => <Pill key={r.id} color="red">{r.name}</Pill>)}
         </div>
       )}
@@ -254,11 +254,11 @@ function FinanceSectionInner({ transactions, week }) {
       {weekTx.length === 0 && <p className="text-xs text-gray-400">No transactions this week.</p>}
       {topCats.length > 0 && (
         <div className="flex flex-col gap-1.5 mt-1">
-          <span className="text-xs font-medium text-gray-500 dark:text-dm-muted uppercase tracking-wide">Top categories</span>
+          <span className="text-xs font-medium text-theme-muted uppercase tracking-wide">Top categories</span>
           {topCats.map(([cat, amt]) => (
             <div key={cat} className="flex items-center justify-between gap-2">
-              <span className="text-xs text-gray-600 dark:text-dm-muted truncate">{cat}</span>
-              <span className="text-xs font-semibold text-gray-700 dark:text-dm-secondary shrink-0">{fmt$(amt)}</span>
+              <span className="text-xs text-gray-600 text-theme-muted truncate">{cat}</span>
+              <span className="text-xs font-semibold text-theme-secondary shrink-0">{fmt$(amt)}</span>
             </div>
           ))}
         </div>
@@ -290,13 +290,13 @@ function GoalsSectionInner({ goals }) {
       <StatRow label="In progress" value={inProgress.length} color="indigo" />
       {stalled.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          <span className="text-xs text-gray-400 dark:text-dm-muted self-center">No progress yet:</span>
+          <span className="text-xs text-theme-muted self-center">No progress yet:</span>
           {stalled.slice(0, 4).map(g => <Pill key={g.id} color="amber">{g.title}</Pill>)}
         </div>
       )}
       {overdue.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          <span className="text-xs text-gray-400 dark:text-dm-muted self-center">Overdue:</span>
+          <span className="text-xs text-theme-muted self-center">Overdue:</span>
           {overdue.slice(0, 3).map(g => <Pill key={g.id} color="red">{g.title}</Pill>)}
         </div>
       )}
@@ -304,7 +304,7 @@ function GoalsSectionInner({ goals }) {
         <div className="flex flex-col gap-2 mt-1">
           {advancing.slice(0, 3).map(g => (
             <div key={g.id}>
-              <div className="flex justify-between text-xs text-gray-600 dark:text-dm-muted mb-0.5">
+              <div className="flex justify-between text-xs text-gray-600 text-theme-muted mb-0.5">
                 <span className="truncate">{g.title}</span>
                 <span className="shrink-0 ml-2 font-semibold">{Number(g.progress) || 0}%</span>
               </div>
@@ -335,7 +335,7 @@ function EducationSectionInner({ items }) {
         <div className="flex flex-col gap-2 mt-1">
           {inProgress.slice(0, 4).map(i => (
             <div key={i.id}>
-              <div className="flex justify-between text-xs text-gray-600 dark:text-dm-muted mb-0.5">
+              <div className="flex justify-between text-xs text-gray-600 text-theme-muted mb-0.5">
                 <span className="truncate">{i.title}</span>
                 <span className="shrink-0 ml-2 font-semibold">{Number(i.progress) || 0}%</span>
               </div>
@@ -425,8 +425,8 @@ export default function WeeklyReview() {
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-dm-primary">Weekly Review</h1>
-          <p className="text-sm text-gray-400 dark:text-dm-muted mt-0.5">{week.label}</p>
+          <h1 className="text-2xl font-bold text-theme-primary">Weekly Review</h1>
+          <p className="text-sm text-theme-muted mt-0.5">{week.label}</p>
         </div>
         <span className="text-2xl mt-1">📋</span>
       </div>
@@ -471,13 +471,13 @@ export default function WeeklyReview() {
           {focus.map((item, i) => (
             <div key={i} className="flex items-start gap-2.5">
               <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${dotColors[item.color] || 'bg-gray-300'}`} />
-              <span className="text-sm text-gray-700 dark:text-dm-secondary">{item.text}</span>
+              <span className="text-sm text-theme-secondary">{item.text}</span>
             </div>
           ))}
         </div>
       </Section>
 
-      <p className="text-center text-xs text-gray-300 dark:text-dm-muted pb-2">Keep showing up. Small actions compound.</p>
+      <p className="text-center text-xs text-gray-300 text-theme-muted pb-2">Keep showing up. Small actions compound.</p>
     </div>
   )
 }
