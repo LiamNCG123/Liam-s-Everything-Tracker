@@ -155,7 +155,7 @@ export default function Goals() {
         <EmptyState
           icon="🎯"
           title="No goals yet"
-          description="Set your first goal and start making progress."
+          description="What would make this year genuinely different?"
           action={<Button onClick={openAdd}>Add your first goal</Button>}
         />
       ) : visible.length === 0 ? (
@@ -206,6 +206,13 @@ export default function Goals() {
                   </div>
                 </div>
                 <ProgressBar value={goal.progress ?? 0} color={goal.status === 'Completed' ? 'green' : 'indigo'} />
+                {goal.status === 'In Progress' && (() => {
+                  const p = goal.progress ?? 0
+                  if (p >= 75 && p < 100) return <p className="text-[10px] text-brand-500 mt-1">Almost there — finish what you started.</p>
+                  if (p >= 50) return <p className="text-[10px] text-theme-muted mt-1">Halfway there — the hardest part is behind you.</p>
+                  if (p >= 25) return <p className="text-[10px] text-theme-muted mt-1">Good start — keep the momentum going.</p>
+                  return null
+                })()}
               </div>
 
               {/* Linked habits */}

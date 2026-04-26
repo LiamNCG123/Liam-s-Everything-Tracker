@@ -222,6 +222,18 @@ function EducationForm({ fields, onChange }) {
   )
 }
 
+// ─── Rotating placeholder hints ──────────────────────────────────────────────
+
+const QUICK_ADD_HINTS = [
+  'Try: Lunch 120',
+  'Try: Bench 80kg 5×5',
+  'Try: Meditation done',
+  'Try: Read 30 pages',
+  'Try: Salary 5000',
+  'Try: Run 30 min',
+  'Try: Atomic Habits book',
+]
+
 // ─── Main QuickAdd component ──────────────────────────────────────────────────
 
 export default function QuickAdd() {
@@ -230,12 +242,13 @@ export default function QuickAdd() {
   const { add: addSession }                      = useStore('training')
   const { add: addEdu }                          = useStore('education')
 
-  const [open,    setOpen]    = useState(false)
-  const [input,   setInput]   = useState('')
-  const [intent,  setIntent]  = useState(null)
-  const [fields,  setFields]  = useState({})
-  const [saved,   setSaved]   = useState(false)
-  const [error,   setError]   = useState(null)
+  const [open,     setOpen]    = useState(false)
+  const [input,    setInput]   = useState('')
+  const [intent,   setIntent]  = useState(null)
+  const [fields,   setFields]  = useState({})
+  const [saved,    setSaved]   = useState(false)
+  const [error,    setError]   = useState(null)
+  const [hintIdx,  setHintIdx] = useState(0)
 
   const inputRef   = useRef(null)
   const prevType   = useRef(null)
@@ -249,12 +262,15 @@ export default function QuickAdd() {
     prevType.current = parsed.type
   }, [input, habits])
 
-  // Auto-focus input when modal opens
+  // Auto-focus input when modal opens; rotate placeholder while open
   useEffect(() => {
     if (open) {
       setSaved(false)
       setError(null)
+      setHintIdx(0)
       setTimeout(() => inputRef.current?.focus(), 50)
+      const id = setInterval(() => setHintIdx(i => (i + 1) % QUICK_ADD_HINTS.length), 2500)
+      return () => clearInterval(id)
     } else {
       setInput('')
       setIntent(null)
@@ -423,7 +439,7 @@ export default function QuickAdd() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && hasIntent) handleSave() }}
-                placeholder="Lunch 120 · Bench 80kg 5x5 · Meditation done · Read 20 pages"
+                placeholder={QUICK_ADD_HINTS[hintIdx]}
                 className="w-full text-sm border-2 border-indigo-300 dark:border-indigo-700 rounded-xl px-4 py-3 bg-theme-input text-theme-primary
                   focus:outline-none focus:border-indigo-500 dark:focus:border-indigo-400 placeholder-gray-300 placeholder-theme-muted"
               />
