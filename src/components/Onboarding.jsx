@@ -216,7 +216,7 @@ export default function Onboarding({ onComplete }) {
                 {THEMES.map(t => (
                   <button
                     key={t.key}
-                    onClick={() => setThemeLocal(t.key)}
+                    onClick={() => { setThemeLocal(t.key); setTheme(t.key) }}
                     className={`relative p-2.5 rounded-lg border-2 transition-all text-left text-xs ${
                       theme === t.key
                         ? 'border-brand-500 bg-brand-50'
