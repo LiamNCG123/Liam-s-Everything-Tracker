@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import { useState, useRef, useEffect, Fragment } from 'react'
 import { useStore } from '../hooks/useStore'
 import { today, dateToStr } from '../utils/storage'
 import { PageHeader, Button, Modal, Input, EmptyState, CompletionBanner } from '../components/ui'
@@ -114,7 +114,7 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
   return (
     <tr className="group">
       {/* Habit name — sticky left */}
-      <td className="sticky left-0 z-10 bg-theme-card pr-3 py-1.5 min-w-[120px] max-w-[160px]">
+      <td className="sticky left-0 z-10 bg-theme-card pl-4 pr-3 py-1.5 min-w-[140px] max-w-[180px]">
         <div className="flex items-center gap-2">
           <span
             className="w-3 h-3 rounded-full shrink-0 shadow-sm"
@@ -151,56 +151,54 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
         />
       ))}
 
-      {/* Streak stats — sticky right */}
-      <td className="sticky right-0 z-10 bg-theme-card pl-3 py-1.5 whitespace-nowrap">
-        {(() => {
-          const doneToday  = set.has(todayStr)
-          const atRisk     = !doneToday && current > 0
-          const streakIcon = current >= 30 ? '🏆' : '🔥'
-          const streakColor = current >= 30
-            ? 'text-yellow-500'
-            : current >= 14 ? 'text-orange-500'
-            : current >= 7  ? 'text-orange-400'
-            : current > 0   ? 'text-orange-300'
-            : 'text-gray-300 text-theme-muted'
+      {/* Streak + Actions — sticky right */}
+      <td className="sticky right-0 z-10 bg-theme-card pl-3 pr-2 py-1.5 whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          {(() => {
+            const doneToday  = set.has(todayStr)
+            const atRisk     = !doneToday && current > 0
+            const streakIcon = current >= 30 ? '🏆' : '🔥'
+            const streakColor = current >= 30
+              ? 'text-yellow-500'
+              : current >= 14 ? 'text-orange-500'
+              : current >= 7  ? 'text-orange-400'
+              : current > 0   ? 'text-orange-300'
+              : 'text-gray-300 text-theme-muted'
 
-          return (
-            <div className="flex flex-col gap-0.5 items-end">
-              <div className={`flex items-center gap-1 ${atRisk ? 'animate-pulse' : ''}`}>
-                <span className="text-sm">{current > 0 ? streakIcon : '○'}</span>
-                <span className={`text-sm font-bold ${streakColor}`}>{current}</span>
-                {atRisk && (
-                  <span className="text-[9px] text-amber-500 font-semibold leading-none">!</span>
-                )}
+            return (
+              <div className="flex flex-col gap-0.5 items-end">
+                <div className={`flex items-center gap-1 ${atRisk ? 'animate-pulse' : ''}`}>
+                  <span className="text-sm">{current > 0 ? streakIcon : '○'}</span>
+                  <span className={`text-sm font-bold ${streakColor}`}>{current}</span>
+                  {atRisk && (
+                    <span className="text-[9px] text-amber-500 font-semibold leading-none">!</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-theme-muted leading-none">
+                  {atRisk
+                    ? <span className="text-amber-500">do it today</span>
+                    : doneToday && current >= 3 && streakSubtitle(current)
+                      ? <span className="text-green-600 dark:text-green-400">{streakSubtitle(current)}</span>
+                      : `best ${longest} · ${doneThisMonth}d`
+                  }
+                </div>
               </div>
-              <div className="text-[10px] text-theme-muted leading-none">
-                {atRisk
-                  ? <span className="text-amber-500">do it today</span>
-                  : doneToday && current >= 3 && streakSubtitle(current)
-                    ? <span className="text-green-600 dark:text-green-400">{streakSubtitle(current)}</span>
-                    : `best ${longest} · ${doneThisMonth}d`
-                }
-              </div>
-            </div>
-          )
-        })()}
-      </td>
-
-      {/* Edit/Delete */}
-      <td className="pl-2">
-        <div className="flex gap-1">
-          <button
-            onClick={() => onEdit(habit)}
-            className="text-xs text-theme-muted hover:text-gray-800 dark:hover:text-gray-100 px-2 py-1 rounded hover:bg-gray-100 hover:bg-theme-hover"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => onDelete(habit.id)}
-            className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
-          >
-            Delete
-          </button>
+            )
+          })()}
+          <div className="flex gap-1">
+            <button
+              onClick={() => onEdit(habit)}
+              className="text-xs text-theme-muted hover:text-gray-800 dark:hover:text-gray-100 px-2 py-1 rounded hover:bg-theme-hover"
+            >
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete(habit.id)}
+              className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </td>
     </tr>
@@ -214,7 +212,7 @@ function SlotHeader({ slot, habits, todayStr }) {
 
   return (
     <tr>
-      <td className="sticky left-0 z-10 bg-theme-input px-3 pt-3.5 pb-1 min-w-[120px] max-w-[160px] border-t border-theme">
+      <td className="sticky left-0 z-10 bg-theme-input pl-4 pr-3 pt-3.5 pb-1 min-w-[140px] max-w-[180px] border-t border-theme">
         <div className="flex items-center gap-1.5">
           <span className="text-sm leading-none">{slot.icon}</span>
           <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide leading-none">
@@ -398,6 +396,20 @@ export default function Habits() {
     }))
     .filter(g => g.habits.length > 0)
 
+  // Scroll to today's column on mount and when navigating back to current month
+  const scrollRef = useRef(null)
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const todayEl = container.querySelector('[data-today]')
+    if (!todayEl) { container.scrollLeft = 0; return }
+    const cRect = container.getBoundingClientRect()
+    const tRect = todayEl.getBoundingClientRect()
+    const stickyW = 140
+    const todayAbs = tRect.left - cRect.left + container.scrollLeft
+    container.scrollLeft = Math.max(0, todayAbs - stickyW - (container.clientWidth - stickyW) / 2 + tRect.width / 2)
+  }, [viewYear, viewMonth])
+
   // Summary stats
   const allCurrentStreaks = habits.map(h => calcCurrentStreak(migrateCompletions(h.completions)))
   const doneToday = habits.filter(h => migrateCompletions(h.completions).includes(todayStr)).length
@@ -473,14 +485,15 @@ export default function Habits() {
           </div>
 
           {/* Calendar grid */}
-          <div className="overflow-x-auto rounded-2xl border border-theme-subtle bg-theme-card shadow-sm">
+          <div ref={scrollRef} className="overflow-x-auto rounded-2xl border border-theme-subtle bg-theme-card shadow-sm">
             <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-20 bg-theme-card min-w-[120px] max-w-[160px]" />
+                  <th className="sticky left-0 z-20 bg-theme-card min-w-[140px] max-w-[180px] pl-4" />
                   {days.map(({ day, dateStr }) => (
                     <th
                       key={dateStr}
+                      data-today={dateStr === todayStr ? 'true' : undefined}
                       className={`p-0.5 text-center ${dateStr === todayStr ? 'relative' : ''}`}
                     >
                       <div className={`text-[10px] font-semibold w-7 mx-auto leading-none pt-2 pb-0.5 ${
@@ -495,12 +508,11 @@ export default function Habits() {
                       </div>
                     </th>
                   ))}
-                  <th className="sticky right-0 z-20 bg-theme-card min-w-[64px]">
+                  <th className="sticky right-0 z-20 bg-theme-card whitespace-nowrap">
                     <div className="text-[10px] font-semibold text-theme-muted text-right pr-3 pt-2 pb-2">
                       Streak
                     </div>
                   </th>
-                  <th className="min-w-[60px]" />
                 </tr>
               </thead>
 
