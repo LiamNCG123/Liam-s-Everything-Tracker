@@ -67,7 +67,7 @@ function getMonthDays(year, month) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Cell({ dateStr, color, done, isToday, isFuture, onToggle }) {
+function Cell({ dateStr, color, done, isToday, isFuture, onToggle, hasNote, onAnnotate }) {
   const [justDone, setJustDone] = useState(false)
 
   const handleClick = () => {
@@ -80,7 +80,7 @@ function Cell({ dateStr, color, done, isToday, isFuture, onToggle }) {
   }
 
   return (
-    <td className="p-0.5">
+    <td className="p-0.5 relative group/cell">
       <button
         onClick={handleClick}
         disabled={isFuture}
@@ -100,13 +100,30 @@ function Cell({ dateStr, color, done, isToday, isFuture, onToggle }) {
         }}
         aria-label={`${done ? 'Unmark' : 'Mark'} ${dateStr}`}
       />
+      {done && !isFuture && (
+        <button
+          onClick={e => { e.stopPropagation(); onAnnotate(dateStr) }}
+          title={hasNote ? 'Edit note' : 'Add note'}
+          className={`absolute top-0 right-0 w-3.5 h-3.5 flex items-center justify-center transition-opacity ${
+            hasNote
+              ? 'opacity-100 pointer-events-auto'
+              : 'opacity-0 group-hover/cell:opacity-100 pointer-events-none group-hover/cell:pointer-events-auto'
+          }`}
+        >
+          {hasNote
+            ? <span className="w-2 h-2 rounded-full bg-white/90 block shadow-sm" />
+            : <span className="text-[7px] leading-none text-white/80">✏</span>
+          }
+        </button>
+      )}
     </td>
   )
 }
 
-function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle }) {
+function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle, annotations, onAnnotate }) {
   const completions = migrateCompletions(habit.completions)
   const set = new Set(completions)
+  const noteSet = new Set(annotations.filter(a => a.habitId === habit.id).map(a => a.date))
   const current = calcCurrentStreak(completions)
   const longest = calcLongestStreak(completions)
   const doneThisMonth = days.filter(d => set.has(d.dateStr)).length
@@ -148,6 +165,8 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
           isToday={dateStr === todayStr}
           isFuture={dateStr > todayStr}
           onToggle={(ds) => onToggle(habit.id, ds, completions)}
+          hasNote={noteSet.has(dateStr)}
+          onAnnotate={(ds) => onAnnotate(habit.id, habit.name, ds)}
         />
       ))}
 
@@ -322,9 +341,12 @@ const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '', timeOfDay: 'anytime
 export default function Habits() {
   const { items: habits, add, update, remove } = useStore('habits')
   const { items: goals } = useStore('goals')
+  const { items: annotations, add: addAnnotation, update: updateAnnotation, remove: removeAnnotation } = useStore('habitAnnotations')
   const goalMap = Object.fromEntries(goals.map(g => [g.id, g.title]))
   const [modal, setModal] = useState(null)       // null | 'add' | habit object
   const [form, setForm] = useState(EMPTY_FORM)
+  const [annotModal, setAnnotModal] = useState(null) // null | { habitId, habitName, date }
+  const [annotText, setAnnotText] = useState('')
 
   // Month navigation
   const now = new Date()
@@ -352,6 +374,25 @@ export default function Habits() {
       ? currentCompletions.filter(d => d !== dateStr)
       : [...currentCompletions, dateStr]
     update(id, { completions: next })
+  }
+
+  const openAnnotate = (habitId, habitName, date) => {
+    const existing = annotations.find(a => a.habitId === habitId && a.date === date)
+    setAnnotText(existing?.note || '')
+    setAnnotModal({ habitId, habitName, date })
+  }
+
+  const saveAnnotation = () => {
+    const existing = annotations.find(a => a.habitId === annotModal.habitId && a.date === annotModal.date)
+    const note = annotText.trim()
+    if (!note) {
+      if (existing) removeAnnotation(existing.id)
+    } else if (existing) {
+      updateAnnotation(existing.id, { note })
+    } else {
+      addAnnotation({ habitId: annotModal.habitId, date: annotModal.date, note })
+    }
+    setAnnotModal(null)
   }
 
   const openAdd  = () => {
@@ -425,6 +466,8 @@ export default function Habits() {
       onEdit={openEdit}
       onDelete={(id) => handleDelete(id, habits.find(h => h.id === id)?.name)}
       goalTitle={habit.goalId ? goalMap[habit.goalId] : null}
+      annotations={annotations}
+      onAnnotate={openAnnotate}
     />
   ))
 
@@ -541,6 +584,36 @@ export default function Habits() {
           </div>
         </>
       )}
+
+      {/* Annotation modal */}
+      <Modal
+        open={!!annotModal}
+        onClose={() => setAnnotModal(null)}
+        title="Completion Note"
+      >
+        {annotModal && (
+          <div className="flex flex-col gap-4">
+            <div className="text-sm text-theme-muted">
+              <span className="font-medium text-theme-primary">{annotModal.habitName}</span>
+              {' · '}
+              <span>{annotModal.date}</span>
+            </div>
+            <textarea
+              rows={3}
+              autoFocus
+              value={annotText}
+              onChange={e => setAnnotText(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveAnnotation() }}
+              placeholder="What happened? How did it feel? Any context…"
+              className="w-full resize-none bg-theme-input rounded-xl px-3 py-2.5 text-sm text-theme-primary placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition"
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="secondary" onClick={() => setAnnotModal(null)}>Cancel</Button>
+              <Button onClick={saveAnnotation}>Save note</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Add / Edit modal */}
       <Modal

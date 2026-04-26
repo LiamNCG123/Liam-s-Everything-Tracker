@@ -25,15 +25,89 @@ function monthDays(year, month) {
 const MOOD_EMOJI = ['', '😔', '😕', '😐', '🙂', '😄']
 
 const LIFE_DOMAINS = [
-  { key: 'health',        label: 'Health & Fitness',       color: '#ef4444' },
-  { key: 'relationships', label: 'Relationships & Social',  color: '#ec4899' },
-  { key: 'career',        label: 'Work & Career',           color: '#3b82f6' },
-  { key: 'finances',      label: 'Finances',                color: '#10b981' },
-  { key: 'learning',      label: 'Learning & Growth',       color: '#8b5cf6' },
-  { key: 'fun',           label: 'Fun & Recreation',        color: '#f59e0b' },
-  { key: 'environment',   label: 'Environment & Home',      color: '#06b6d4' },
-  { key: 'purpose',       label: 'Purpose & Contribution',  color: '#6366f1' },
+  { key: 'health',        label: 'Health & Fitness',       short: 'Health',   color: '#ef4444' },
+  { key: 'relationships', label: 'Relationships & Social',  short: 'Social',   color: '#ec4899' },
+  { key: 'career',        label: 'Work & Career',           short: 'Work',     color: '#3b82f6' },
+  { key: 'finances',      label: 'Finances',                short: 'Money',    color: '#10b981' },
+  { key: 'learning',      label: 'Learning & Growth',       short: 'Learning', color: '#8b5cf6' },
+  { key: 'fun',           label: 'Fun & Recreation',        short: 'Fun',      color: '#f59e0b' },
+  { key: 'environment',   label: 'Environment & Home',      short: 'Home',     color: '#06b6d4' },
+  { key: 'purpose',       label: 'Purpose & Contribution',  short: 'Purpose',  color: '#6366f1' },
 ]
+
+// ─── Wheel of Life radar chart ────────────────────────────────────────────────
+
+function WheelChart({ domains, scores }) {
+  const cx = 150, cy = 150, r = 90
+  const n = domains.length
+  const angleFor = i => (i * 2 * Math.PI / n) - Math.PI / 2
+
+  const axisEnd = domains.map((_, i) => {
+    const a = angleFor(i)
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) }
+  })
+
+  const gridRing = frac => domains.map((_, i) => {
+    const a = angleFor(i)
+    return `${(cx + frac * r * Math.cos(a)).toFixed(1)},${(cy + frac * r * Math.sin(a)).toFixed(1)}`
+  }).join(' ')
+
+  const scorePts = domains.map((d, i) => {
+    const frac = (scores[d.key] || 0) / 10
+    const a = angleFor(i)
+    return { x: cx + frac * r * Math.cos(a), y: cy + frac * r * Math.sin(a) }
+  })
+
+  const polyPoints = scorePts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+
+  const labelPts = domains.map((d, i) => {
+    const a = angleFor(i)
+    const lr = r + 28
+    return { x: cx + lr * Math.cos(a), y: cy + lr * Math.sin(a), short: d.short, color: d.color, score: scores[d.key] || 0 }
+  })
+
+  const hasAnyScore = domains.some(d => scores[d.key] > 0)
+
+  return (
+    <svg viewBox="0 0 300 300" className="w-full max-w-[260px] mx-auto mb-4">
+      {[0.25, 0.5, 0.75, 1].map(frac => (
+        <polygon key={frac} points={gridRing(frac)} fill="none"
+          stroke="#94a3b8" strokeOpacity={frac === 1 ? 0.3 : 0.12} strokeWidth="1" />
+      ))}
+      {axisEnd.map((pt, i) => (
+        <line key={i} x1={cx} y1={cy} x2={pt.x.toFixed(1)} y2={pt.y.toFixed(1)}
+          stroke="#94a3b8" strokeOpacity="0.18" strokeWidth="1" />
+      ))}
+      {hasAnyScore && (
+        <>
+          <polygon points={polyPoints} fill="rgba(99,102,241,0.15)"
+            stroke="rgba(99,102,241,0.65)" strokeWidth="1.5" strokeLinejoin="round" />
+          {scorePts.map((pt, i) => scores[domains[i].key] ? (
+            <circle key={i} cx={pt.x.toFixed(1)} cy={pt.y.toFixed(1)} r="3.5"
+              fill={domains[i].color} stroke="white" strokeWidth="1.5" />
+          ) : null)}
+        </>
+      )}
+      {labelPts.map((pt, i) => (
+        <g key={i}>
+          <text x={pt.x.toFixed(1)} y={pt.y.toFixed(1)}
+            textAnchor="middle" dominantBaseline="middle"
+            fontSize="9" fontWeight="600" fill={pt.score ? pt.color : '#94a3b8'}>
+            {pt.short}
+          </text>
+          {pt.score > 0 && (
+            <text x={pt.x.toFixed(1)} y={(pt.y + 11).toFixed(1)}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="8" fill={pt.color} opacity="0.75">
+              {pt.score}
+            </text>
+          )}
+        </g>
+      ))}
+      <circle cx={cx} cy={cy} r="2.5" fill="rgba(99,102,241,0.35)" />
+    </svg>
+  )
+}
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -332,6 +406,7 @@ export default function MonthlyReview() {
       <Card className="p-4">
         <p className="text-xs font-semibold text-theme-muted uppercase tracking-wide mb-1">Balance Check-In</p>
         <p className="text-xs text-theme-muted mb-4">Rate each life area 1–10. How satisfied are you this month?</p>
+        <WheelChart domains={LIFE_DOMAINS} scores={wheel} />
         <div className="flex flex-col gap-5">
           {LIFE_DOMAINS.map(domain => {
             const score = wheel[domain.key] || 0

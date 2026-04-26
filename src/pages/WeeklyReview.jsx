@@ -348,6 +348,132 @@ function EducationSectionInner({ items }) {
   )
 }
 
+// ─── Patterns / correlations ─────────────────────────────────────────────────
+
+function InsightsSectionInner({ habits, sessions, checkins }) {
+  const now = new Date()
+  const last30 = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(now); d.setDate(d.getDate() - i); return toStr(d)
+  }).reverse()
+
+  const trainingDates = new Set((sessions || []).map(s => s.date))
+
+  const moodByDate = {}
+  const energyByDate = {}
+  ;(checkins || []).forEach(c => {
+    if (c.date && c.mood)   moodByDate[c.date]   = c.mood
+    if (c.date && c.energy) energyByDate[c.date] = c.energy
+  })
+
+  const allComps    = (habits || []).map(h => new Set(migrateCompletions(h.completions)))
+  const totalHabits = habits?.length || 0
+  const countOnDay  = d => allComps.filter(s => s.has(d)).length
+
+  const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null
+
+  const insights = []
+
+  // Mood × Training
+  const trainingMoods = last30.filter(d => trainingDates.has(d) && moodByDate[d] != null).map(d => moodByDate[d])
+  const restMoods     = last30.filter(d => !trainingDates.has(d) && moodByDate[d] != null).map(d => moodByDate[d])
+  if (trainingMoods.length >= 2 && restMoods.length >= 2) {
+    const avgT = avg(trainingMoods), avgR = avg(restMoods)
+    const diff = avgT - avgR
+    if (Math.abs(diff) >= 0.3) {
+      insights.push({
+        icon: '💪',
+        headline: diff > 0 ? 'Training lifts your mood' : 'Rest days feel calmer',
+        detail: `Avg mood ${avgT.toFixed(1)} on training days vs ${avgR.toFixed(1)} on rest days`,
+        color: diff > 0 ? 'indigo' : 'amber',
+      })
+    }
+  }
+
+  // Mood × Full habit completion
+  if (totalHabits > 0) {
+    const fullMoods    = last30.filter(d => d <= TODAY && countOnDay(d) === totalHabits && moodByDate[d] != null).map(d => moodByDate[d])
+    const partialMoods = last30.filter(d => d <= TODAY && countOnDay(d) < totalHabits  && moodByDate[d] != null).map(d => moodByDate[d])
+    if (fullMoods.length >= 2 && partialMoods.length >= 2) {
+      const avgF = avg(fullMoods), avgP = avg(partialMoods)
+      const diff = avgF - avgP
+      if (Math.abs(diff) >= 0.3) {
+        insights.push({
+          icon: '✅',
+          headline: diff > 0 ? 'Full habit days boost your mood' : 'Your mood holds even on partial days',
+          detail: `Avg mood ${avgF.toFixed(1)} when all habits done vs ${avgP.toFixed(1)} otherwise`,
+          color: diff > 0 ? 'green' : 'amber',
+        })
+      }
+    }
+  }
+
+  // Best day of the week for habits
+  if (totalHabits > 0) {
+    const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const cnt = new Array(7).fill(0), tot = new Array(7).fill(0)
+    last30.forEach(d => {
+      if (d > TODAY) return
+      const dow = new Date(d + 'T12:00:00').getDay()
+      tot[dow]++
+      cnt[dow] += countOnDay(d)
+    })
+    const rates = tot.map((t, i) => t >= 2 ? cnt[i] / (t * totalHabits) : -1)
+    const best  = rates.indexOf(Math.max(...rates.filter(r => r >= 0)))
+    const worst = rates.indexOf(Math.min(...rates.filter(r => r >= 0)))
+    if (rates[best] >= 0 && rates[worst] >= 0 && (rates[best] - rates[worst]) > 0.15) {
+      insights.push({
+        icon: '📅',
+        headline: `${DOW[best]}s are your strongest habit day`,
+        detail: `${Math.round(rates[best] * 100)}% completion vs ${Math.round(rates[worst] * 100)}% on ${DOW[worst]}s`,
+        color: 'indigo',
+      })
+    }
+  }
+
+  // Energy trend (first 15 days vs last 15 days of past 30)
+  const first15E = last30.slice(0, 15).filter(d => energyByDate[d] != null).map(d => energyByDate[d])
+  const last15E  = last30.slice(15).filter(d  => energyByDate[d] != null).map(d => energyByDate[d])
+  if (first15E.length >= 3 && last15E.length >= 3) {
+    const avgOld = avg(first15E), avgNew = avg(last15E)
+    const diff   = avgNew - avgOld
+    if (Math.abs(diff) >= 0.3) {
+      insights.push({
+        icon: '⚡',
+        headline: diff > 0 ? 'Energy trending up' : 'Energy dipping lately',
+        detail: `Recent 2 weeks: ${avgNew.toFixed(1)}/5 energy vs ${avgOld.toFixed(1)}/5 two weeks prior`,
+        color: diff > 0 ? 'green' : 'amber',
+      })
+    }
+  }
+
+  const colorCard = { green: 'bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-800', indigo: 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800', amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-800' }
+  const colorText = { green: 'text-green-700 dark:text-green-400', indigo: 'text-indigo-700 dark:text-indigo-400', amber: 'text-amber-700 dark:text-amber-400' }
+
+  if (!insights.length) {
+    const logged = last30.filter(d => moodByDate[d] != null).length
+    return (
+      <p className="text-sm text-theme-muted">
+        {logged < 5 ? 'Check in daily for a few more days to unlock patterns.' : 'No strong patterns detected yet — keep logging.'}
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {insights.map((ins, i) => (
+        <div key={i} className={`rounded-xl border px-4 py-3 flex items-start gap-3 ${colorCard[ins.color] || colorCard.indigo}`}>
+          <span className="text-base mt-0.5 shrink-0">{ins.icon}</span>
+          <div>
+            <p className={`text-sm font-semibold ${colorText[ins.color] || colorText.indigo}`}>{ins.headline}</p>
+            <p className="text-xs text-theme-muted mt-0.5">{ins.detail}</p>
+          </div>
+        </div>
+      ))}
+      <p className="text-[10px] text-theme-muted">Based on past 30 days of data.</p>
+    </div>
+  )
+}
+
 // ─── Takeaway & focus logic ───────────────────────────────────────────────────
 
 function buildTakeaway(s) {
@@ -525,6 +651,12 @@ export default function WeeklyReview() {
       <ErrorBoundary title="Learning">
         <Section emoji="📚" title="Learning">
           <EducationSectionInner items={eduItems || []} />
+        </Section>
+      </ErrorBoundary>
+
+      <ErrorBoundary title="Patterns">
+        <Section emoji="🔍" title="Patterns">
+          <InsightsSectionInner habits={habits || []} sessions={sessions || []} checkins={checkins || []} />
         </Section>
       </ErrorBoundary>
 
