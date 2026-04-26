@@ -14,8 +14,9 @@ const NAV_MODULE_STYLES = {
   education: { pill: 'bg-amber-100 dark:bg-amber-400/15',    text: 'text-amber-600 dark:text-amber-300'     },
 }
 const NAV_TAIL = [
-  { to: '/review',   label: 'Review',   emoji: '📋', pill: 'bg-sky-100 dark:bg-sky-400/15',  text: 'text-sky-600 dark:text-sky-300'    },
-  { to: '/settings', label: 'Settings', emoji: '⚙️',  pill: 'bg-gray-100 dark:bg-gray-400/15', text: 'text-gray-600 dark:text-gray-300' },
+  { to: '/review',   label: 'Weekly',   emoji: '📋', pill: 'bg-sky-100 dark:bg-sky-400/15',    text: 'text-sky-600 dark:text-sky-300'    },
+  { to: '/monthly',  label: 'Monthly',  emoji: '📅', pill: 'bg-rose-100 dark:bg-rose-400/15',  text: 'text-rose-600 dark:text-rose-300'  },
+  { to: '/settings', label: 'Settings', emoji: '⚙️',  pill: 'bg-gray-100 dark:bg-gray-400/15', text: 'text-gray-600 dark:text-gray-300', iconOnly: true },
 ]
 
 export default function Layout({ children }) {
@@ -36,7 +37,7 @@ export default function Layout({ children }) {
       <header className="hidden sm:flex items-center gap-3 px-6 py-3 bg-theme-card border-b border-theme-subtle sticky top-0 z-30 backdrop-blur-sm">
         <span className="text-lg font-bold text-theme-primary tracking-tight">Spora</span>
         <nav className="flex gap-0.5 ml-6">
-          {nav.map(({ to, label, pill, text }) => (
+          {nav.map(({ to, label, emoji, pill, text, iconOnly }) => (
             <NavLink
               key={to}
               to={to}
@@ -49,7 +50,7 @@ export default function Layout({ children }) {
                 }`
               }
             >
-              {label}
+              {iconOnly ? emoji : label}
             </NavLink>
           ))}
         </nav>
@@ -64,7 +65,7 @@ export default function Layout({ children }) {
 
       {/* Bottom tab bar — mobile only */}
       <nav className="sm:hidden fixed bottom-0 inset-x-0 bg-theme-card border-t border-theme-subtle flex z-30 safe-area-pb">
-        {nav.map(({ to, label, emoji, pill, text }) => (
+        {nav.map(({ to, label, emoji, pill, text, iconOnly }) => (
           <NavLink
             key={to}
             to={to}
@@ -76,9 +77,11 @@ export default function Layout({ children }) {
                 <span className={`text-lg leading-none px-2.5 py-1 rounded-2xl transition-colors ${isActive ? pill : ''}`}>
                   {emoji}
                 </span>
-                <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-theme-muted'}`}>
-                  {label}
-                </span>
+                {!iconOnly && (
+                  <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? text : 'text-theme-muted'}`}>
+                    {label}
+                  </span>
+                )}
               </>
             )}
           </NavLink>
