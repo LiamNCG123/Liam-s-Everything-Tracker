@@ -93,7 +93,7 @@ export default function Education() {
         <EmptyState
           icon="📚"
           title="Nothing tracked yet"
-          description="Add a book, course, or anything you're learning."
+          description="What are you curious about right now?"
           action={<Button onClick={openAdd}>Add your first item</Button>}
         />
       ) : sorted.length === 0 ? (
@@ -141,6 +141,13 @@ export default function Education() {
                     </div>
                   </div>
                   <ProgressBar value={item.progress ?? 0} color={item.status === 'Completed' ? 'green' : 'indigo'} />
+                  {item.status === 'In Progress' && (() => {
+                    const p = item.progress ?? 0
+                    if (p >= 75 && p < 100) return <p className="text-[10px] text-brand-500 mt-1">Almost there — push through to the end.</p>
+                    if (p >= 50) return <p className="text-[10px] text-theme-muted mt-1">More than halfway — keep going.</p>
+                    if (p >= 25) return <p className="text-[10px] text-theme-muted mt-1">Good progress — even 15 minutes helps.</p>
+                    return null
+                  })()}
                 </div>
               )}
 

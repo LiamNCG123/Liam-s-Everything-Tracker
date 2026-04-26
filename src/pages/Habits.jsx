@@ -176,7 +176,9 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
               <div className="text-[10px] text-theme-muted leading-none">
                 {atRisk
                   ? <span className="text-amber-500">do it today</span>
-                  : `best ${longest} · ${doneThisMonth}d`
+                  : doneToday && current >= 3 && streakSubtitle(current)
+                    ? <span className="text-green-600 dark:text-green-400">{streakSubtitle(current)}</span>
+                    : `best ${longest} · ${doneThisMonth}d`
                 }
               </div>
             </div>
@@ -295,6 +297,26 @@ function TimeOfDayPicker({ value, onChange }) {
   )
 }
 
+// ─── Copy pools ──────────────────────────────────────────────────────────────
+
+const COMPLETION_MSGS = [
+  { title: 'All habits done.',    sub: "That's the whole game. See you tomorrow." },
+  { title: 'Clean sweep today.',  sub: 'Stack another day on top of this one.' },
+  { title: 'Every single one.',   sub: 'This is how it compounds.' },
+  { title: 'You showed up.',      sub: "That's what matters — see you tomorrow." },
+  { title: 'Done and dusted.',    sub: 'Enjoy the rest of your day.' },
+  { title: 'Habits: done.',       sub: 'Streak: alive. Keep it going.' },
+  { title: 'Full house today.',   sub: 'Nothing left on the list. Well done.' },
+]
+
+function streakSubtitle(streak) {
+  if (streak >= 30) return 'legendary run'
+  if (streak >= 14) return "you're on a roll"
+  if (streak >= 7)  return `${streak} days strong`
+  if (streak >= 3)  return 'building momentum'
+  return null
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 const EMPTY_FORM = { name: '', color: PALETTE[0], notes: '', timeOfDay: 'anytime', cue: '', goalId: '' }
@@ -405,7 +427,7 @@ export default function Habits() {
         <EmptyState
           icon="✅"
           title="No habits yet"
-          description="Add your first habit and start building your streak."
+          description="What's one small thing you want to show up for every day?"
           action={<Button onClick={openAdd}>Add your first habit</Button>}
         />
       ) : (
@@ -426,8 +448,8 @@ export default function Habits() {
           {/* All-done state */}
           {doneToday === habits.length && habits.length > 0 && (
             <CompletionBanner
-              title="All habits done today."
-              sub="Keep the streak alive — see you tomorrow."
+              title={COMPLETION_MSGS[new Date().getDay() % COMPLETION_MSGS.length].title}
+              sub={COMPLETION_MSGS[new Date().getDay() % COMPLETION_MSGS.length].sub}
               className="mb-4"
             />
           )}

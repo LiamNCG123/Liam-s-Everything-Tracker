@@ -61,6 +61,18 @@ function monthLabel() {
   return new Date(+y, +m - 1, 1).toLocaleDateString('en-AU', { month: 'long' })
 }
 
+// ─── Copy pools ──────────────────────────────────────────────────────────────
+
+const HABITS_DONE_MSGS = [
+  { text: 'All habits done today — solid.',   },
+  { text: 'Every single one. That\'s the whole game.' },
+  { text: 'Clean sweep. Stack another day on top.' },
+  { text: 'You showed up today. That counts.' },
+  { text: 'Done and dusted — enjoy the rest of your day.' },
+  { text: 'Habits: done. Streak: alive.' },
+  { text: 'Nothing left on the list. Good work.' },
+]
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SectionHeader({ emoji, title, meta, action }) {
@@ -107,8 +119,8 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
   if (!total) return (
     <Card className="p-4">
       <SectionHeader emoji="✅" title="Habits" />
-      <p className="text-sm text-theme-muted">No habits yet.{' '}
-        <button onClick={() => navigate('/habits')} className="text-indigo-500 hover:underline">Add one →</button>
+      <p className="text-sm text-theme-muted">No habits set up yet.{' '}
+        <button onClick={() => navigate('/habits')} className="text-brand-500 hover:underline">Go build something consistent →</button>
       </p>
     </Card>
   )
@@ -141,7 +153,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
         <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-xl px-3 py-2 mb-3">
           <span className="text-base">⚠️</span>
           <span className="text-xs text-amber-800 dark:text-amber-300 font-medium">
-            {atRiskCount} streak{atRiskCount > 1 ? 's' : ''} at risk — complete before midnight
+            {atRiskCount} streak{atRiskCount > 1 ? 's' : ''} on the line — don't let the day slip away
           </span>
         </div>
       )}
@@ -213,7 +225,7 @@ function HabitsSection({ habits, todayStr, onToggle, flashIds, goals }) {
 
       {allDone && (
         <div className="mt-3 text-center text-sm font-semibold text-green-600 dark:text-green-400">
-          All habits done today 🎉
+          {HABITS_DONE_MSGS[new Date().getDay() % HABITS_DONE_MSGS.length].text}
         </div>
       )}
     </Card>
@@ -278,10 +290,12 @@ function TrainingSection({ programmes, sessions, todayStr }) {
       ) : (
         <div className="flex items-center justify-between">
           <p className="text-sm text-theme-muted">
-            {programmes.length === 0 ? 'No programme yet.' : 'No active programme.'}
+            {programmes.length === 0
+              ? 'No programme set up yet — ready when you are.'
+              : 'No active programme — head there to get one going.'}
           </p>
           <Button variant="secondary" size="sm" onClick={() => navigate('/training')}>
-            Log workout →
+            Open →
           </Button>
         </div>
       )}
@@ -315,7 +329,7 @@ function FinanceSection({ transactions }) {
 
       {monthTx.length === 0 ? (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-theme-muted">No transactions this month.</p>
+          <p className="text-sm text-theme-muted">Nothing logged for {monthLabel()} yet.</p>
           <Button variant="secondary" size="sm" onClick={() => navigate('/finance/import')}>Import CSV →</Button>
         </div>
       ) : (
@@ -392,8 +406,8 @@ function GoalsSection({ goals }) {
 
       {active.length === 0 ? (
         <p className="text-sm text-theme-muted">
-          No active goals.{' '}
-          <button onClick={() => navigate('/goals')} className="text-indigo-500 hover:underline">Set one →</button>
+          No goals in motion yet.{' '}
+          <button onClick={() => navigate('/goals')} className="text-brand-500 hover:underline">What are you working toward? →</button>
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -447,7 +461,7 @@ function EducationSection({ eduItems }) {
       {active.length === 0 ? (
         <p className="text-sm text-theme-muted">
           Nothing in progress.{' '}
-          <button onClick={() => navigate('/education')} className="text-indigo-500 hover:underline">Add something →</button>
+          <button onClick={() => navigate('/education')} className="text-brand-500 hover:underline">What are you reading or learning right now? →</button>
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -488,8 +502,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
       items.push({
         id: `habit-risk-${h.id}`,
         priority: 1,
-        label: `"${h.name}" streak at risk`,
-        sub: `${streak}-day streak — complete before midnight`,
+        label: `Keep your ${h.name} streak going`,
+        sub: `${streak} day${streak > 1 ? 's' : ''} — complete before midnight`,
         to: '/habits',
       })
     }
@@ -502,8 +516,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
     items.push({
       id: 'finance-uncat',
       priority: 1,
-      label: `${uncatCount} uncategorized transaction${uncatCount > 1 ? 's' : ''}`,
-      sub: 'Review and categorize in Finance',
+      label: uncatCount === 1 ? 'One transaction needs a category' : `${uncatCount} transactions need categories`,
+      sub: 'Takes 30 seconds — head to Finance',
       to: '/finance',
     })
   }
@@ -520,8 +534,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
         items.push({
           id: `budget-over-${bi.category}`,
           priority: 2,
-          label: `${bi.category} over budget`,
-          sub: `Spent A$${Math.round(spent)} of A$${Math.round(limit)} limit`,
+          label: `${bi.category} is running over`,
+          sub: `A$${Math.round(spent)} of A$${Math.round(limit)} limit — worth a look`,
           to: '/finance',
         })
       }
@@ -535,8 +549,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
     items.push({
       id: `goal-overdue-${g.id}`,
       priority: 2,
-      label: `"${g.title}" overdue`,
-      sub: `Target date was ${fmtDate(g.targetDate)}`,
+      label: `"${g.title}" is past its target date`,
+      sub: `Was due ${fmtDate(g.targetDate)} — update it or extend the deadline`,
       to: '/goals',
     })
   })
@@ -550,8 +564,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
         items.push({
           id: `goal-stalled-${g.id}`,
           priority: 2,
-          label: `"${g.title}" stalled`,
-          sub: `No update in ${daysSince} days`,
+          label: `"${g.title}" hasn't moved lately`,
+          sub: `No update in ${daysSince} days — even +10% counts`,
           to: '/goals',
         })
       }
@@ -567,8 +581,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
         items.push({
           id: `edu-stalled-${e.id}`,
           priority: 3,
-          label: `"${e.title}" stalled`,
-          sub: `No progress in ${daysSince} days`,
+          label: `"${e.title}" is gathering dust`,
+          sub: `No progress in ${daysSince} days — even 15 minutes helps`,
           to: '/education',
         })
       }
@@ -591,8 +605,8 @@ function generateInboxItems({ habits, sessions, transactions, goals, eduItems, b
       items.push({
         id: `streak-nudge-${h.id}`,
         priority: 2,
-        label: `"${h.name}" is on a ${streak}-day streak`,
-        sub: `Time to update progress on "${linkedGoal.title}"`,
+        label: `"${h.name}" has ${streak} days going strong`,
+        sub: `Good moment to log progress on "${linkedGoal.title}"`,
         to: '/goals',
       })
     }
@@ -777,6 +791,24 @@ export default function Today() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const greetingText = userName ? `${greeting}, ${userName}` : greeting
 
+  // Greeting context line — shows remaining habits + suggested training day
+  const remainingHabits = habits.filter(
+    h => !migrateCompletions(h.completions).includes(todayStr)
+  ).length
+  const activeProg = programmes.find(p => p.isActive && !p.isArchived)
+  const doneTodaySession = sessions.some(s => s.date === todayStr)
+  const suggestedDay = activeProg && !doneTodaySession
+    ? suggestNextDay(activeProg, sessions)
+    : null
+  const contextParts = []
+  if (habits.length > 0) {
+    if (remainingHabits === 0) contextParts.push('habits all done')
+    else if (remainingHabits === 1) contextParts.push('1 habit left')
+    else contextParts.push(`${remainingHabits} habits to go`)
+  }
+  if (suggestedDay) contextParts.push(`${suggestedDay.title} up next`)
+  const contextLine = contextParts.length ? contextParts.join(' · ') : null
+
   // Micro-feedback: track which habit ids just got checked (brief flash)
   const [flashIds, setFlashIds] = useState(new Set())
 
@@ -811,9 +843,12 @@ export default function Today() {
   return (
     <div className="flex flex-col gap-4">
       {/* Date heading */}
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-theme-primary">{greetingText}</h1>
-        <span className="text-sm text-theme-muted">{dateLabel}</span>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-theme-primary">{greetingText}</h1>
+          {contextLine && <p className="text-sm text-theme-muted mt-1">{contextLine}</p>}
+        </div>
+        <span className="text-sm text-theme-muted shrink-0 ml-4 mt-1">{dateLabel}</span>
       </div>
 
       {/* Status bar */}
