@@ -10,6 +10,7 @@ import Education from './pages/Education'
 import Finance from './pages/Finance'
 import ImportCSV from './pages/ImportCSV'
 import WeeklyReview from './pages/WeeklyReview'
+import MonthlyReview from './pages/MonthlyReview'
 import Settings from './pages/Settings'
 import Onboarding from './components/Onboarding'
 import { ModulesProvider } from './hooks/useModules'
@@ -35,6 +36,7 @@ export default function App() {
             <Route path="/finance"        element={<Finance />} />
             <Route path="/finance/import" element={<ImportCSV />} />
             <Route path="/review"         element={<WeeklyReview />} />
+            <Route path="/monthly"        element={<MonthlyReview />} />
             <Route path="/settings"       element={<Settings />} />
           </Routes>
         </Layout>

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { useModules } from '../hooks/useModules'
@@ -72,6 +72,126 @@ const HABITS_DONE_MSGS = [
   { text: 'Habits: done. Streak: alive.' },
   { text: 'Nothing left on the list. Good work.' },
 ]
+
+// ─── Daily check-in ──────────────────────────────────────────────────────────
+
+const MOOD_OPTS = [
+  { val: 1, emoji: '😔', label: 'Rough' },
+  { val: 2, emoji: '😕', label: 'Meh'   },
+  { val: 3, emoji: '😐', label: 'Okay'  },
+  { val: 4, emoji: '🙂', label: 'Good'  },
+  { val: 5, emoji: '😄', label: 'Great' },
+]
+
+function MoodCheckin({ checkin, onSave }) {
+  const [mood,    setMood]    = useState(checkin?.mood   || 0)
+  const [energy,  setEnergy]  = useState(checkin?.energy || 0)
+  const [editing, setEditing] = useState(!checkin)
+
+  const pick = (m, e) => {
+    if (m && e) { onSave(m, e); setEditing(false) }
+  }
+
+  if (!editing && checkin) {
+    const m = MOOD_OPTS.find(o => o.val === checkin.mood)
+    return (
+      <div className="flex items-center gap-3 bg-theme-card border border-theme-subtle rounded-2xl px-4 py-3">
+        <span className="text-xl">{m?.emoji || '😐'}</span>
+        <div className="flex-1 flex items-center gap-2">
+          <span className="text-sm font-medium text-theme-primary">{m?.label}</span>
+          <span className="text-theme-muted text-sm">·</span>
+          <span className="text-xs text-theme-muted">Energy</span>
+          <span className="flex gap-0.5">
+            {[1,2,3,4,5].map(i => (
+              <span key={i} className={`inline-block w-2 h-2 rounded-full ${i <= checkin.energy ? 'bg-brand-400' : 'bg-theme-input'}`} />
+            ))}
+          </span>
+        </div>
+        <button onClick={() => setEditing(true)} className="text-xs text-theme-muted hover:text-theme-secondary">Edit</button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-theme-card border border-theme-subtle rounded-2xl p-4">
+      <p className="text-xs font-semibold text-theme-muted uppercase tracking-wide mb-3">Daily check-in</p>
+      <div className="mb-4">
+        <p className="text-xs text-theme-secondary font-medium mb-2">How are you feeling?</p>
+        <div className="flex gap-2">
+          {MOOD_OPTS.map(({ val, emoji, label }) => (
+            <button
+              key={val}
+              onClick={() => { setMood(val); pick(val, energy) }}
+              className={`flex-1 flex flex-col items-center py-2.5 rounded-xl transition-all ${
+                mood === val
+                  ? 'bg-brand-100 dark:bg-brand-500/20 scale-105'
+                  : 'bg-theme-input hover:bg-theme-hover'
+              }`}
+            >
+              <span className="text-xl leading-none">{emoji}</span>
+              <span className={`text-[10px] mt-1 font-medium ${mood === val ? 'text-brand-600 dark:text-brand-400' : 'text-theme-muted'}`}>{label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs text-theme-secondary font-medium mb-2">Energy level</p>
+        <div className="flex gap-2">
+          {[1,2,3,4,5].map(val => {
+            const bg = ['', 'bg-slate-400', 'bg-yellow-400', 'bg-amber-400', 'bg-lime-500', 'bg-green-500'][val]
+            return (
+              <button
+                key={val}
+                onClick={() => { setEnergy(val); pick(mood, val) }}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  energy === val ? `${bg} text-white scale-105` : 'bg-theme-input text-theme-muted hover:bg-theme-hover'
+                }`}
+              >{val}</button>
+            )
+          })}
+        </div>
+        <div className="flex justify-between text-[10px] text-theme-muted mt-1"><span>Low</span><span>High</span></div>
+      </div>
+    </div>
+  )
+}
+
+function HighlightCard({ todayHighlight, yesterdayHighlight, onSave }) {
+  const [text, setText] = useState(todayHighlight?.text || '')
+  const [justSaved, setJustSaved] = useState(false)
+
+  useEffect(() => { setText(todayHighlight?.text || '') }, [todayHighlight?.id])
+
+  const handleBlur = () => {
+    const trimmed = text.trim()
+    if (trimmed !== (todayHighlight?.text || '').trim()) {
+      onSave(trimmed)
+      if (trimmed) { setJustSaved(true); setTimeout(() => setJustSaved(false), 2000) }
+    }
+  }
+
+  return (
+    <div className="bg-theme-card border border-theme-subtle rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-theme-muted uppercase tracking-wide">Today's highlight</p>
+        {justSaved && <span className="text-[10px] text-green-500 font-semibold">Saved ✓</span>}
+      </div>
+      <textarea
+        rows={2}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        onBlur={handleBlur}
+        placeholder="What made today worth remembering?"
+        className="w-full resize-none bg-transparent text-sm text-theme-primary placeholder-theme-muted focus:outline-none leading-relaxed"
+      />
+      {!text && yesterdayHighlight?.text && (
+        <p className="text-[11px] text-theme-muted mt-2 border-t border-theme-subtle pt-2 italic">
+          Yesterday: "{yesterdayHighlight.text}"
+        </p>
+      )}
+    </div>
+  )
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -780,6 +900,8 @@ export default function Today() {
   const { items: goals                              } = useStore('goals')
   const { items: eduItems                           } = useStore('education')
   const { items: budgets                            } = useStore('monthlyBudgets')
+  const { items: highlights, add: addHighlight, update: updateHighlight } = useStore('dailyHighlights')
+  const { items: checkins,   add: addCheckin,   update: updateCheckin   } = useStore('dailyCheckins')
 
   const todayStr = today()
   const dateLabel = new Date().toLocaleDateString('en-AU', {
@@ -808,6 +930,22 @@ export default function Today() {
   }
   if (suggestedDay) contextParts.push(`${suggestedDay.title} up next`)
   const contextLine = contextParts.length ? contextParts.join(' · ') : null
+
+  // Highlight + check-in helpers
+  const todayHighlight     = highlights.find(h => h.date === todayStr)
+  const yesterdayStr       = (() => { const d = new Date(); d.setDate(d.getDate() - 1); return dateToStr(d) })()
+  const yesterdayHighlight = highlights.find(h => h.date === yesterdayStr)
+  const todayCheckin       = checkins.find(c => c.date === todayStr)
+
+  const saveHighlight = useCallback((text) => {
+    if (todayHighlight) updateHighlight(todayHighlight.id, { text })
+    else if (text) addHighlight({ date: todayStr, text })
+  }, [todayHighlight, todayStr, updateHighlight, addHighlight])
+
+  const saveCheckin = useCallback((mood, energy) => {
+    if (todayCheckin) updateCheckin(todayCheckin.id, { mood, energy })
+    else addCheckin({ date: todayStr, mood, energy })
+  }, [todayCheckin, todayStr, updateCheckin, addCheckin])
 
   // Micro-feedback: track which habit ids just got checked (brief flash)
   const [flashIds, setFlashIds] = useState(new Set())
@@ -850,6 +988,10 @@ export default function Today() {
         </div>
         <span className="text-sm text-theme-muted shrink-0 ml-4 mt-1">{dateLabel}</span>
       </div>
+
+      {/* Daily check-in + highlight */}
+      <MoodCheckin checkin={todayCheckin} onSave={saveCheckin} />
+      <HighlightCard todayHighlight={todayHighlight} yesterdayHighlight={yesterdayHighlight} onSave={saveHighlight} />
 
       {/* Status bar */}
       <CompletionBar

@@ -385,12 +385,17 @@ function buildFocus(s) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+const MOOD_EMOJI  = ['', '😔', '😕', '😐', '🙂', '😄']
+const MOOD_LABELS = ['', 'Rough', 'Meh', 'Okay', 'Good', 'Great']
+
 export default function WeeklyReview() {
   const { items: habits       } = useStore('habits')
   const { items: sessions     } = useStore('training')
   const { items: transactions } = useStore('financeTransactions')
   const { items: goals        } = useStore('goals')
   const { items: eduItems     } = useStore('education')
+  const { items: highlights   } = useStore('dailyHighlights')
+  const { items: checkins     } = useStore('dailyCheckins')
 
   const week = useMemo(getWeekRange, [])
 
@@ -421,6 +426,15 @@ export default function WeeklyReview() {
   const focus    = buildFocus(signals)
   const dotColors = { green: 'bg-green-500', amber: 'bg-amber-500', red: 'bg-red-400', indigo: 'bg-indigo-500', gray: 'bg-gray-300' }
 
+  const weekHighlights = useMemo(
+    () => (highlights || []).filter(h => inWeek(h.date, week)).sort((a, b) => a.date.localeCompare(b.date)),
+    [highlights, week]
+  )
+  const weekCheckins = useMemo(
+    () => (checkins || []).filter(c => inWeek(c.date, week)),
+    [checkins, week]
+  )
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-2">
@@ -435,6 +449,54 @@ export default function WeeklyReview() {
         <p className="text-xs font-semibold uppercase tracking-widest opacity-70 mb-1">This week</p>
         <p className="text-sm leading-relaxed">{takeaway}</p>
       </div>
+
+      {/* Mood & Energy this week */}
+      {weekCheckins.length > 0 && (
+        <Section emoji="🌡️" title="Mood & Energy">
+          <div className="flex gap-2">
+            {week.days.map(d => {
+              const c = weekCheckins.find(c => c.date === d)
+              const isPast = d <= TODAY
+              const moodBg = ['bg-theme-input', 'bg-red-400', 'bg-orange-300', 'bg-yellow-300', 'bg-lime-400', 'bg-green-500']
+              const dayLabel = new Date(d + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short' }).slice(0,2)
+              return (
+                <div key={d} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] text-theme-muted">{dayLabel}</span>
+                  <div
+                    title={c ? `${MOOD_LABELS[c.mood]} · Energy ${c.energy}/5` : 'No check-in'}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-base ${c ? moodBg[c.mood] : isPast ? 'bg-theme-input' : 'opacity-20 bg-theme-input'}`}
+                  >
+                    {c ? MOOD_EMOJI[c.mood] : isPast ? '' : ''}
+                  </div>
+                  {c && (
+                    <div className="flex gap-0.5">
+                      {[1,2,3,4,5].map(i => (
+                        <div key={i} className={`w-1 h-1 rounded-full ${i <= c.energy ? 'bg-brand-400' : 'bg-theme-input'}`} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </Section>
+      )}
+
+      {/* Highlights this week */}
+      {weekHighlights.length > 0 && (
+        <Section emoji="✨" title="Highlights">
+          <div className="flex flex-col gap-2">
+            {weekHighlights.map(h => (
+              <div key={h.id} className="flex gap-3 py-1.5 border-b border-theme-subtle last:border-0">
+                <span className="text-[11px] text-theme-muted shrink-0 pt-0.5 w-8">
+                  {new Date(h.date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short' })}
+                </span>
+                <span className="text-sm text-theme-primary">{h.text}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <ErrorBoundary title="Habits">
         <Section emoji="✅" title="Habits">
