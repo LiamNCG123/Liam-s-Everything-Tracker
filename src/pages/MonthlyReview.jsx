@@ -423,15 +423,9 @@ export default function MonthlyReview() {
                   type="range" min="1" max="10" step="1"
                   value={score || 5}
                   onChange={e => saveWheel(domain.key, Number(e.target.value))}
-                  className="w-full mb-1.5"
+                  className="w-full"
                   style={{ accentColor: domain.color }}
                 />
-                <div className="h-1.5 bg-theme-input rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{ width: `${score * 10}%`, backgroundColor: domain.color, opacity: score ? 1 : 0 }}
-                  />
-                </div>
               </div>
             )
           })}
