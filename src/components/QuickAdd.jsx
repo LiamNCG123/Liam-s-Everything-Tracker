@@ -21,7 +21,7 @@ const INTENT_META = {
   [INTENT.FINANCE]:   { emoji: '💰', label: 'Finance',   bg: 'bg-green-50 dark:bg-green-900/20',   border: 'border-green-200 dark:border-green-800',   text: 'text-green-700 dark:text-green-400'   },
   [INTENT.HABIT]:     { emoji: '✅', label: 'Habit',     bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', text: 'text-indigo-700 dark:text-indigo-400' },
   [INTENT.TRAINING]:  { emoji: '💪', label: 'Training',  bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', text: 'text-orange-700 dark:text-orange-400' },
-  [INTENT.EDUCATION]: { emoji: '📚', label: 'Education', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-700 dark:text-purple-400' },
+  [INTENT.EDUCATION]: { emoji: '📚', label: 'Learning', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', text: 'text-purple-700 dark:text-purple-400' },
   [INTENT.UNKNOWN]:   { emoji: '❓', label: 'Unknown',   bg: 'bg-theme-input',        border: 'border-theme',     text: 'text-theme-muted'     },
 }
 

@@ -36,7 +36,7 @@ const MODULES = [
   { to: '/habits',    emoji: '✅', label: 'Habits',    desc: 'Daily check-ins & streaks' },
   { to: '/goals',     emoji: '🎯', label: 'Goals',     desc: 'Track what matters' },
   { to: '/training',  emoji: '💪', label: 'Training',  desc: 'Log workouts & progress' },
-  { to: '/education', emoji: '📚', label: 'Education', desc: 'Books, courses & learning' },
+  { to: '/education', emoji: '📚', label: 'Learning', desc: 'Books, courses & learning' },
   { to: '/finance',   emoji: '💰', label: 'Finance',   desc: 'Income, expenses & budgets' },
 ]
 

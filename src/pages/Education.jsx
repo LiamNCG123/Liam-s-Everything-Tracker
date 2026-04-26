@@ -61,7 +61,7 @@ export default function Education() {
   return (
     <div>
       <PageHeader
-        title="Education"
+        title="Learning"
         action={<Button onClick={openAdd}>+ Add item</Button>}
       />
 

@@ -460,8 +460,8 @@ export default function WeeklyReview() {
         </Section>
       </ErrorBoundary>
 
-      <ErrorBoundary title="Education">
-        <Section emoji="📚" title="Education">
+      <ErrorBoundary title="Learning">
+        <Section emoji="📚" title="Learning">
           <EducationSectionInner items={eduItems || []} />
         </Section>
       </ErrorBoundary>

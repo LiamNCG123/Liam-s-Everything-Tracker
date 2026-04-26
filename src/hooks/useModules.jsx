@@ -6,7 +6,7 @@ export const ALL_MODULES = [
   { key: 'training',  label: 'Training',  emoji: '💪', path: '/training'  },
   { key: 'finance',   label: 'Finance',   emoji: '💰', path: '/finance'   },
   { key: 'goals',     label: 'Goals',     emoji: '🎯', path: '/goals'     },
-  { key: 'education', label: 'Education', emoji: '📚', path: '/education' },
+  { key: 'education', label: 'Learning', emoji: '📚', path: '/education' },
 ]
 
 const DEFAULT_ORDER = ALL_MODULES.map(m => m.key)
