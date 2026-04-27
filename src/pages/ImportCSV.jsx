@@ -424,12 +424,15 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
     if (!aiKey || uncategorized.length === 0) return
     setAiRunning(true)
     setAiError(null)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000)
     try {
       const payload = uncategorized.map(r => ({
         id: r._importId, description: r.description, amount: r.amount, type: r.type,
       }))
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'x-api-key': aiKey,
           'anthropic-version': '2023-06-01',
@@ -484,8 +487,13 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
       }))
       setAiDone(true)
     } catch (e) {
-      setAiError(e.message)
+      if (e.name === 'AbortError') {
+        setAiError('Request timed out after 30 seconds. Try again with fewer rows.')
+      } else {
+        setAiError(e.message)
+      }
     } finally {
+      clearTimeout(timeoutId)
       setAiRunning(false)
     }
   }
