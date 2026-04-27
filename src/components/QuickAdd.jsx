@@ -279,6 +279,15 @@ export default function QuickAdd() {
     }
   }, [open])
 
+  useEffect(() => {
+    const handler = (event) => {
+      setOpen(true)
+      if (event.detail?.input) setInput(event.detail.input)
+    }
+    window.addEventListener('spora:open-quick-add', handler)
+    return () => window.removeEventListener('spora:open-quick-add', handler)
+  }, [])
+
   const onFieldChange = useCallback((key, val) => {
     setFields(f => ({ ...f, [key]: val }))
   }, [])

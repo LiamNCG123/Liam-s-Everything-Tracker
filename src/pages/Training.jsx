@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useStore } from '../hooks/useStore'
 import { today, uid, fmtDate, dateToStr } from '../utils/storage'
 import { useFlash } from '../utils/microReward'
@@ -876,6 +876,16 @@ export default function Training() {
   const [editTarget, setEditTarget] = useState(null)
   const [logTarget, setLogTarget] = useState(null)
   const [sessionToast, triggerSessionToast] = useFlash(2000)
+
+  useEffect(() => {
+    const handler = () => {
+      setTab('programmes')
+      setEditTarget(null)
+      setView('editor')
+    }
+    window.addEventListener('spora:training:new-programme', handler)
+    return () => window.removeEventListener('spora:training:new-programme', handler)
+  }, [])
 
   // Programme operations
   const saveProg = (form) => {

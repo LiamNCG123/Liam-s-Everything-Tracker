@@ -449,9 +449,24 @@ export default function Onboarding({ onComplete }) {
             <h2 className="text-2xl font-bold text-theme-primary mb-2">
               {displayName ? `You're all set, ${displayName}.` : "You're all set."}
             </h2>
-            <p className="text-theme-muted text-sm mb-8">
-              Spora is ready when you are. Your Today page is live.
+            <p className="text-theme-muted text-sm mb-5">
+              Spora is ready. Start small, then let the pattern build.
             </p>
+            <div className="text-left bg-theme-card border border-theme-subtle rounded-2xl px-4 py-3 mb-6">
+              {[
+                ['Check in', 'Mark your mood and energy.'],
+                ['Log one thing', 'Record a habit, workout, spend, or reading note.'],
+                ['Review later', 'Pick a week or month once you have a few entries.'],
+              ].map(([title, copy]) => (
+                <div key={title} className="flex gap-3 py-2 border-b border-theme-subtle last:border-0">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-brand-400 shrink-0" />
+                  <div>
+                    <div className="text-sm font-semibold text-theme-primary">{title}</div>
+                    <div className="text-xs text-theme-muted mt-0.5">{copy}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
             <PrimaryBtn onClick={finish}>Let's see it →</PrimaryBtn>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import QuickAdd from './QuickAdd'
+import ContextualGuide from './ContextualGuide'
 import { useModules } from '../hooks/useModules'
 
 // ── Active pill colors ────────────────────────────────────────────────────────
@@ -57,6 +58,7 @@ export default function Layout({ children }) {
 
       {/* Page content */}
       <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-6 pb-28 sm:pb-10">
+        <ContextualGuide />
         {children}
       </main>
 
