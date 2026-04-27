@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import Today from './pages/Today'
@@ -9,8 +9,7 @@ import Training from './pages/Training'
 import Education from './pages/Education'
 import Finance from './pages/Finance'
 import ImportCSV from './pages/ImportCSV'
-import WeeklyReview from './pages/WeeklyReview'
-import MonthlyReview from './pages/MonthlyReview'
+import Review from './pages/Review'
 import Settings from './pages/Settings'
 import Onboarding from './components/Onboarding'
 import { ModulesProvider } from './hooks/useModules'
@@ -35,8 +34,8 @@ export default function App() {
             <Route path="/education"      element={<Education />} />
             <Route path="/finance"        element={<Finance />} />
             <Route path="/finance/import" element={<ImportCSV />} />
-            <Route path="/review"         element={<WeeklyReview />} />
-            <Route path="/monthly"        element={<MonthlyReview />} />
+            <Route path="/review"         element={<Review />} />
+            <Route path="/monthly"        element={<Navigate to="/review?period=month" replace />} />
             <Route path="/settings"       element={<Settings />} />
           </Routes>
         </Layout>

@@ -111,10 +111,28 @@ function WheelChart({ domains, scores }) {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function MonthlyReview() {
+export default function MonthlyReview({
+  selectedYear,
+  selectedMonth,
+  onMonthChange,
+  showHeader = true,
+  showNavigator = true,
+  showFooterLink = true,
+} = {}) {
   const now = new Date()
-  const [viewYear,  setViewYear]  = useState(now.getFullYear())
-  const [viewMonth, setViewMonth] = useState(now.getMonth())
+  const [localYear,  setLocalYear]  = useState(now.getFullYear())
+  const [localMonth, setLocalMonth] = useState(now.getMonth())
+  const isControlled = Number.isInteger(selectedYear) && Number.isInteger(selectedMonth)
+  const viewYear = isControlled ? selectedYear : localYear
+  const viewMonth = isControlled ? selectedMonth : localMonth
+
+  const setReviewMonth = (year, month) => {
+    if (isControlled) onMonthChange?.(year, month)
+    else {
+      setLocalYear(year)
+      setLocalMonth(month)
+    }
+  }
 
   const { items: habits      } = useStore('habits')
   const { items: sessions    } = useStore('training')
@@ -160,12 +178,12 @@ export default function MonthlyReview() {
   // Month navigation
   const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth()
   const prevMonth = () => {
-    if (viewMonth === 0) { setViewYear(y => y - 1); setViewMonth(11) }
-    else setViewMonth(m => m - 1)
+    if (viewMonth === 0) setReviewMonth(viewYear - 1, 11)
+    else setReviewMonth(viewYear, viewMonth - 1)
   }
   const nextMonth = () => {
-    if (viewMonth === 11) { setViewYear(y => y + 1); setViewMonth(0) }
-    else setViewMonth(m => m + 1)
+    if (viewMonth === 11) setReviewMonth(viewYear + 1, 0)
+    else setReviewMonth(viewYear, viewMonth + 1)
   }
 
   // ── Data calculations ────────────────────────────────────────────────────────
@@ -235,24 +253,28 @@ export default function MonthlyReview() {
     <div className="flex flex-col gap-4">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-primary">Monthly Review</h1>
-          <p className="text-sm text-theme-muted mt-0.5">Reflect, balance, and set your intention</p>
+      {showHeader && (
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-theme-primary">Monthly Review</h1>
+            <p className="text-sm text-theme-muted mt-0.5">Reflect, balance, and set your intention</p>
+          </div>
+          <span className="text-2xl mt-1">📅</span>
         </div>
-        <span className="text-2xl mt-1">📅</span>
-      </div>
+      )}
 
       {/* Month navigator */}
-      <div className="flex items-center justify-between bg-theme-card border border-theme-subtle rounded-2xl px-4 py-3">
-        <button onClick={prevMonth} className="text-theme-muted hover:text-theme-primary px-2 py-1 rounded-lg hover:bg-theme-hover transition text-xl leading-none">‹</button>
-        <span className="font-semibold text-theme-primary">{monthLabel}</span>
-        <button
-          onClick={nextMonth}
-          disabled={isCurrentMonth}
-          className="text-theme-muted hover:text-theme-primary px-2 py-1 rounded-lg hover:bg-theme-hover transition text-xl leading-none disabled:opacity-30"
-        >›</button>
-      </div>
+      {showNavigator && (
+        <div className="flex items-center justify-between bg-theme-card border border-theme-subtle rounded-2xl px-4 py-3">
+          <button onClick={prevMonth} className="text-theme-muted hover:text-theme-primary px-2 py-1 rounded-lg hover:bg-theme-hover transition text-xl leading-none">‹</button>
+          <span className="font-semibold text-theme-primary">{monthLabel}</span>
+          <button
+            onClick={nextMonth}
+            disabled={isCurrentMonth}
+            className="text-theme-muted hover:text-theme-primary px-2 py-1 rounded-lg hover:bg-theme-hover transition text-xl leading-none disabled:opacity-30"
+          >›</button>
+        </div>
+      )}
 
       {/* Month in numbers */}
       <Card className="p-4">
@@ -439,10 +461,12 @@ export default function MonthlyReview() {
       </Card>
 
       {/* Footer link */}
-      <p className="text-center text-xs text-theme-muted pb-2">
-        Looking for this week's detail?{' '}
-        <Link to="/review" className="text-brand-500 hover:underline">Weekly Review →</Link>
-      </p>
+      {showFooterLink && (
+        <p className="text-center text-xs text-theme-muted pb-2">
+          Looking for this week's detail?{' '}
+          <Link to="/review" className="text-brand-500 hover:underline">Weekly Review →</Link>
+        </p>
+      )}
 
     </div>
   )

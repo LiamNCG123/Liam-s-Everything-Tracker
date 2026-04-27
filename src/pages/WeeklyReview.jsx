@@ -25,8 +25,8 @@ class ErrorBoundary extends Component {
 
 function toStr(d) { return dateToStr(d) }
 
-function getWeekRange() {
-  const now = new Date()
+export function getWeekRange(referenceDate = new Date()) {
+  const now = new Date(referenceDate)
   const dow  = now.getDay()
   const mon  = new Date(now)
   mon.setDate(now.getDate() - ((dow + 6) % 7))
@@ -208,9 +208,9 @@ function TrainingSectionInner({ sessions, week }) {
 
   return (
     <>
-      <StatRow label="Sessions this week" value={count} color={count >= 3 ? 'green' : count >= 1 ? 'amber' : 'red'} />
+      <StatRow label="Sessions" value={count} color={count >= 3 ? 'green' : count >= 1 ? 'amber' : 'red'} />
       {count === 0
-        ? <p className="text-xs text-gray-400">No sessions logged this week.</p>
+        ? <p className="text-xs text-gray-400">No sessions logged for this week.</p>
         : uniqueNames.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {uniqueNames.slice(0, 8).map(n => <Pill key={n} color="indigo">{n}</Pill>)}
@@ -251,7 +251,7 @@ function FinanceSectionInner({ transactions, week }) {
           color={totalIncome - totalSpend >= 0 ? 'green' : 'red'}
         />
       )}
-      {weekTx.length === 0 && <p className="text-xs text-gray-400">No transactions this week.</p>}
+      {weekTx.length === 0 && <p className="text-xs text-gray-400">No transactions for this week.</p>}
       {topCats.length > 0 && (
         <div className="flex flex-col gap-1.5 mt-1">
           <span className="text-xs font-medium text-theme-muted uppercase tracking-wide">Top categories</span>
@@ -514,7 +514,7 @@ function buildFocus(s) {
 const MOOD_EMOJI  = ['', '😔', '😕', '😐', '🙂', '😄']
 const MOOD_LABELS = ['', 'Rough', 'Meh', 'Okay', 'Good', 'Great']
 
-export default function WeeklyReview() {
+export default function WeeklyReview({ week: selectedWeek, showHeader = true } = {}) {
   const { items: habits       } = useStore('habits')
   const { items: sessions     } = useStore('training')
   const { items: transactions } = useStore('financeTransactions')
@@ -523,7 +523,8 @@ export default function WeeklyReview() {
   const { items: highlights   } = useStore('dailyHighlights')
   const { items: checkins     } = useStore('dailyCheckins')
 
-  const week = useMemo(getWeekRange, [])
+  const defaultWeek = useMemo(() => getWeekRange(), [])
+  const week = selectedWeek || defaultWeek
 
   const signals = useMemo(() => {
     const daysSoFar = week.days.filter(d => d <= TODAY).length
@@ -563,16 +564,18 @@ export default function WeeklyReview() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold text-theme-primary">Weekly Review</h1>
-          <p className="text-sm text-theme-muted mt-0.5">{week.label}</p>
+      {showHeader && (
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h1 className="text-2xl font-bold text-theme-primary">Weekly Review</h1>
+            <p className="text-sm text-theme-muted mt-0.5">{week.label}</p>
+          </div>
+          <span className="text-2xl mt-1">📋</span>
         </div>
-        <span className="text-2xl mt-1">📋</span>
-      </div>
+      )}
 
       <div className="bg-indigo-600 rounded-2xl px-5 py-4 text-white shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-widest opacity-70 mb-1">This week</p>
+        <p className="text-xs font-semibold uppercase tracking-widest opacity-70 mb-1">Selected week</p>
         <p className="text-sm leading-relaxed">{takeaway}</p>
       </div>
 
@@ -660,7 +663,7 @@ export default function WeeklyReview() {
         </Section>
       </ErrorBoundary>
 
-      <Section emoji="🔭" title="Next week — focus on">
+      <Section emoji="🔭" title="Suggested focus">
         <div className="flex flex-col gap-2">
           {focus.map((item, i) => (
             <div key={i} className="flex items-start gap-2.5">

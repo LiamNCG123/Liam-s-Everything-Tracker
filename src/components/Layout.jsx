@@ -14,8 +14,7 @@ const NAV_MODULE_STYLES = {
   education: { pill: 'bg-amber-100 dark:bg-amber-400/15',    text: 'text-amber-600 dark:text-amber-300'     },
 }
 const NAV_TAIL = [
-  { to: '/review',   label: 'Weekly',   emoji: '📋', pill: 'bg-sky-100 dark:bg-sky-400/15',    text: 'text-sky-600 dark:text-sky-300'    },
-  { to: '/monthly',  label: 'Monthly',  emoji: '📅', pill: 'bg-rose-100 dark:bg-rose-400/15',  text: 'text-rose-600 dark:text-rose-300'  },
+  { to: '/review',   label: 'Review',   emoji: '📋', pill: 'bg-sky-100 dark:bg-sky-400/15',    text: 'text-sky-600 dark:text-sky-300'    },
   { to: '/settings', label: 'Settings', emoji: '⚙️',  pill: 'bg-gray-100 dark:bg-gray-400/15', text: 'text-gray-600 dark:text-gray-300', iconOnly: true },
 ]
 
