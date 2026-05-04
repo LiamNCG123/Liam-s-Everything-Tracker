@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, Fragment } from 'react'
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react'
 import { useStore } from '../hooks/useStore'
 import { today, dateToStr } from '../utils/storage'
 import { PageHeader, Button, Modal, Input, EmptyState, CompletionBanner } from '../components/ui'
@@ -86,7 +87,7 @@ function Cell({ dateStr, color, done, isToday, isFuture, onToggle, hasNote, onAn
         disabled={isFuture}
         title={dateStr}
         className={[
-          'w-7 h-7 rounded-md transition-colors duration-150',
+          'w-6 h-6 sm:w-7 sm:h-7 rounded-md transition-colors duration-150',
           isFuture
             ? 'opacity-0 cursor-default'
             : done
@@ -120,6 +121,54 @@ function Cell({ dateStr, color, done, isToday, isFuture, onToggle, hasNote, onAn
   )
 }
 
+function HabitActions({ habit, onEdit, onDelete }) {
+  const [open, setOpen] = useState(false)
+
+  const edit = () => {
+    setOpen(false)
+    onEdit(habit)
+  }
+
+  const remove = () => {
+    setOpen(false)
+    onDelete(habit.id)
+  }
+
+  return (
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        title="Habit actions"
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-theme-muted hover:text-theme-primary hover:bg-theme-hover transition"
+      >
+        <MoreVertical size={16} strokeWidth={2.2} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 z-30 w-32 overflow-hidden rounded-xl border border-theme-subtle bg-theme-card shadow-lg">
+          <button
+            type="button"
+            onClick={edit}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-theme-secondary hover:bg-theme-hover hover:text-theme-primary transition"
+          >
+            <Pencil size={14} />
+            <span>Edit</span>
+          </button>
+          <button
+            type="button"
+            onClick={remove}
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition"
+          >
+            <Trash2 size={14} />
+            <span>Delete</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle, annotations, onAnnotate }) {
   const completions = migrateCompletions(habit.completions)
   const set = new Set(completions)
@@ -131,7 +180,7 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
   return (
     <tr className="group">
       {/* Habit name — sticky left */}
-      <td className="sticky left-0 z-10 bg-theme-card pl-4 pr-3 py-1.5 min-w-[140px] max-w-[180px]">
+      <td className="sticky left-0 z-10 bg-theme-card pl-3 pr-2 sm:pl-4 sm:pr-3 py-1.5 min-w-[112px] max-w-[128px] sm:min-w-[150px] sm:max-w-[190px]">
         <div className="flex items-center gap-2">
           <span
             className="w-3 h-3 rounded-full shrink-0 shadow-sm"
@@ -171,8 +220,8 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
       ))}
 
       {/* Streak + Actions — sticky right */}
-      <td className="sticky right-0 z-10 bg-theme-card pl-3 pr-2 py-1.5 whitespace-nowrap">
-        <div className="flex items-center gap-2">
+      <td className="sticky right-0 z-10 bg-theme-card pl-2 pr-1.5 sm:pl-3 sm:pr-2 py-1.5 whitespace-nowrap min-w-[88px] sm:min-w-[104px]">
+        <div className="flex items-center justify-end gap-1.5">
           {(() => {
             const doneToday  = set.has(todayStr)
             const atRisk     = !doneToday && current > 0
@@ -204,20 +253,7 @@ function HabitRow({ habit, days, todayStr, onToggle, onEdit, onDelete, goalTitle
               </div>
             )
           })()}
-          <div className="flex gap-1">
-            <button
-              onClick={() => onEdit(habit)}
-              className="text-xs text-theme-muted hover:text-gray-800 dark:hover:text-gray-100 px-2 py-1 rounded hover:bg-theme-hover"
-            >
-              Edit
-            </button>
-            <button
-              onClick={() => onDelete(habit.id)}
-              className="text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30"
-            >
-              Delete
-            </button>
-          </div>
+          <HabitActions habit={habit} onEdit={onEdit} onDelete={onDelete} />
         </div>
       </td>
     </tr>
@@ -231,7 +267,7 @@ function SlotHeader({ slot, habits, todayStr }) {
 
   return (
     <tr>
-      <td className="sticky left-0 z-10 bg-theme-input pl-4 pr-3 pt-3.5 pb-1 min-w-[140px] max-w-[180px] border-t border-theme">
+      <td className="sticky left-0 z-10 bg-theme-input pl-3 pr-2 sm:pl-4 sm:pr-3 pt-3.5 pb-1 min-w-[112px] max-w-[128px] sm:min-w-[150px] sm:max-w-[190px] border-t border-theme">
         <div className="flex items-center gap-1.5">
           <span className="text-sm leading-none">{slot.icon}</span>
           <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide leading-none">
@@ -446,7 +482,7 @@ export default function Habits() {
     if (!todayEl) { container.scrollLeft = 0; return }
     const cRect = container.getBoundingClientRect()
     const tRect = todayEl.getBoundingClientRect()
-    const stickyW = 140
+    const stickyW = container.querySelector('th.sticky.left-0, td.sticky.left-0')?.getBoundingClientRect().width || 112
     const todayAbs = tRect.left - cRect.left + container.scrollLeft
     container.scrollLeft = Math.max(0, todayAbs - stickyW - (container.clientWidth - stickyW) / 2 + tRect.width / 2)
   }, [viewYear, viewMonth])
@@ -532,26 +568,26 @@ export default function Habits() {
             <table className="border-collapse" style={{ tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th className="sticky left-0 z-20 bg-theme-card min-w-[140px] max-w-[180px] pl-4" />
+                  <th className="sticky left-0 z-20 bg-theme-card min-w-[112px] max-w-[128px] sm:min-w-[150px] sm:max-w-[190px] pl-3 sm:pl-4" />
                   {days.map(({ day, dateStr }) => (
                     <th
                       key={dateStr}
                       data-today={dateStr === todayStr ? 'true' : undefined}
                       className={`p-0.5 text-center ${dateStr === todayStr ? 'relative' : ''}`}
                     >
-                      <div className={`text-[10px] font-semibold w-7 mx-auto leading-none pt-2 pb-0.5 ${
+                      <div className={`text-[10px] font-semibold w-6 sm:w-7 mx-auto leading-none pt-2 pb-0.5 ${
                         dateStr === todayStr ? 'text-brand-600' : 'text-theme-muted'
                       }`}>
                         {day}
                       </div>
-                      <div className={`text-[9px] w-7 mx-auto leading-none pb-2 ${
+                      <div className={`text-[9px] w-6 sm:w-7 mx-auto leading-none pb-2 ${
                         dateStr === todayStr ? 'text-brand-400' : 'text-gray-300 text-theme-muted'
                       }`}>
                         {DAY_LABELS[new Date(viewYear, viewMonth, day).getDay()]}
                       </div>
                     </th>
                   ))}
-                  <th className="sticky right-0 z-20 bg-theme-card whitespace-nowrap">
+                  <th className="sticky right-0 z-20 bg-theme-card whitespace-nowrap min-w-[88px] sm:min-w-[104px]">
                     <div className="text-[10px] font-semibold text-theme-muted text-right pr-3 pt-2 pb-2">
                       Streak
                     </div>
