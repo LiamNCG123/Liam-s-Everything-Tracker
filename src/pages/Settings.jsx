@@ -1,8 +1,115 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useModules } from '../hooks/useModules'
 import { useTheme, THEMES } from '../hooks/useTheme'
 import { load, save } from '../utils/storage'
+import { flushSyncQueue, isSyncEnabled, pullRemoteSnapshot } from '../data/syncClient'
+import { loadSyncQueue } from '../data/syncQueue'
 import { Card } from '../components/ui'
+
+function plural(count, singular, pluralWord = `${singular}s`) {
+  return count === 1 ? singular : pluralWord
+}
+
+function SyncCard() {
+  const enabled = isSyncEnabled()
+  const [queueCount, setQueueCount] = useState(() => loadSyncQueue().length)
+  const [busy, setBusy] = useState(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+
+  const refreshQueue = () => setQueueCount(loadSyncQueue().length)
+
+  useEffect(() => {
+    refreshQueue()
+    const id = setInterval(refreshQueue, 2000)
+    return () => clearInterval(id)
+  }, [])
+
+  const pushNow = async () => {
+    setBusy('push')
+    setMessage('')
+    setError('')
+    try {
+      const result = await flushSyncQueue()
+      refreshQueue()
+      if (result.skipped) {
+        setMessage('Sync is disabled.')
+      } else {
+        const pushed = result.pushed ?? 0
+        setMessage(`Pushed ${pushed} queued ${plural(pushed, 'change')}.`)
+      }
+    } catch (err) {
+      setError(err.message || 'Sync push failed.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const checkBackup = async () => {
+    setBusy('pull')
+    setMessage('')
+    setError('')
+    try {
+      const result = await pullRemoteSnapshot()
+      const count = result.records?.length ?? 0
+      setMessage(`Backup has ${count} synced ${plural(count, 'record')}.`)
+    } catch (err) {
+      setError(err.message || 'Backup check failed.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <Card className="p-5">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="font-semibold text-theme-primary">Sync</h2>
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+          enabled
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+        }`}>
+          {enabled ? 'Enabled' : 'Off'}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="rounded-xl border border-theme-subtle bg-theme-input px-4 py-3">
+          <div className="text-2xl font-bold text-theme-primary">{queueCount}</div>
+          <div className="text-xs text-theme-muted">Queued {plural(queueCount, 'change')}</div>
+        </div>
+        <div className="rounded-xl border border-theme-subtle bg-theme-input px-4 py-3">
+          <div className="text-2xl font-bold text-theme-primary">{enabled ? 'Live' : 'Local'}</div>
+          <div className="text-xs text-theme-muted">Storage mode</div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={pushNow}
+          disabled={busy || !enabled}
+          className="px-4 py-2 bg-brand-500 hover:bg-brand-600 active:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          {busy === 'push' ? 'Pushing...' : 'Push now'}
+        </button>
+        <button
+          onClick={checkBackup}
+          disabled={busy || !enabled}
+          className="px-4 py-2 bg-theme-input hover:bg-theme-hover disabled:opacity-50 disabled:cursor-not-allowed text-theme-secondary text-sm font-medium rounded-lg transition-colors border border-theme"
+        >
+          {busy === 'pull' ? 'Checking...' : 'Check backup'}
+        </button>
+      </div>
+
+      {message && (
+        <p className="mt-3 text-sm text-green-700 dark:text-green-300">{message}</p>
+      )}
+      {error && (
+        <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+      )}
+    </Card>
+  )
+}
 
 export default function Settings() {
   const { modules, toggle, moveUp, moveDown, reset } = useModules()
@@ -72,6 +179,8 @@ export default function Settings() {
           ))}
         </div>
       </Card>
+
+      <SyncCard />
 
       {/* Modules */}
       <Card className="p-5">
