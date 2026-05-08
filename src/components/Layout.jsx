@@ -1,7 +1,8 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import QuickAdd from './QuickAdd'
 import ContextualGuide from './ContextualGuide'
 import { useModules } from '../hooks/useModules'
+import { useAuth } from '../context/AuthContext'
 
 // ── Active pill colors ────────────────────────────────────────────────────────
 const NAV_STATIC = [
@@ -19,8 +20,23 @@ const NAV_TAIL = [
   { to: '/settings', label: 'Settings', emoji: '⚙️',  pill: 'bg-gray-100 dark:bg-gray-400/15', text: 'text-gray-600 dark:text-gray-300', iconOnly: true },
 ]
 
+function ProfileAvatar({ user, size = 'md' }) {
+  const initial = user?.email?.[0]?.toUpperCase() ?? null
+  const sz = size === 'sm' ? 'w-6 h-6 text-[10px]' : 'w-7 h-7 text-xs'
+  return (
+    <div className={`${sz} rounded-full flex items-center justify-center font-bold shrink-0 ${
+      initial
+        ? 'bg-brand-500 text-white'
+        : 'bg-theme-input text-theme-muted border border-theme-subtle'
+    }`}>
+      {initial ?? '?'}
+    </div>
+  )
+}
+
 export default function Layout({ children }) {
   const { modules } = useModules()
+  const { user } = useAuth()
 
   const nav = [
     ...NAV_STATIC,
@@ -54,6 +70,10 @@ export default function Layout({ children }) {
             </NavLink>
           ))}
         </nav>
+        <Link to="/account" className="ml-auto flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-theme-hover transition-colors">
+          <ProfileAvatar user={user} />
+          <span className="text-sm text-theme-secondary">{user ? 'Account' : 'Sign in'}</span>
+        </Link>
       </header>
 
       {/* Page content */}
@@ -87,6 +107,18 @@ export default function Layout({ children }) {
             )}
           </NavLink>
         ))}
+        <NavLink to="/account" className="flex-1 flex flex-col items-center pt-2 pb-1 gap-0.5">
+          {({ isActive }) => (
+            <>
+              <span className={`leading-none px-2.5 py-1 rounded-2xl transition-colors ${isActive ? 'bg-gray-100 dark:bg-gray-400/15' : ''}`}>
+                <ProfileAvatar user={user} size="sm" />
+              </span>
+              <span className={`text-[10px] font-semibold tracking-wide transition-colors ${isActive ? 'text-gray-600 dark:text-gray-300' : 'text-theme-muted'}`}>
+                {user ? 'Account' : 'Sign in'}
+              </span>
+            </>
+          )}
+        </NavLink>
       </nav>
 
     </div>
