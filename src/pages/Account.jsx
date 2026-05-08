@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase/client'
 import { useAuth } from '../context/AuthContext'
 import { Button, Input, PageHeader, Card } from '../components/ui'
+import { save } from '../utils/storage'
 
 function StatusMessage({ status }) {
   if (!status) return null
@@ -51,10 +52,12 @@ export default function Account() {
       .update({ display_name: displayName, updated_at: new Date().toISOString() })
       .eq('id', user.id)
     setSaving(false)
+    if (!error) save('userName', displayName)
     setStatus(error
       ? { type: 'error', message: error.message }
       : { type: 'success', message: 'Profile saved.' }
     )
+    if (!error) refreshProfile()
   }
 
   async function handleAvatarChange(e) {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { useModules } from '../hooks/useModules'
 import { today, fmtDate, load, dateToStr } from '../utils/storage'
+import { useAuth } from '../context/AuthContext'
 import { Card, ProgressBar, Button } from '../components/ui'
 
 // ─── Habit helpers (mirrored from Habits.jsx) ────────────────────────────────
@@ -908,7 +909,8 @@ export default function Today() {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
-  const userName = load('userName') || ''
+  const { profile } = useAuth()
+  const userName = profile?.display_name || load('userName') || ''
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const greetingText = userName ? `${greeting}, ${userName}` : greeting
