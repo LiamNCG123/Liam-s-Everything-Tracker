@@ -2,6 +2,11 @@ import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
+import PublicRoute from './components/PublicRoute'
+import { AuthProvider } from './context/AuthContext'
+import { ModulesProvider } from './hooks/useModules'
+import { load } from './utils/storage'
 import Today from './pages/Today'
 import Habits from './pages/Habits'
 import Goals from './pages/Goals'
@@ -11,11 +16,14 @@ import Finance from './pages/Finance'
 import ImportCSV from './pages/ImportCSV'
 import Review from './pages/Review'
 import Settings from './pages/Settings'
+import Account from './pages/Account'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+import ForgotPassword from './pages/ForgotPassword'
 import Onboarding from './components/Onboarding'
-import { ModulesProvider } from './hooks/useModules'
-import { load } from './utils/storage'
 
-export default function App() {
+// The main app shell: handles the onboarding gate then renders the full Layout
+function MainShell() {
   const [onboarded, setOnboarded] = useState(() => !!load('onboardingDone'))
 
   if (!onboarded) {
@@ -23,24 +31,41 @@ export default function App() {
   }
 
   return (
-    <ModulesProvider>
-      <BrowserRouter>
-        <Layout>
+    <Layout>
+      <Routes>
+        <Route path="/"               element={<Today />} />
+        <Route path="/habits"         element={<Habits />} />
+        <Route path="/goals"          element={<Goals />} />
+        <Route path="/training"       element={<Training />} />
+        <Route path="/education"      element={<Education />} />
+        <Route path="/finance"        element={<Finance />} />
+        <Route path="/finance/import" element={<ImportCSV />} />
+        <Route path="/review"         element={<Review />} />
+        <Route path="/monthly"        element={<Navigate to="/review?period=month" replace />} />
+        <Route path="/settings"       element={<Settings />} />
+        <Route path="/account"        element={<ProtectedRoute><Account /></ProtectedRoute>} />
+      </Routes>
+    </Layout>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <ModulesProvider>
+        <BrowserRouter>
           <Routes>
-            <Route path="/"               element={<Today />} />
-            <Route path="/habits"         element={<Habits />} />
-            <Route path="/goals"          element={<Goals />} />
-            <Route path="/training"       element={<Training />} />
-            <Route path="/education"      element={<Education />} />
-            <Route path="/finance"        element={<Finance />} />
-            <Route path="/finance/import" element={<ImportCSV />} />
-            <Route path="/review"         element={<Review />} />
-            <Route path="/monthly"        element={<Navigate to="/review?period=month" replace />} />
-            <Route path="/settings"       element={<Settings />} />
+            {/* Auth pages — standalone, no Layout, no onboarding gate */}
+            <Route path="/login"           element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/signup"          element={<PublicRoute><Signup /></PublicRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+
+            {/* Everything else — onboarding gate + Layout */}
+            <Route path="/*" element={<MainShell />} />
           </Routes>
-        </Layout>
-      </BrowserRouter>
-      <Analytics />
-    </ModulesProvider>
+          <Analytics />
+        </BrowserRouter>
+      </ModulesProvider>
+    </AuthProvider>
   )
 }

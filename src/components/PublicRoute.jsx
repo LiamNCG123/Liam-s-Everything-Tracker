@@ -1,0 +1,17 @@
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+
+function Spinner() {
+  return (
+    <div className="min-h-screen bg-theme-page flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
+}
+
+export default function PublicRoute({ children }) {
+  const { user, loading } = useAuth()
+  if (loading) return <Spinner />
+  if (user) return <Navigate to="/" replace />
+  return children
+}
