@@ -18,7 +18,7 @@ function StatusMessage({ status }) {
 }
 
 export default function Account() {
-  const { user } = useAuth()
+  const { user, refreshProfile } = useAuth()
   const fileRef = useRef(null)
   const [displayName, setDisplayName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -92,6 +92,7 @@ export default function Account() {
     setAvatarUrl(newAvatarUrl)
     setUploading(false)
     setStatus({ type: 'success', message: 'Avatar updated.' })
+    refreshProfile()
     // reset file input so the same file can be re-selected
     e.target.value = ''
   }

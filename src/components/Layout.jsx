@@ -20,9 +20,18 @@ const NAV_TAIL = [
   { to: '/settings', label: 'Settings', emoji: '⚙️',  pill: 'bg-gray-100 dark:bg-gray-400/15', text: 'text-gray-600 dark:text-gray-300', iconOnly: true },
 ]
 
-function ProfileAvatar({ user, size = 'md' }) {
-  const initial = user?.email?.[0]?.toUpperCase() ?? null
+function ProfileAvatar({ user, profile, size = 'md' }) {
   const sz = size === 'sm' ? 'w-6 h-6 text-[10px]' : 'w-7 h-7 text-xs'
+  if (profile?.avatar_url) {
+    return (
+      <img
+        src={profile.avatar_url}
+        alt="Profile"
+        className={`${sz} rounded-full object-cover border border-theme-subtle shrink-0`}
+      />
+    )
+  }
+  const initial = user?.email?.[0]?.toUpperCase() ?? null
   return (
     <div className={`${sz} rounded-full flex items-center justify-center font-bold shrink-0 ${
       initial
@@ -36,7 +45,7 @@ function ProfileAvatar({ user, size = 'md' }) {
 
 export default function Layout({ children }) {
   const { modules } = useModules()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
 
   const nav = [
     ...NAV_STATIC,
@@ -71,7 +80,7 @@ export default function Layout({ children }) {
           ))}
         </nav>
         <Link to="/account" className="ml-auto flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-theme-hover transition-colors">
-          <ProfileAvatar user={user} />
+          <ProfileAvatar user={user} profile={profile} />
           <span className="text-sm text-theme-secondary">{user ? 'Account' : 'Sign in'}</span>
         </Link>
       </header>
