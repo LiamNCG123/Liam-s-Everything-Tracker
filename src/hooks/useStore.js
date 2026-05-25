@@ -1,92 +1,126 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { localRepository } from '../data/localRepository'
-import { flushSyncQueue } from '../data/syncClient'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { supabase } from '../lib/supabase/client'
+import { uid } from '../utils/storage'
+import { useAuth } from '../context/AuthContext'
 
 /**
- * Generic CRUD hook backed by the local repository.
- * Each record must have an `id` field.
+ * Generic CRUD hook backed by Supabase (sync_records table).
+ * API is identical to the old localStorage version — all pages work unchanged.
+ * Writes are optimistic: UI updates instantly, Supabase persists in the background.
  */
 export function useStore(key) {
-  const [items, setItems] = useState(() => localRepository.list(key))
-  const itemsRef = useRef(items)
+  const { user, loading: authLoading } = useAuth()
+  const userId = user?.id ?? null
+
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const itemsRef = useRef([])
+
+  // Keep ref in sync so callbacks always read the latest items without stale closure
+  const commit = (next) => {
+    itemsRef.current = next
+    setItems(next)
+  }
 
   useEffect(() => {
-    const current = localRepository.list(key)
-    itemsRef.current = current
-    setItems(current)
-
-    return localRepository.subscribe(key, next => {
-      itemsRef.current = next
-      setItems(next)
-    })
-  }, [key])
-
-  const queueMutations = useCallback((mutations) => {
-    const list = Array.isArray(mutations) ? mutations : [mutations]
-    const queued = list
-      .filter(Boolean)
-      .map(mutation => localRepository.queueMutation(key, mutation))
-      .filter(Boolean)
-
-    if (queued.length) {
-      flushSyncQueue().catch(error => {
-        console.warn('Sync queue flush failed:', error.message)
-      })
+    if (authLoading) return
+    if (!userId) {
+      commit([])
+      setLoading(false)
+      return
     }
-  }, [key])
 
-  const persist = useCallback((updater, mutations) => {
-    const prev = itemsRef.current
-    const next = typeof updater === 'function' ? updater(prev) : updater
-    const saved = localRepository.replaceAll(key, next)
+    let cancelled = false
+    setLoading(true)
 
-    itemsRef.current = saved
-    setItems(saved)
+    supabase
+      .from('sync_records')
+      .select('payload')
+      .eq('user_id', userId)
+      .eq('store_key', key)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) {
+          console.error(`[useStore:${key}] fetch failed:`, error.message)
+        } else {
+          commit((data || []).map(r => r.payload))
+        }
+        setLoading(false)
+      })
 
-    const pending = typeof mutations === 'function' ? mutations(saved, prev) : mutations
-    queueMutations(pending)
+    return () => { cancelled = true }
+  }, [userId, key, authLoading])
 
-    return saved
-  }, [key, queueMutations])
+  const add = useCallback(async (item) => {
+    if (!userId) return
+    const record = { id: uid(), createdAt: new Date().toISOString(), ...item }
+    commit([...itemsRef.current, record])
 
-  const add = useCallback((item) => {
-    const record = localRepository.buildInsert(item)
-    persist(
-      prev => [...prev, record],
-      { op: 'upsert', recordId: record.id, record }
-    )
+    const { error } = await supabase.from('sync_records').insert({
+      user_id: userId,
+      store_key: key,
+      record_id: record.id,
+      payload: record,
+    })
+    if (error) {
+      console.error(`[useStore:${key}] add failed:`, error.message)
+      commit(itemsRef.current.filter(r => r.id !== record.id))
+    }
     return record
-  }, [persist])
+  }, [userId, key])
 
-  // Bulk insert: single atomic save, safe for large imports.
-  const addMany = useCallback((newItems) => {
+  const addMany = useCallback(async (newItems) => {
+    if (!userId) return []
     const now = new Date().toISOString()
-    const records = newItems.map(item => localRepository.buildInsert(item, now))
+    const records = newItems.map(item => ({ id: uid(), createdAt: now, ...item }))
+    commit([...itemsRef.current, ...records])
 
-    persist(
-      prev => [...prev, ...records],
-      records.map(record => ({ op: 'upsert', recordId: record.id, record }))
+    const { error } = await supabase.from('sync_records').insert(
+      records.map(r => ({ user_id: userId, store_key: key, record_id: r.id, payload: r }))
     )
-
+    if (error) {
+      console.error(`[useStore:${key}] addMany failed:`, error.message)
+      const ids = new Set(records.map(r => r.id))
+      commit(itemsRef.current.filter(r => !ids.has(r.id)))
+    }
     return records
-  }, [persist])
+  }, [userId, key])
 
-  const update = useCallback((id, patch) => {
-    persist(
-      prev => prev.map(item => item.id === id ? localRepository.buildUpdate(item, patch) : item),
-      next => {
-        const record = next.find(item => item.id === id)
-        return record ? { op: 'upsert', recordId: id, record } : null
-      }
+  const update = useCallback(async (id, patch) => {
+    if (!userId) return
+    const now = new Date().toISOString()
+    const next = itemsRef.current.map(item =>
+      item.id === id ? { ...item, ...patch, updatedAt: now } : item
     )
-  }, [persist])
+    commit(next)
+    const updated = next.find(r => r.id === id)
+    if (!updated) return
 
-  const remove = useCallback((id) => {
-    persist(
-      prev => prev.filter(item => item.id !== id),
-      (next, prev) => prev.some(item => item.id === id) ? { op: 'delete', recordId: id } : null
-    )
-  }, [persist])
+    const { error } = await supabase.from('sync_records')
+      .update({ payload: updated, updated_at: now })
+      .eq('user_id', userId)
+      .eq('store_key', key)
+      .eq('record_id', id)
+    if (error) console.error(`[useStore:${key}] update failed:`, error.message)
+  }, [userId, key])
 
-  return { items, add, addMany, update, remove }
+  const remove = useCallback(async (id) => {
+    if (!userId) return
+    const prev = itemsRef.current
+    commit(prev.filter(item => item.id !== id))
+
+    const { error } = await supabase.from('sync_records')
+      .delete()
+      .eq('user_id', userId)
+      .eq('store_key', key)
+      .eq('record_id', id)
+    if (error) {
+      console.error(`[useStore:${key}] remove failed:`, error.message)
+      commit(prev)
+    }
+  }, [userId, key])
+
+  return { items, loading, add, addMany, update, remove }
 }

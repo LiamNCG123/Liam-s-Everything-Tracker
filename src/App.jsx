@@ -60,8 +60,8 @@ export default function App() {
             <Route path="/signup"          element={<PublicRoute><Signup /></PublicRoute>} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* Everything else — onboarding gate + Layout */}
-            <Route path="/*" element={<MainShell />} />
+            {/* Everything else — requires login */}
+            <Route path="/*" element={<ProtectedRoute><MainShell /></ProtectedRoute>} />
           </Routes>
           <Analytics />
         </BrowserRouter>
