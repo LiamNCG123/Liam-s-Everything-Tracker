@@ -604,37 +604,47 @@ function TransactionsTab({ transactions, month, onAdd, onEdit, onDelete }) {
 
 // ─── Budget tab ───────────────────────────────────────────────────────────────
 
-// Monthly equivalent of a budget item (supports annual conversion)
 function monthlyLimit(item) {
   if (item.annual && item.annualAmount) return Number(item.annualAmount) / 12
   return Number(item.limit || 0)
 }
 
-function BudgetEditorRow({ item, onChange }) {
-  const monthly = item.annual && item.annualAmount
-    ? (Number(item.annualAmount) / 12).toFixed(0)
-    : item.limit
+function calcIncomeActuals(transactions, month) {
+  const tx = transactions.filter(t => t.date?.startsWith(month) && t.type === 'income')
+  const map = {}
+  tx.forEach(t => { map[t.category] = (map[t.category] || 0) + Number(t.amount || 0) })
+  return map
+}
 
+const DEFAULT_SAVINGS_GOALS = ['Emergency Fund', 'Holiday Fund', 'House Deposit', 'Retirement/Super']
+
+function AmountInput({ value, onChange, placeholder = 'Monthly' }) {
+  return (
+    <div className="relative w-24 shrink-0">
+      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-theme-muted text-xs">$</span>
+      <input
+        type="number" min="0" placeholder={placeholder} value={value || ''}
+        onChange={e => onChange(e.target.value)}
+        className="w-full pl-5 pr-1 py-1 text-xs border border-theme rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 bg-theme-input text-theme-primary placeholder-theme-muted"
+      />
+    </div>
+  )
+}
+
+function BudgetEditorRow({ item, onChange, onRemove }) {
+  const monthly = item.annual && item.annualAmount ? (Number(item.annualAmount) / 12).toFixed(0) : item.limit
   return (
     <div className="flex items-center gap-2 py-1.5">
       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catColor(item.category) }} />
       <span className="flex-1 text-sm text-theme-secondary min-w-0 truncate">{item.category}</span>
-      {item.annual && (
-        <span className="text-[10px] text-theme-muted shrink-0">≈{fmt(monthly)}/mo</span>
-      )}
-      <div className="relative w-24 shrink-0">
-        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-theme-muted text-xs">$</span>
-        <input
-          type="number" min="0"
-          placeholder={item.annual ? 'Annual' : 'Monthly'}
-          value={item.annual ? (item.annualAmount || '') : (item.limit || '')}
-          onChange={e => {
-            if (item.annual) onChange({ annualAmount: e.target.value, limit: e.target.value ? (Number(e.target.value) / 12).toFixed(2) : '' })
-            else onChange({ limit: e.target.value })
-          }}
-          className="w-full pl-5 pr-1 py-1 text-xs border border-theme rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 bg-theme-input text-theme-primary placeholder-theme-muted"
-        />
-      </div>
+      {item.annual && <span className="text-[10px] text-theme-muted shrink-0">≈{fmt(monthly)}/mo</span>}
+      <AmountInput
+        value={item.annual ? (item.annualAmount || '') : (item.limit || '')}
+        placeholder={item.annual ? 'Annual' : 'Monthly'}
+        onChange={v => item.annual
+          ? onChange({ annualAmount: v, limit: v ? (Number(v) / 12).toFixed(2) : '' })
+          : onChange({ limit: v })}
+      />
       <button
         title={item.annual ? 'Switch to monthly' : 'Switch to annual'}
         onClick={() => onChange({ annual: !item.annual, annualAmount: '', limit: '' })}
@@ -642,45 +652,135 @@ function BudgetEditorRow({ item, onChange }) {
           item.annual ? 'border-brand-300 text-brand-600 bg-brand-50' : 'border-gray-200 text-gray-400 hover:border-gray-300'
         }`}
       >yr</button>
+      {item.custom
+        ? <button onClick={onRemove} className="text-red-400 hover:text-red-500 text-lg leading-none shrink-0 w-4">×</button>
+        : <div className="w-4 shrink-0" />}
+    </div>
+  )
+}
+
+function SimpleEditorRow({ label, value, onChange, onRemove, showDot = false }) {
+  return (
+    <div className="flex items-center gap-2 py-1.5">
+      {showDot && <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: catColor(label) }} />}
+      <span className="flex-1 text-sm text-theme-secondary min-w-0 truncate">{label}</span>
+      <AmountInput value={value} onChange={onChange} />
+      {onRemove
+        ? <button onClick={onRemove} className="text-red-400 hover:text-red-500 text-lg leading-none shrink-0 w-4">×</button>
+        : <div className="w-4 shrink-0" />}
+    </div>
+  )
+}
+
+function NetWorthEditorRow({ item, onChange, onRemove }) {
+  return (
+    <div className="flex items-center gap-2 py-1.5">
+      <button
+        onClick={() => onChange({ type: item.type === 'asset' ? 'liability' : 'asset' })}
+        className={`text-[10px] shrink-0 px-1.5 py-0.5 rounded-full border font-medium transition-colors ${
+          item.type === 'asset'
+            ? 'text-green-600 border-green-300 bg-green-50 dark:bg-green-900/20'
+            : 'text-red-500 border-red-300 bg-red-50 dark:bg-red-900/20'
+        }`}
+      >{item.type === 'asset' ? 'Asset' : 'Debt'}</button>
+      <span className="flex-1 text-sm text-theme-secondary min-w-0 truncate">{item.name}</span>
+      <AmountInput value={item.amount} onChange={v => onChange({ amount: v })} placeholder="Value" />
+      <button onClick={onRemove} className="text-red-400 hover:text-red-500 text-lg leading-none shrink-0 w-4">×</button>
+    </div>
+  )
+}
+
+function AddRow({ placeholder, onAdd, hasType = false }) {
+  const [name, setName] = useState('')
+  const [type, setType] = useState('asset')
+  const submit = () => {
+    if (!name.trim()) return
+    onAdd(name.trim(), type)
+    setName('')
+  }
+  return (
+    <div className="flex items-center gap-2 py-2">
+      {hasType && (
+        <select value={type} onChange={e => setType(e.target.value)}
+          className="text-[10px] border border-theme rounded-lg px-1.5 py-1 bg-theme-input text-theme-primary focus:outline-none shrink-0">
+          <option value="asset">Asset</option>
+          <option value="liability">Debt</option>
+        </select>
+      )}
+      <input type="text" placeholder={placeholder} value={name}
+        onChange={e => setName(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()}
+        className="flex-1 px-2 py-1 text-xs border border-theme rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 bg-theme-input text-theme-primary placeholder-theme-muted" />
+      <button onClick={submit}
+        className="text-xs font-semibold text-brand-600 hover:text-brand-800 shrink-0 px-2 py-1 rounded-lg border border-brand-300 hover:bg-brand-50 transition-colors">
+        + Add
+      </button>
+    </div>
+  )
+}
+
+function BudgetSection({ title, icon, children }) {
+  return (
+    <div className="mb-4">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span>{icon}</span>
+        <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">{title}</span>
+      </div>
+      <Card className="px-4 py-2 divide-y divide-theme-subtle">{children}</Card>
     </div>
   )
 }
 
 function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
-  const fmt = useFmt()
-  const budget   = budgets.find(b => b.month === month)
-  const byCatMap = Object.fromEntries(calcCategorySpend(transactions, month))
+  const fmt        = useFmt()
+  const budget     = budgets.find(b => b.month === month)
+  const byCatMap   = Object.fromEntries(calcCategorySpend(transactions, month))
+  const incActuals = calcIncomeActuals(transactions, month)
   const [editing, setEditing] = useState(false)
-  const [items, setItems]     = useState([])
+
+  const [expItems, setExpItems] = useState([])
+  const [incItems, setIncItems] = useState([])
+  const [savItems, setSavItems] = useState([])
+  const [nwItems,  setNwItems]  = useState([])
+  const [nwTarget, setNwTarget] = useState('')
 
   const startEdit = () => {
-    const existing = budget?.items || []
-    const seeded = CATEGORY_GROUPS.flatMap(g =>
-      g.categories.map(c => {
-        const ex = existing.find(i => i.category === c.name)
-        return ex || { category: c.name, limit: '', annual: false, annualAmount: '' }
-      })
+    const savedExp = budget?.items || []
+    const savedInc = budget?.incomeItems || []
+    const savedSav = budget?.savingsItems || []
+
+    const seededExp = CATEGORY_GROUPS.flatMap(g =>
+      g.categories.map(c => savedExp.find(i => i.category === c.name && !i.custom) || { category: c.name, limit: '', annual: false, annualAmount: '' })
     )
-    setItems(seeded)
+    const seededInc = INCOME_CATS.map(c => savedInc.find(i => i.category === c) || { category: c, target: '', custom: false })
+    const seededSav = DEFAULT_SAVINGS_GOALS.map(n => savedSav.find(i => i.name === n) || { name: n, target: '', custom: false })
+
+    setExpItems([...seededExp, ...savedExp.filter(i => i.custom)])
+    setIncItems([...seededInc, ...savedInc.filter(i => i.custom)])
+    setSavItems([...seededSav, ...savedSav.filter(i => i.custom)])
+    setNwItems(budget?.netWorthItems || [])
+    setNwTarget(budget?.netWorthTarget || '')
     setEditing(true)
   }
 
   const save = () => {
-    const saved = items
+    const savedExp = expItems
       .filter(i => (i.annual ? i.annualAmount : i.limit) && Number(i.annual ? i.annualAmount : i.limit) > 0)
       .map(i => ({ ...i, limit: String(monthlyLimit(i)) }))
-    onSaveBudget({ month, items: saved })
+    const savedInc = incItems.filter(i => i.target && Number(i.target) > 0)
+    const savedSav = savItems.filter(i => i.target && Number(i.target) > 0)
+    const savedNw  = nwItems.filter(i => i.name && Number(i.amount) >= 0)
+    onSaveBudget({ month, items: savedExp, incomeItems: savedInc, savingsItems: savedSav, netWorthItems: savedNw, netWorthTarget: nwTarget })
     setEditing(false)
   }
 
-  const updateItem = (idx, patch) =>
-    setItems(it => it.map((x, i) => i === idx ? { ...x, ...patch } : x))
-
   const totalBudget = (budget?.items || []).reduce((s, i) => s + monthlyLimit(i), 0)
+  const hasAny = totalBudget > 0 || (budget?.incomeItems?.length > 0) || (budget?.savingsItems?.length > 0) || (budget?.netWorthItems?.length > 0)
 
   // ── Edit mode ────────────────────────────────────────────────────────────────
   if (editing) {
-    let cursor = 0
+    const expBase       = CATEGORY_GROUPS.flatMap(g => g.categories).length
+    const customExpItems = expItems.slice(expBase)
+
     return (
       <div>
         <div className="flex items-center justify-between mb-3">
@@ -690,46 +790,94 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
             <Button size="sm" onClick={save}>Save</Button>
           </div>
         </div>
-        <p className="text-xs text-theme-muted mb-3">
-          Leave blank to skip. Toggle <span className="font-medium">yr</span> to enter annual amounts (auto-converts to monthly).
+        <p className="text-xs text-theme-muted mb-4">
+          Leave blank to skip. Toggle <span className="font-medium">yr</span> for annual amounts.
         </p>
-        {CATEGORY_GROUPS.map(g => {
-          const groupItems = g.categories.map(c => {
-            const item = items[cursor]; cursor++; return item
-          })
-          const groupStart = cursor - g.categories.length
-          return (
-            <div key={g.group} className="mb-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span>{g.icon}</span>
-                <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">{g.group}</span>
-              </div>
-              <Card className="px-4 py-2 divide-y divide-theme-subtle">
-                {groupItems.map((item, i) => (
+
+        <BudgetSection title="Income Targets" icon="💰">
+          {incItems.map((item, i) => (
+            <SimpleEditorRow key={`inc-${i}`} label={item.category} showDot value={item.target}
+              onChange={v => setIncItems(it => it.map((x, j) => j === i ? { ...x, target: v } : x))}
+              onRemove={item.custom ? () => setIncItems(it => it.filter((_, j) => j !== i)) : null} />
+          ))}
+          <AddRow placeholder="Custom income source…"
+            onAdd={name => setIncItems(it => [...it, { category: name, target: '', custom: true }])} />
+        </BudgetSection>
+
+        {(() => {
+          let c = 0
+          return CATEGORY_GROUPS.map(g => (
+            <BudgetSection key={g.group} title={g.group} icon={g.icon}>
+              {g.categories.map(() => {
+                const item = expItems[c]
+                const idx  = c++
+                return (
                   <BudgetEditorRow key={item.category} item={item}
-                    onChange={patch => updateItem(groupStart + i, patch)} />
-                ))}
-              </Card>
-            </div>
-          )
-        })}
+                    onChange={patch => setExpItems(it => it.map((x, j) => j === idx ? { ...x, ...patch } : x))} />
+                )
+              })}
+            </BudgetSection>
+          ))
+        })()}
+
+        <BudgetSection title="Custom Expenses" icon="📝">
+          {customExpItems.map((item, i) => (
+            <BudgetEditorRow key={`cexp-${i}`} item={item}
+              onChange={patch => setExpItems(it => it.map((x, j) => j === expBase + i ? { ...x, ...patch } : x))}
+              onRemove={() => setExpItems(it => it.filter((_, j) => j !== expBase + i))} />
+          ))}
+          <AddRow placeholder="Custom expense category…"
+            onAdd={name => setExpItems(it => [...it, { category: name, limit: '', annual: false, annualAmount: '', custom: true }])} />
+        </BudgetSection>
+
+        <BudgetSection title="Savings Goals" icon="🏦">
+          {savItems.map((item, i) => (
+            <SimpleEditorRow key={`sav-${i}`} label={item.name} value={item.target}
+              onChange={v => setSavItems(it => it.map((x, j) => j === i ? { ...x, target: v } : x))}
+              onRemove={item.custom ? () => setSavItems(it => it.filter((_, j) => j !== i)) : null} />
+          ))}
+          <AddRow placeholder="New savings goal…"
+            onAdd={name => setSavItems(it => [...it, { name, target: '', custom: true }])} />
+        </BudgetSection>
+
+        <BudgetSection title="Net Worth Snapshot" icon="📈">
+          <div className="flex items-center gap-2 py-1.5">
+            <span className="flex-1 text-sm text-theme-secondary">Target net worth</span>
+            <AmountInput value={nwTarget} onChange={setNwTarget} placeholder="Goal" />
+            <div className="w-4 shrink-0" />
+          </div>
+          {nwItems.map((item, i) => (
+            <NetWorthEditorRow key={`nw-${i}`} item={item}
+              onChange={patch => setNwItems(it => it.map((x, j) => j === i ? { ...x, ...patch } : x))}
+              onRemove={() => setNwItems(it => it.filter((_, j) => j !== i))} />
+          ))}
+          <AddRow placeholder="Asset or debt name…" hasType
+            onAdd={(name, type) => setNwItems(it => [...it, { name, type, amount: '', custom: true }])} />
+        </BudgetSection>
       </div>
     )
   }
 
   // ── Empty state ───────────────────────────────────────────────────────────────
-  if (!budget || budget.items.length === 0) {
+  if (!hasAny) {
     return (
       <EmptyState icon="📊" title="No budget set"
-        description={`Set a monthly budget for ${monthLabel(month)} to track your spending.`}
+        description={`Track income targets, expense limits, savings goals, and net worth for ${monthLabel(month)}.`}
         action={<Button onClick={startEdit}>Set up budget</Button>}
       />
     )
   }
 
   // ── View mode ─────────────────────────────────────────────────────────────────
-  const totalSpent = (budget.items || []).reduce((s, i) => s + (byCatMap[i.category] || 0), 0)
-  const overCount  = (budget.items || []).filter(i => (byCatMap[i.category] || 0) > monthlyLimit(i)).length
+  const totalSpent         = (budget.items || []).reduce((s, i) => s + (byCatMap[i.category] || 0), 0)
+  const overCount          = (budget.items || []).filter(i => (byCatMap[i.category] || 0) > monthlyLimit(i)).length
+  const totalIncomeAct     = Object.values(incActuals).reduce((s, v) => s + v, 0)
+  const totalIncomeTarget  = (budget.incomeItems || []).reduce((s, i) => s + Number(i.target || 0), 0)
+  const totalSavingsTarget = (budget.savingsItems || []).reduce((s, i) => s + Number(i.target || 0), 0)
+  const budgetNwItems      = budget.netWorthItems || []
+  const totalAssets        = budgetNwItems.filter(i => i.type === 'asset').reduce((s, i) => s + Number(i.amount || 0), 0)
+  const totalLiabilities   = budgetNwItems.filter(i => i.type === 'liability').reduce((s, i) => s + Number(i.amount || 0), 0)
+  const netWorth           = totalAssets - totalLiabilities
 
   return (
     <div>
@@ -741,77 +889,243 @@ function BudgetTab({ transactions, budgets, month, onSaveBudget }) {
         <Button variant="secondary" size="sm" onClick={startEdit}>Edit budget</Button>
       </div>
 
-      {/* Total summary */}
-      <Card className="p-4 mb-5">
-        <div className="flex justify-between text-sm mb-2">
-          <span className="font-semibold text-theme-secondary">Total budget</span>
-          <span className="text-theme-muted">{fmt(totalSpent)} / {fmt(totalBudget)}</span>
-        </div>
-        <ProgressBar value={totalSpent} max={totalBudget}
-          color={totalSpent > totalBudget ? 'red' : totalSpent / totalBudget > 0.8 ? 'yellow' : 'green'} />
-        <div className="flex justify-between mt-2 text-xs text-gray-400">
-          <span className="text-theme-muted">{fmt(Math.max(0, totalBudget - totalSpent))} remaining</span>
-          <span className="text-theme-muted">{totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}% used</span>
-        </div>
-      </Card>
-
-      {/* Grouped categories */}
-      {CATEGORY_GROUPS.map(g => {
-        const groupBudgetItems = (budget.items || []).filter(i => g.categories.some(c => c.name === i.category))
-        if (groupBudgetItems.length === 0) return null
-        const groupBudget = groupBudgetItems.reduce((s, i) => s + monthlyLimit(i), 0)
-        const groupSpent  = groupBudgetItems.reduce((s, i) => s + (byCatMap[i.category] || 0), 0)
-        const groupOver   = groupSpent > groupBudget
-
-        return (
-          <div key={g.group} className="mb-4">
-            {/* Group header */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5">
-                <span>{g.icon}</span>
-                <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">{g.group}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className={groupOver ? 'text-red-500 font-semibold' : 'text-theme-muted'}>
-                  {fmt(groupSpent)}
-                </span>
-                <span className="text-gray-300 text-theme-muted">/</span>
-                <span className="text-theme-muted">{fmt(groupBudget)}</span>
-              </div>
+      {/* ── Income ── */}
+      {totalIncomeTarget > 0 && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span>💰</span>
+              <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">Income</span>
             </div>
-
-            <div className="flex flex-col gap-2">
-              {groupBudgetItems.map(item => {
-                const spent = byCatMap[item.category] || 0
-                const limit = monthlyLimit(item)
-                const pct   = limit > 0 ? (spent / limit) * 100 : 0
-                const over  = spent > limit
-                const near  = !over && pct >= 80
-                return (
-                  <Card key={item.category} className={`px-4 py-3 ${over ? 'border-red-100 bg-red-50/30 dark:bg-red-900/20' : ''}`}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
-                        <span className="text-sm font-medium text-theme-primary">{item.category}</span>
-                        {item.annual && <span className="text-[10px] text-theme-muted bg-theme-input px-1.5 py-0.5 rounded-full">annual</span>}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-theme-secondary'}`}>{fmt(spent)}</span>
-                        <span className="text-xs text-theme-muted">/ {fmt(limit)}</span>
-                        {over && <Badge color="red">Over</Badge>}
-                        {near && <Badge color="yellow">Near</Badge>}
-                        {!over && !near && spent > 0 && <Badge color="green">✓</Badge>}
-                      </div>
-                    </div>
-                    <ProgressBar value={spent} max={limit}
-                      color={over ? 'red' : near ? 'yellow' : 'green'} />
-                  </Card>
-                )
-              })}
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className={totalIncomeAct >= totalIncomeTarget ? 'text-green-600 font-semibold' : 'text-theme-muted'}>{fmt(totalIncomeAct)}</span>
+              <span className="text-theme-muted">/ {fmt(totalIncomeTarget)}</span>
             </div>
           </div>
-        )
-      })}
+          <Card className="p-4 mb-2">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="font-semibold text-theme-secondary">Total income target</span>
+              <span className="text-theme-muted">{fmt(totalIncomeAct)} / {fmt(totalIncomeTarget)}</span>
+            </div>
+            <ProgressBar value={totalIncomeAct} max={totalIncomeTarget}
+              color={totalIncomeAct >= totalIncomeTarget ? 'green' : totalIncomeAct / totalIncomeTarget > 0.7 ? 'yellow' : 'default'} />
+          </Card>
+          <div className="flex flex-col gap-2">
+            {(budget.incomeItems || []).map(item => {
+              const actual = incActuals[item.category] || 0
+              const target = Number(item.target || 0)
+              const pct    = target > 0 ? (actual / target) * 100 : 0
+              const met    = actual >= target
+              return (
+                <Card key={item.category} className="px-4 py-3">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: catColor(item.category) }} />
+                      <span className="text-sm font-medium text-theme-primary">{item.category}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-sm font-bold ${met ? 'text-green-600' : 'text-theme-secondary'}`}>{fmt(actual)}</span>
+                      <span className="text-xs text-theme-muted">/ {fmt(target)}</span>
+                      {met && <Badge color="green">✓</Badge>}
+                      {!met && actual > 0 && pct >= 70 && <Badge color="yellow">~</Badge>}
+                    </div>
+                  </div>
+                  <ProgressBar value={actual} max={target} color={met ? 'green' : pct >= 70 ? 'yellow' : 'default'} />
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Expenses ── */}
+      {totalBudget > 0 && (
+        <div className="mb-5">
+          <Card className="p-4 mb-3">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="font-semibold text-theme-secondary">Total expenses</span>
+              <span className="text-theme-muted">{fmt(totalSpent)} / {fmt(totalBudget)}</span>
+            </div>
+            <ProgressBar value={totalSpent} max={totalBudget}
+              color={totalSpent > totalBudget ? 'red' : totalSpent / totalBudget > 0.8 ? 'yellow' : 'green'} />
+            <div className="flex justify-between mt-2 text-xs text-theme-muted">
+              <span>{fmt(Math.max(0, totalBudget - totalSpent))} remaining</span>
+              <span>{totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0}% used</span>
+            </div>
+          </Card>
+
+          {CATEGORY_GROUPS.map(g => {
+            const groupItems = (budget.items || []).filter(i => g.categories.some(c => c.name === i.category))
+            if (groupItems.length === 0) return null
+            const groupBudget = groupItems.reduce((s, i) => s + monthlyLimit(i), 0)
+            const groupSpent  = groupItems.reduce((s, i) => s + (byCatMap[i.category] || 0), 0)
+            const groupOver   = groupSpent > groupBudget
+            return (
+              <div key={g.group} className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <span>{g.icon}</span>
+                    <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">{g.group}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className={groupOver ? 'text-red-500 font-semibold' : 'text-theme-muted'}>{fmt(groupSpent)}</span>
+                    <span className="text-theme-muted">/</span>
+                    <span className="text-theme-muted">{fmt(groupBudget)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {groupItems.map(item => {
+                    const spent = byCatMap[item.category] || 0
+                    const limit = monthlyLimit(item)
+                    const pct   = limit > 0 ? (spent / limit) * 100 : 0
+                    const over  = spent > limit
+                    const near  = !over && pct >= 80
+                    return (
+                      <Card key={item.category} className={`px-4 py-3 ${over ? 'border-red-100 bg-red-50/30 dark:bg-red-900/20' : ''}`}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: g.color }} />
+                            <span className="text-sm font-medium text-theme-primary">{item.category}</span>
+                            {item.annual && <span className="text-[10px] text-theme-muted bg-theme-input px-1.5 py-0.5 rounded-full">annual</span>}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-theme-secondary'}`}>{fmt(spent)}</span>
+                            <span className="text-xs text-theme-muted">/ {fmt(limit)}</span>
+                            {over && <Badge color="red">Over</Badge>}
+                            {near && <Badge color="yellow">Near</Badge>}
+                            {!over && !near && spent > 0 && <Badge color="green">✓</Badge>}
+                          </div>
+                        </div>
+                        <ProgressBar value={spent} max={limit} color={over ? 'red' : near ? 'yellow' : 'green'} />
+                      </Card>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+
+          {(budget.items || []).filter(i => i.custom).length > 0 && (
+            <div className="mb-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span>📝</span>
+                <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">Custom</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {(budget.items || []).filter(i => i.custom).map(item => {
+                  const spent = byCatMap[item.category] || 0
+                  const limit = monthlyLimit(item)
+                  const pct   = limit > 0 ? (spent / limit) * 100 : 0
+                  const over  = spent > limit
+                  const near  = !over && pct >= 80
+                  return (
+                    <Card key={item.category} className={`px-4 py-3 ${over ? 'border-red-100 bg-red-50/30 dark:bg-red-900/20' : ''}`}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: catColor(item.category) }} />
+                          <span className="text-sm font-medium text-theme-primary">{item.category}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-sm font-bold ${over ? 'text-red-500' : 'text-theme-secondary'}`}>{fmt(spent)}</span>
+                          <span className="text-xs text-theme-muted">/ {fmt(limit)}</span>
+                          {over && <Badge color="red">Over</Badge>}
+                          {near && <Badge color="yellow">Near</Badge>}
+                          {!over && !near && spent > 0 && <Badge color="green">✓</Badge>}
+                        </div>
+                      </div>
+                      <ProgressBar value={spent} max={limit} color={over ? 'red' : near ? 'yellow' : 'green'} />
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Savings Goals ── */}
+      {(budget.savingsItems || []).length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span>🏦</span>
+              <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">Savings Goals</span>
+            </div>
+            <span className="text-xs text-theme-muted">Monthly targets</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {(budget.savingsItems || []).map(item => (
+              <Card key={item.name} className="px-4 py-3 flex items-center justify-between">
+                <span className="text-sm font-medium text-theme-primary">🎯 {item.name}</span>
+                <span className="text-sm font-bold text-brand-600">{fmt(Number(item.target))}/mo</span>
+              </Card>
+            ))}
+            {totalSavingsTarget > 0 && (
+              <Card className="px-4 py-3 flex items-center justify-between bg-brand-50/30 dark:bg-brand-900/10">
+                <span className="text-sm font-semibold text-theme-primary">Total savings target</span>
+                <span className="text-sm font-bold text-brand-600">{fmt(totalSavingsTarget)}/mo</span>
+              </Card>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Net Worth ── */}
+      {budgetNwItems.length > 0 && (
+        <div className="mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span>📈</span>
+              <span className="text-xs font-semibold text-theme-muted uppercase tracking-wide">Net Worth</span>
+            </div>
+            <span className={`text-sm font-bold ${netWorth >= 0 ? 'text-green-600' : 'text-red-500'}`}>{fmt(netWorth)}</span>
+          </div>
+          <Card className="p-4">
+            {budgetNwItems.filter(i => i.type === 'asset').length > 0 && (
+              <div className="mb-3">
+                <div className="flex justify-between text-xs font-semibold mb-2">
+                  <span className="text-green-600">Assets</span>
+                  <span className="text-green-600">{fmt(totalAssets)}</span>
+                </div>
+                {budgetNwItems.filter(i => i.type === 'asset').map(item => (
+                  <div key={item.name} className="flex justify-between text-sm py-1.5 border-b border-theme-subtle last:border-0">
+                    <span className="text-theme-secondary">{item.name}</span>
+                    <span className="font-medium text-theme-primary">{fmt(item.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {budgetNwItems.filter(i => i.type === 'liability').length > 0 && (
+              <div>
+                <div className="flex justify-between text-xs font-semibold mb-2">
+                  <span className="text-red-500">Debts</span>
+                  <span className="text-red-500">{fmt(totalLiabilities)}</span>
+                </div>
+                {budgetNwItems.filter(i => i.type === 'liability').map(item => (
+                  <div key={item.name} className="flex justify-between text-sm py-1.5 border-b border-theme-subtle last:border-0">
+                    <span className="text-theme-secondary">{item.name}</span>
+                    <span className="font-medium text-red-500">{fmt(item.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex justify-between text-sm mt-3 pt-3 border-t border-theme-subtle font-bold">
+              <span className="text-theme-primary">Net Worth</span>
+              <span className={netWorth >= 0 ? 'text-green-600' : 'text-red-500'}>{fmt(netWorth)}</span>
+            </div>
+            {budget.netWorthTarget && Number(budget.netWorthTarget) > 0 && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs text-theme-muted mb-1">
+                  <span>Progress to target</span>
+                  <span>{fmt(Math.max(0, netWorth))} / {fmt(budget.netWorthTarget)}</span>
+                </div>
+                <ProgressBar value={Math.max(0, netWorth)} max={Number(budget.netWorthTarget)}
+                  color={netWorth >= Number(budget.netWorthTarget) ? 'green' : 'default'} />
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
