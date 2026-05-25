@@ -188,11 +188,9 @@ function calcInsights(transactions, budgets, month) {
 
   // Biggest overspend
   const biggestOver = overBudget.length
-    ? overBudget.sort((a, b) => {
-        const aOver = (byCatMap[a.category] || 0) - Number(a.limit)
-        const bOver = (byCatMap[b.category] || 0) - Number(b.limit)
-        return bOver - aOver
-      })[0]
+    ? overBudget
+        .map(b => ({ ...b, overspend: (byCatMap[b.category] || 0) - Number(b.limit) }))
+        .sort((a, b) => b.overspend - a.overspend)[0]
     : null
 
   // Group totals
@@ -941,15 +939,15 @@ function InsightsTab({ transactions, budgets, month }) {
               label="Savings/investing target"
               value={ins.savingsMet
                 ? `Met — ${fmt(ins.savingsActual)} saved`
-                : `${fmt(ins.savingsActual)} of ${fmt(ins.savingsBudget)} target`}
+                : `${fmt(ins.savingsActual)} of ${fmt(Number(ins.savingsBudget?.limit))} target`}
               color={ins.savingsMet ? 'green' : 'red'}
             />
           )}
-          {ins.biggestOver.length > 0 && (
+          {ins.biggestOver !== null && (
             <InsightRow
               icon="🔴"
               label="Biggest overspend"
-              value={`${ins.biggestOver[0].category} (+${fmt(ins.biggestOver[0].overspend)})`}
+              value={`${ins.biggestOver.category} (+${fmt(ins.biggestOver.overspend)})`}
               color="red"
             />
           )}
