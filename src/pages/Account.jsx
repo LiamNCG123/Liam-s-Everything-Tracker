@@ -28,6 +28,14 @@ export default function Account() {
   const [uploading, setUploading] = useState(false)
   const [status, setStatus] = useState(null)
 
+  // Password change state
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordChanging, setPasswordChanging] = useState(false)
+  const [passwordStatus, setPasswordStatus] = useState(null)
+
   useEffect(() => {
     if (!user) return
     supabase
@@ -43,6 +51,17 @@ export default function Account() {
         setProfileLoading(false)
       })
   }, [user])
+
+  // Detect when user arrives via a password-reset email link
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true)
+        setShowPasswordForm(true)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   async function handleSave() {
     setSaving(true)
@@ -100,6 +119,31 @@ export default function Account() {
     e.target.value = ''
   }
 
+  async function handlePasswordChange(e) {
+    e.preventDefault()
+    setPasswordStatus(null)
+    if (newPassword.length < 8) {
+      setPasswordStatus({ type: 'error', message: 'Password must be at least 8 characters.' })
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordStatus({ type: 'error', message: 'Passwords do not match.' })
+      return
+    }
+    setPasswordChanging(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setPasswordChanging(false)
+    if (error) {
+      setPasswordStatus({ type: 'error', message: error.message })
+    } else {
+      setPasswordStatus({ type: 'success', message: 'Password updated successfully.' })
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowPasswordForm(false)
+      setPasswordRecovery(false)
+    }
+  }
+
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
@@ -115,7 +159,7 @@ export default function Account() {
   }
 
   return (
-    <div className="max-w-lg mx-auto">
+    <div className="max-w-lg mx-auto flex flex-col gap-4">
       <PageHeader title="Account" />
 
       <Card className="p-6 flex flex-col gap-6">
@@ -178,6 +222,63 @@ export default function Account() {
             Sign out
           </Button>
         </div>
+      </Card>
+
+      {/* Password section */}
+      <Card className="p-6 flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-theme-primary">Password</h3>
+            {passwordRecovery && (
+              <p className="text-xs text-brand-500 mt-0.5">Set a new password for your account.</p>
+            )}
+          </div>
+          {!showPasswordForm && (
+            <button
+              onClick={() => { setShowPasswordForm(true); setPasswordStatus(null) }}
+              className="text-sm text-brand-500 hover:text-brand-600 font-medium transition-colors"
+            >
+              Change password
+            </button>
+          )}
+        </div>
+
+        {showPasswordForm && (
+          <form onSubmit={handlePasswordChange} className="flex flex-col gap-4" noValidate>
+            <Input
+              label="New password"
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              autoComplete="new-password"
+              placeholder="At least 8 characters"
+            />
+            <Input
+              label="Confirm new password"
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              placeholder="Repeat new password"
+            />
+            <StatusMessage status={passwordStatus} />
+            <div className="flex items-center gap-3">
+              <Button type="submit" disabled={passwordChanging}>
+                {passwordChanging ? 'Updating…' : 'Update password'}
+              </Button>
+              {!passwordRecovery && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => { setShowPasswordForm(false); setNewPassword(''); setConfirmPassword(''); setPasswordStatus(null) }}
+                  className="text-theme-muted"
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
+          </form>
+        )}
       </Card>
     </div>
   )
