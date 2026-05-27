@@ -119,6 +119,8 @@ export default function Education() {
   const [selectedId, setSelectedId] = useState(null)
   const [moduleTitle, setModuleTitle] = useState('')
   const [taskForm, setTaskForm] = useState(EMPTY_TASK)
+  const [editingTaskId, setEditingTaskId] = useState(null)
+  const [editTaskForm, setEditTaskForm] = useState(EMPTY_TASK)
   const [resourceForm, setResourceForm] = useState(EMPTY_RESOURCE)
   const [questionText, setQuestionText] = useState('')
   const [sessionForm, setSessionForm] = useState(EMPTY_SESSION)
@@ -259,6 +261,19 @@ export default function Education() {
     setTaskForm(EMPTY_TASK)
   }
 
+  const startEditTask = task => {
+    setEditingTaskId(task.id)
+    setEditTaskForm({ title: task.title, dueDate: task.dueDate || '' })
+  }
+
+  const saveEditTask = event => {
+    event.preventDefault()
+    if (!editTaskForm.title.trim()) return
+    updateTask(selected, editingTaskId, { title: editTaskForm.title.trim(), dueDate: editTaskForm.dueDate })
+    setEditingTaskId(null)
+    setEditTaskForm(EMPTY_TASK)
+  }
+
   const addResource = event => {
     event.preventDefault()
     if (!selected || !resourceForm.title.trim()) return
@@ -346,7 +361,7 @@ export default function Education() {
     <div>
       <PageHeader
         title="Education"
-        action={<Button onClick={openAdd}>+ New curriculum</Button>}
+        action={<Button onClick={openAdd}>+ Add</Button>}
       />
 
       {curriculums.length > 0 && (
@@ -379,9 +394,9 @@ export default function Education() {
       {curriculums.length === 0 ? (
         <EmptyState
           icon="+"
-          title="Build your first curriculum"
-          description="Choose a topic, narrow the scope, pick a timeframe, and give yourself one next action."
-          action={<Button onClick={openAdd}>Start planning</Button>}
+          title="Start tracking your learning"
+          description="Add a book to read, a course to take, or build a full curriculum with scope and tasks."
+          action={<Button onClick={openAdd}>Add something</Button>}
         />
       ) : (
         <>
@@ -533,19 +548,39 @@ export default function Education() {
                         {selected.tasks.length === 0 ? (
                           <p className="text-sm text-theme-muted rounded-2xl bg-theme-input p-3">Create small actions that move the curriculum forward.</p>
                         ) : selected.tasks.map(task => (
-                          <div key={task.id} className="flex items-start gap-3 rounded-2xl bg-theme-input p-3">
-                            <input
-                              type="checkbox"
-                              checked={!!task.done}
-                              onChange={event => updateTask(selected, task.id, { done: event.target.checked })}
-                              className="mt-1 h-4 w-4 accent-brand-500"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className={`text-sm ${task.done ? 'text-theme-muted line-through' : 'text-theme-primary'}`}>{task.title}</div>
-                              {task.dueDate && <div className="text-xs text-theme-muted mt-0.5">Due {fmtDate(task.dueDate)}</div>}
+                          editingTaskId === task.id ? (
+                            <form key={task.id} onSubmit={saveEditTask} className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-2 rounded-2xl bg-theme-input p-3">
+                              <Input
+                                aria-label="Edit task title"
+                                value={editTaskForm.title}
+                                onChange={event => setEditTaskForm(current => ({ ...current, title: event.target.value }))}
+                                autoFocus
+                              />
+                              <Input
+                                aria-label="Edit due date"
+                                type="date"
+                                value={editTaskForm.dueDate}
+                                onChange={event => setEditTaskForm(current => ({ ...current, dueDate: event.target.value }))}
+                              />
+                              <Button type="submit" size="sm" disabled={!editTaskForm.title.trim()}>Save</Button>
+                              <Button type="button" size="sm" variant="ghost" onClick={() => setEditingTaskId(null)}>Cancel</Button>
+                            </form>
+                          ) : (
+                            <div key={task.id} className="flex items-start gap-3 rounded-2xl bg-theme-input p-3">
+                              <input
+                                type="checkbox"
+                                checked={!!task.done}
+                                onChange={event => updateTask(selected, task.id, { done: event.target.checked })}
+                                className="mt-1 h-4 w-4 accent-brand-500"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className={`text-sm ${task.done ? 'text-theme-muted line-through' : 'text-theme-primary'}`}>{task.title}</div>
+                                {task.dueDate && <div className="text-xs text-theme-muted mt-0.5">Due {fmtDate(task.dueDate)}</div>}
+                              </div>
+                              <Button size="sm" variant="ghost" onClick={() => startEditTask(task)}>Edit</Button>
+                              <Button size="sm" variant="ghost" onClick={() => removeNested(selected, 'tasks', task.id)}>Remove</Button>
                             </div>
-                            <Button size="sm" variant="ghost" onClick={() => removeNested(selected, 'tasks', task.id)}>Remove</Button>
-                          </div>
+                          )
                         ))}
                       </div>
                     </section>
@@ -789,34 +824,8 @@ export default function Education() {
         </>
       )}
 
-      <Modal open={!!modal} onClose={() => setModal(null)} title={modal === 'add' ? 'New curriculum' : 'Edit curriculum'}>
+      <Modal open={!!modal} onClose={() => setModal(null)} title={modal === 'add' ? 'Add learning item' : 'Edit'}>
         <div className="flex flex-col gap-4">
-          <Input
-            label="Topic"
-            placeholder="e.g. Modern cryptography, Dutch basics, cellular biology"
-            value={form.title}
-            onChange={event => setForm(current => ({ ...current, title: event.target.value }))}
-          />
-          <Textarea
-            label="Objective"
-            placeholder="Why does this matter, and what should you be able to do by the end?"
-            value={form.objective}
-            onChange={event => setForm(current => ({ ...current, objective: event.target.value }))}
-          />
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Textarea
-              label="In scope"
-              placeholder="The subtopics, skills, or questions this curriculum includes"
-              value={form.scopeIn}
-              onChange={event => setForm(current => ({ ...current, scopeIn: event.target.value }))}
-            />
-            <Textarea
-              label="Out of scope"
-              placeholder="What you are deliberately ignoring for now"
-              value={form.scopeOut}
-              onChange={event => setForm(current => ({ ...current, scopeOut: event.target.value }))}
-            />
-          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select label="Type" value={form.type} onChange={event => setForm(current => ({ ...current, type: event.target.value }))}>
               {LEARNING_TYPES.map(type => <option key={type}>{type}</option>)}
@@ -825,62 +834,104 @@ export default function Education() {
               {STATUSES.map(status => <option key={status}>{status}</option>)}
             </Select>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Select label="Timeframe" value={form.timeframe} onChange={event => setForm(current => ({ ...current, timeframe: event.target.value }))}>
-              {TIMEFRAMES.map(timeframe => <option key={timeframe}>{timeframe}</option>)}
-            </Select>
-            <Input
-              label="Cadence"
-              placeholder="e.g. 30 min weekday mornings"
-              value={form.cadence}
-              onChange={event => setForm(current => ({ ...current, cadence: event.target.value }))}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input
-              label="Start date"
-              type="date"
-              value={form.startDate}
-              onChange={event => setForm(current => ({ ...current, startDate: event.target.value }))}
-            />
-            <Input
-              label="End date"
-              type="date"
-              value={form.endDate}
-              onChange={event => setForm(current => ({ ...current, endDate: event.target.value }))}
-            />
-          </div>
-          {modal === 'add' && (
-            <div className="grid grid-cols-1 gap-3 rounded-2xl bg-theme-input p-3">
-              <Input
-                label="First resource"
-                placeholder="One book, video, paper, course, or article to start with"
-                value={form.firstResource}
-                onChange={event => setForm(current => ({ ...current, firstResource: event.target.value }))}
+          <Input
+            label={form.type === 'Curriculum' ? 'Topic' : 'Title'}
+            placeholder={
+              form.type === 'Book' ? 'e.g. Thinking, Fast and Slow — Kahneman' :
+              form.type === 'Course' ? 'e.g. Stanford ML course' :
+              form.type === 'Podcast' ? 'e.g. Lex Fridman #405' :
+              form.type === 'Article' ? 'e.g. Article title or URL' :
+              form.type === 'Video' ? 'e.g. Video title or URL' :
+              'e.g. Modern cryptography, Dutch basics'
+            }
+            value={form.title}
+            onChange={event => setForm(current => ({ ...current, title: event.target.value }))}
+          />
+
+          {form.type === 'Curriculum' ? (
+            <>
+              <Textarea
+                label="Objective"
+                placeholder="Why does this matter, and what should you be able to do by the end?"
+                value={form.objective}
+                onChange={event => setForm(current => ({ ...current, objective: event.target.value }))}
               />
-              <Input
-                label="First task"
-                placeholder="The next concrete study action"
-                value={form.firstTask}
-                onChange={event => setForm(current => ({ ...current, firstTask: event.target.value }))}
-              />
-              <Input
-                label="Practice question"
-                placeholder="A question you want to be able to answer"
-                value={form.firstQuestion}
-                onChange={event => setForm(current => ({ ...current, firstQuestion: event.target.value }))}
-              />
-            </div>
-          )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Textarea
+                  label="In scope"
+                  placeholder="The subtopics, skills, or questions this curriculum includes"
+                  value={form.scopeIn}
+                  onChange={event => setForm(current => ({ ...current, scopeIn: event.target.value }))}
+                />
+                <Textarea
+                  label="Out of scope"
+                  placeholder="What you are deliberately ignoring for now"
+                  value={form.scopeOut}
+                  onChange={event => setForm(current => ({ ...current, scopeOut: event.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Select label="Timeframe" value={form.timeframe} onChange={event => setForm(current => ({ ...current, timeframe: event.target.value }))}>
+                  {TIMEFRAMES.map(timeframe => <option key={timeframe}>{timeframe}</option>)}
+                </Select>
+                <Input
+                  label="Cadence"
+                  placeholder="e.g. 30 min weekday mornings"
+                  value={form.cadence}
+                  onChange={event => setForm(current => ({ ...current, cadence: event.target.value }))}
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Input
+                  label="Start date"
+                  type="date"
+                  value={form.startDate}
+                  onChange={event => setForm(current => ({ ...current, startDate: event.target.value }))}
+                />
+                <Input
+                  label="End date"
+                  type="date"
+                  value={form.endDate}
+                  onChange={event => setForm(current => ({ ...current, endDate: event.target.value }))}
+                />
+              </div>
+              {modal === 'add' && (
+                <div className="grid grid-cols-1 gap-3 rounded-2xl bg-theme-input p-3">
+                  <Input
+                    label="First resource"
+                    placeholder="One book, video, paper, course, or article to start with"
+                    value={form.firstResource}
+                    onChange={event => setForm(current => ({ ...current, firstResource: event.target.value }))}
+                  />
+                  <Input
+                    label="First task"
+                    placeholder="The next concrete study action"
+                    value={form.firstTask}
+                    onChange={event => setForm(current => ({ ...current, firstTask: event.target.value }))}
+                  />
+                  <Input
+                    label="Practice question"
+                    placeholder="A question you want to be able to answer"
+                    value={form.firstQuestion}
+                    onChange={event => setForm(current => ({ ...current, firstQuestion: event.target.value }))}
+                  />
+                </div>
+              )}
+            </>
+          ) : null}
+
           <Textarea
             label="Notes"
-            placeholder="Any extra context, constraints, or ideas"
+            placeholder={
+              form.type === 'Book' ? 'Why you want to read it, where you heard about it, topic…' :
+              'Any extra context or ideas'
+            }
             value={form.notes}
             onChange={event => setForm(current => ({ ...current, notes: event.target.value }))}
           />
           <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end pt-2">
             <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={!form.title.trim()}>Save curriculum</Button>
+            <Button onClick={handleSave} disabled={!form.title.trim()}>Save</Button>
           </div>
         </div>
       </Modal>
