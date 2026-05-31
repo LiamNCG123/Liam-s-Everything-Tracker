@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
-import { uid, today } from '../utils/storage'
+import { uid, today, save } from '../utils/storage'
 import {
   parseCSV, autoDetectMapping, normalizeRows,
   categorizeAll, detectDuplicates,
@@ -9,7 +9,6 @@ import {
 } from '../utils/csvImport'
 import { Button, Card, Badge, Input, Select, Modal } from '../components/ui'
 import { CURRENCIES } from '../hooks/useCurrency'
-import { load } from '../utils/storage'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -183,16 +182,48 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
   const [fxRate,         setFxRate]         = useState(1)
   const [fxLoading,      setFxLoading]      = useState(false)
   const [fxError,        setFxError]        = useState(null)
+  const [aiKeyFx,        setAiKeyFx]        = useState(() => load('importAiKey') || '')
 
-  useEffect(() => {
-    if (csvCurrency === targetCurrency) { setFxRate(1); setFxError(null); return }
+  const fetchRateViaAI = async (from, to) => {
+    const key = aiKeyFx
+    if (!key) { setFxError('Enter your Anthropic API key below to fetch live rates.'); return }
     setFxLoading(true)
     setFxError(null)
-    fetch(`https://api.frankfurter.app/latest?from=${csvCurrency}&to=${targetCurrency}`)
-      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() })
-      .then(data => setFxRate(data.rates[targetCurrency]))
-      .catch(e => setFxError(`Could not fetch rate: ${e.message}`))
-      .finally(() => setFxLoading(false))
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 256,
+          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          messages: [{
+            role: 'user',
+            content: `Search XE.com for the current ${from} to ${to} exchange rate. Reply with ONLY the numeric rate as a plain decimal, e.g. 0.1312. No other text.`,
+          }],
+        }),
+      })
+      const data = await resp.json()
+      if (!resp.ok) throw new Error(data?.error?.message || `API error ${resp.status}`)
+      const text = data?.content?.find(b => b.type === 'text')?.text || ''
+      const match = text.match(/\d+\.?\d*/)
+      if (!match) throw new Error(`Unexpected AI response: "${text.slice(0, 80)}"`)
+      setFxRate(parseFloat(match[0]))
+    } catch (e) {
+      setFxError(e.message)
+    } finally {
+      setFxLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (csvCurrency === targetCurrency) { setFxRate(1); setFxError(null) }
+    else { setFxRate(null); setFxError(null) }
   }, [csvCurrency, targetCurrency])
 
   const headerOptions = [{ value: '', label: '— not mapped —' }, ...headers.map(h => ({ value: h, label: h }))]
@@ -208,7 +239,11 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
   const handleConfirm = () => {
     const err = validate()
     if (err) { setError(err); return }
-    onConfirm({ mapping, signConvention, csvCurrency, targetCurrency, fxRate })
+    if (csvCurrency !== targetCurrency && !fxRate) {
+      setError('Click "Get rate via AI" to fetch the exchange rate before continuing.')
+      return
+    }
+    onConfirm({ mapping, signConvention, csvCurrency, targetCurrency, fxRate: fxRate || 1 })
   }
 
   return (
@@ -266,7 +301,7 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
       {/* Currency conversion */}
       <Card className="p-4 mb-4">
         <p className="text-sm font-semibold text-theme-secondary mb-2">Currency conversion</p>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap mb-3">
           <div className="flex flex-col gap-1">
             <span className="text-xs text-theme-muted">CSV is in</span>
             <select
@@ -288,17 +323,42 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
               {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <div className="mt-4 text-sm text-theme-muted">
-            {fxLoading && <span>Fetching rate…</span>}
-            {!fxLoading && fxError && <span className="text-red-500">{fxError}</span>}
-            {!fxLoading && !fxError && csvCurrency !== targetCurrency && (
-              <span>1 {csvCurrency} = <strong>{fxRate.toFixed(4)}</strong> {targetCurrency}</span>
-            )}
-            {!fxLoading && csvCurrency === targetCurrency && (
-              <span className="text-theme-muted">No conversion needed</span>
-            )}
-          </div>
+          {csvCurrency !== targetCurrency && (
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                onClick={() => fetchRateViaAI(csvCurrency, targetCurrency)}
+                disabled={fxLoading || !aiKeyFx}
+                className="text-sm px-3 py-1.5 rounded-lg bg-brand-500 text-white disabled:opacity-40 hover:bg-brand-600"
+              >
+                {fxLoading ? 'Fetching…' : 'Get rate via AI'}
+              </button>
+              {fxRate && fxRate !== 1 && !fxLoading && (
+                <span className="text-sm text-green-600 font-medium">
+                  1 {csvCurrency} = {fxRate.toFixed(4)} {targetCurrency}
+                </span>
+              )}
+            </div>
+          )}
+          {csvCurrency === targetCurrency && (
+            <span className="text-sm text-theme-muted mt-4">No conversion needed</span>
+          )}
         </div>
+        {csvCurrency !== targetCurrency && (
+          <div>
+            {fxError && <p className="text-xs text-red-500 mb-2">{fxError}</p>}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-theme-muted shrink-0">Anthropic API key</span>
+              <input
+                type="password"
+                placeholder="sk-ant-…"
+                value={aiKeyFx}
+                onChange={e => { setAiKeyFx(e.target.value); save('importAiKey', e.target.value) }}
+                className="flex-1 text-sm border border-theme rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </div>
+            <p className="text-xs text-theme-muted mt-1">Used to look up the latest rate from XE.com via AI web search.</p>
+          </div>
+        )}
       </Card>
 
       {/* CSV preview */}
@@ -449,7 +509,7 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
   const [rows, setRows]               = useState(() => detectDuplicates(initialRows, existingTransactions))
   const [filter, setFilter]           = useState('all')
   const [showSkipped, setShowSkipped] = useState(false)
-  const [aiKey, setAiKey]             = useState('')
+  const [aiKey, setAiKey]             = useState(() => load('importAiKey') || '')
   const [aiRunning, setAiRunning]     = useState(false)
   const [aiDone, setAiDone]           = useState(false)
   const [aiError, setAiError]         = useState(null)
@@ -637,7 +697,7 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
                   type="password"
                   placeholder="sk-ant-..."
                   value={aiKey}
-                  onChange={e => setAiKey(e.target.value)}
+                  onChange={e => { setAiKey(e.target.value); save('importAiKey', e.target.value) }}
                   className="flex-1 text-sm border border-theme rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
                 />
                 <Button
