@@ -438,7 +438,7 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
         },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
+          max_tokens: 4096,
           messages: [{
             role: 'user',
             content: `Categorize these bank transactions. Reply ONLY with a JSON array, no other text.
@@ -462,14 +462,26 @@ Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expe
 
       const text = data?.content?.[0]?.text || ''
       console.log('[AI categorization] raw response:', text)
-      const match = text.match(/\[[\s\S]*\]/)
-      if (!match) {
-        setAiError(`Unexpected response: "${text.slice(0, 120)}"`)
+      console.log('[AI categorization] stop_reason:', data?.stop_reason)
 
+      if (data?.stop_reason === 'max_tokens') {
+        setAiError('AI response was truncated — too many transactions. Try importing a smaller batch.')
         return
       }
 
-      const results = JSON.parse(match[0])
+      const match = text.match(/\[[\s\S]*\]/)
+      if (!match) {
+        setAiError(`Unexpected response: "${text.slice(0, 120)}"`)
+        return
+      }
+
+      let results
+      try {
+        results = JSON.parse(match[0])
+      } catch {
+        setAiError('AI returned malformed JSON — the response may have been cut off. Try importing fewer rows at once.')
+        return
+      }
       const byId = Object.fromEntries(results.map(r => [r.id, r]))
       setRows(rs => rs.map(r => {
         const ai = byId[r._importId]
