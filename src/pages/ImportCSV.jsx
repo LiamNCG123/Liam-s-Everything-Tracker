@@ -193,40 +193,20 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
   const [fxRate,         setFxRate]         = useState(1)
   const [fxLoading,      setFxLoading]      = useState(false)
   const [fxError,        setFxError]        = useState(null)
-  const [aiKeyFx,        setAiKeyFx]        = useState(() => load('importAiKey') || '')
-
-  const fetchRateViaAI = async (from, to) => {
-    const key = aiKeyFx
-    if (!key) { setFxError('Enter your Anthropic API key below to fetch live rates.'); return }
+  const fetchRate = async (from, to) => {
     setFxLoading(true)
     setFxError(null)
     try {
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 256,
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-          messages: [{
-            role: 'user',
-            content: `Search XE.com for the current ${from} to ${to} exchange rate. Reply with ONLY the numeric rate as a plain decimal, e.g. 0.1312. No other text.`,
-          }],
-        }),
-      })
+      // Free, no-key, CORS-enabled CDN-backed currency API
+      const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${from.toLowerCase()}.json`
+      const resp = await fetch(url)
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
       const data = await resp.json()
-      if (!resp.ok) throw new Error(data?.error?.message || `API error ${resp.status}`)
-      const text = data?.content?.find(b => b.type === 'text')?.text || ''
-      const match = text.match(/\d+\.?\d*/)
-      if (!match) throw new Error(`Unexpected AI response: "${text.slice(0, 80)}"`)
-      setFxRate(parseFloat(match[0]))
+      const rate = data[from.toLowerCase()]?.[to.toLowerCase()]
+      if (!rate) throw new Error(`No rate found for ${from}→${to}`)
+      setFxRate(rate)
     } catch (e) {
-      setFxError(e.message)
+      setFxError(`Could not fetch rate: ${e.message}`)
     } finally {
       setFxLoading(false)
     }
@@ -251,7 +231,7 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
     const err = validate()
     if (err) { setError(err); return }
     if (csvCurrency !== targetCurrency && !fxRate) {
-      setError('Click "Get rate via AI" to fetch the exchange rate before continuing.')
+      setError('Click "Get live rate" to fetch the exchange rate before continuing.')
       return
     }
     onConfirm({ mapping, signConvention, csvCurrency, targetCurrency, fxRate: fxRate || 1 })
@@ -337,11 +317,11 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
           {csvCurrency !== targetCurrency && (
             <div className="mt-4 flex items-center gap-2">
               <button
-                onClick={() => fetchRateViaAI(csvCurrency, targetCurrency)}
-                disabled={fxLoading || !aiKeyFx}
+                onClick={() => fetchRate(csvCurrency, targetCurrency)}
+                disabled={fxLoading}
                 className="text-sm px-3 py-1.5 rounded-lg bg-brand-500 text-white disabled:opacity-40 hover:bg-brand-600"
               >
-                {fxLoading ? 'Fetching…' : 'Get rate via AI'}
+                {fxLoading ? 'Fetching…' : 'Get live rate'}
               </button>
               {fxRate && fxRate !== 1 && !fxLoading && (
                 <span className="text-sm text-green-600 font-medium">
@@ -354,22 +334,7 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
             <span className="text-sm text-theme-muted mt-4">No conversion needed</span>
           )}
         </div>
-        {csvCurrency !== targetCurrency && (
-          <div>
-            {fxError && <p className="text-xs text-red-500 mb-2">{fxError}</p>}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-theme-muted shrink-0">Anthropic API key</span>
-              <input
-                type="password"
-                placeholder="sk-ant-…"
-                value={aiKeyFx}
-                onChange={e => { setAiKeyFx(e.target.value); save('importAiKey', e.target.value) }}
-                className="flex-1 text-sm border border-theme rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-400"
-              />
-            </div>
-            <p className="text-xs text-theme-muted mt-1">Used to look up the latest rate from XE.com via AI web search.</p>
-          </div>
-        )}
+        {fxError && <p className="text-xs text-red-500 mt-2">{fxError}</p>}
       </Card>
 
       {/* CSV preview */}
