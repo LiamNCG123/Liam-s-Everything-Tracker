@@ -419,6 +419,43 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
   const duplicateCount  = rows.filter(r => r._isDuplicate && !r._excluded).length
   const warnedCount     = rows.filter(r => r._parseWarns?.length > 0 && !r._excluded).length
 
+  const AI_BATCH_SIZE = 25
+
+  const categoriseBatch = async (batch) => {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': aiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2048,
+        messages: [{
+          role: 'user',
+          content: `Categorize these bank transactions. Reply ONLY with a JSON array, no other text.
+
+Available categories: ${ALL_CATEGORIES.join(', ')}
+
+Transactions:
+${JSON.stringify(batch)}
+
+Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expense"}]`,
+        }],
+      }),
+    })
+    const data = await resp.json()
+    if (!resp.ok) throw new Error(data?.error?.message || `API error ${resp.status}`)
+    const text = data?.content?.[0]?.text || ''
+    console.log('[AI categorization] batch response:', text, 'stop_reason:', data?.stop_reason)
+    if (data?.stop_reason === 'max_tokens') throw new Error('Response truncated even for a small batch — please try again.')
+    const match = text.match(/\[[\s\S]*\]/)
+    if (!match) throw new Error(`Unexpected response: "${text.slice(0, 120)}"`)
+    return JSON.parse(match[0])
+  }
+
   // AI categorization for uncategorized rows
   const runAI = async () => {
     if (!aiKey || uncategorized.length === 0) return
@@ -428,61 +465,20 @@ function ReviewStep({ rows: initialRows, skippedRows = [], existingTransactions,
       const payload = uncategorized.map(r => ({
         id: r._importId, description: r.description, amount: r.amount, type: r.type,
       }))
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': aiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 4096,
-          messages: [{
-            role: 'user',
-            content: `Categorize these bank transactions. Reply ONLY with a JSON array, no other text.
 
-Available categories: ${ALL_CATEGORIES.join(', ')}
-
-Transactions:
-${JSON.stringify(payload)}
-
-Reply format: [{"id":"...","category":"...","confidence":0.9,"type":"income|expense"}]`,
-          }],
-        }),
-      })
-      const data = await resp.json()
-
-      if (!resp.ok) {
-        const msg = data?.error?.message || `API error ${resp.status}`
-        setAiError(msg)
-        return
+      // Split into batches to avoid truncation on large imports
+      const batches = []
+      for (let i = 0; i < payload.length; i += AI_BATCH_SIZE) {
+        batches.push(payload.slice(i, i + AI_BATCH_SIZE))
       }
 
-      const text = data?.content?.[0]?.text || ''
-      console.log('[AI categorization] raw response:', text)
-      console.log('[AI categorization] stop_reason:', data?.stop_reason)
-
-      if (data?.stop_reason === 'max_tokens') {
-        setAiError('AI response was truncated — too many transactions. Try importing a smaller batch.')
-        return
+      const allResults = []
+      for (const batch of batches) {
+        const results = await categoriseBatch(batch)
+        allResults.push(...results)
       }
 
-      const match = text.match(/\[[\s\S]*\]/)
-      if (!match) {
-        setAiError(`Unexpected response: "${text.slice(0, 120)}"`)
-        return
-      }
-
-      let results
-      try {
-        results = JSON.parse(match[0])
-      } catch {
-        setAiError('AI returned malformed JSON — the response may have been cut off. Try importing fewer rows at once.')
-        return
-      }
-      const byId = Object.fromEntries(results.map(r => [r.id, r]))
+      const byId = Object.fromEntries(allResults.map(r => [r.id, r]))
       setRows(rs => rs.map(r => {
         const ai = byId[r._importId]
         if (!ai) return r
