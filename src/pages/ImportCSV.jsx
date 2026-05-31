@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
-import { uid, today, save } from '../utils/storage'
+import { uid, today, save, load } from '../utils/storage'
 import {
   parseCSV, autoDetectMapping, normalizeRows,
   categorizeAll, detectDuplicates,
