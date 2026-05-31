@@ -5,6 +5,7 @@ import { load, save } from '../utils/storage'
 import { flushSyncQueue, isSyncEnabled, pullRemoteSnapshot } from '../data/syncClient'
 import { loadSyncQueue } from '../data/syncQueue'
 import { Card } from '../components/ui'
+import { useStore } from '../hooks/useStore'
 
 function plural(count, singular, pluralWord = `${singular}s`) {
   return count === 1 ? singular : pluralWord
@@ -111,6 +112,60 @@ function SyncCard() {
   )
 }
 
+function ImportHistoryCard() {
+  const { items: batches, remove: removeBatch }         = useStore('transactionImportBatches')
+  const { items: transactions, remove: removeTx }       = useStore('financeTransactions')
+  const [confirming, setConfirming] = useState(null)
+
+  const sorted = [...batches].sort((a, b) => (b.importedAt || '').localeCompare(a.importedAt || ''))
+
+  const deleteBatch = (batch) => {
+    transactions
+      .filter(t => t.importBatchId === batch.id)
+      .forEach(t => removeTx(t.id))
+    removeBatch(batch.id)
+    setConfirming(null)
+  }
+
+  if (!batches.length) return null
+
+  return (
+    <Card className="p-5">
+      <h2 className="font-semibold text-theme-primary mb-4">Import History</h2>
+      <div className="flex flex-col gap-3">
+        {sorted.map(batch => (
+          <div key={batch.id} className="flex items-center justify-between gap-3 text-sm">
+            <div>
+              <p className="font-medium text-theme-secondary">{batch.filename}</p>
+              <p className="text-xs text-theme-muted">
+                {batch.importedAt ? new Date(batch.importedAt).toLocaleString('en-AU') : '—'}
+                {' · '}{batch.rowCount ?? '?'} transactions
+              </p>
+            </div>
+            {confirming === batch.id ? (
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={() => deleteBatch(batch)}
+                  className="text-xs px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600"
+                >Confirm delete</button>
+                <button
+                  onClick={() => setConfirming(null)}
+                  className="text-xs px-2 py-1 rounded bg-theme-input text-theme-secondary"
+                >Cancel</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setConfirming(batch.id)}
+                className="text-xs px-2 py-1 rounded border border-red-300 text-red-500 hover:bg-red-50 shrink-0"
+              >Delete batch</button>
+            )}
+          </div>
+        ))}
+      </div>
+    </Card>
+  )
+}
+
 export default function Settings() {
   const { modules, toggle, moveUp, moveDown, reset } = useModules()
   const { theme, setTheme } = useTheme()
@@ -181,6 +236,7 @@ export default function Settings() {
       </Card>
 
       <SyncCard />
+      <ImportHistoryCard />
 
       {/* Modules */}
       <Card className="p-5">
