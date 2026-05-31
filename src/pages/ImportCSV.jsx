@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../hooks/useStore'
 import { uid, today } from '../utils/storage'
@@ -8,6 +8,8 @@ import {
   buildRuleFromCorrection, deserializeRules,
 } from '../utils/csvImport'
 import { Button, Card, Badge, Input, Select, Modal } from '../components/ui'
+import { CURRENCIES } from '../hooks/useCurrency'
+import { load } from '../utils/storage'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -175,6 +177,24 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
   const [signConvention, setSignConvention] = useState('positive_is_income')
   const [error, setError]                   = useState(null)
 
+  const homeCurrency = load('currencyHome') || 'AUD'
+  const [csvCurrency,    setCsvCurrency]    = useState(homeCurrency)
+  const [targetCurrency, setTargetCurrency] = useState(homeCurrency)
+  const [fxRate,         setFxRate]         = useState(1)
+  const [fxLoading,      setFxLoading]      = useState(false)
+  const [fxError,        setFxError]        = useState(null)
+
+  useEffect(() => {
+    if (csvCurrency === targetCurrency) { setFxRate(1); setFxError(null); return }
+    setFxLoading(true)
+    setFxError(null)
+    fetch(`https://api.frankfurter.app/latest?from=${csvCurrency}&to=${targetCurrency}`)
+      .then(r => { if (!r.ok) throw new Error(`${r.status}`); return r.json() })
+      .then(data => setFxRate(data.rates[targetCurrency]))
+      .catch(e => setFxError(`Could not fetch rate: ${e.message}`))
+      .finally(() => setFxLoading(false))
+  }, [csvCurrency, targetCurrency])
+
   const headerOptions = [{ value: '', label: '— not mapped —' }, ...headers.map(h => ({ value: h, label: h }))]
 
   const validate = () => {
@@ -188,7 +208,7 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
   const handleConfirm = () => {
     const err = validate()
     if (err) { setError(err); return }
-    onConfirm({ mapping, signConvention })
+    onConfirm({ mapping, signConvention, csvCurrency, targetCurrency, fxRate })
   }
 
   return (
@@ -242,6 +262,44 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
           </div>
         </Card>
       )}
+
+      {/* Currency conversion */}
+      <Card className="p-4 mb-4">
+        <p className="text-sm font-semibold text-theme-secondary mb-2">Currency conversion</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-theme-muted">CSV is in</span>
+            <select
+              className="text-sm border border-theme rounded-lg px-3 py-1.5 bg-theme-card focus:outline-none focus:ring-2 focus:ring-brand-400"
+              value={csvCurrency}
+              onChange={e => setCsvCurrency(e.target.value)}
+            >
+              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <span className="text-theme-muted mt-4">→</span>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-theme-muted">Convert to</span>
+            <select
+              className="text-sm border border-theme rounded-lg px-3 py-1.5 bg-theme-card focus:outline-none focus:ring-2 focus:ring-brand-400"
+              value={targetCurrency}
+              onChange={e => setTargetCurrency(e.target.value)}
+            >
+              {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="mt-4 text-sm text-theme-muted">
+            {fxLoading && <span>Fetching rate…</span>}
+            {!fxLoading && fxError && <span className="text-red-500">{fxError}</span>}
+            {!fxLoading && !fxError && csvCurrency !== targetCurrency && (
+              <span>1 {csvCurrency} = <strong>{fxRate.toFixed(4)}</strong> {targetCurrency}</span>
+            )}
+            {!fxLoading && csvCurrency === targetCurrency && (
+              <span className="text-theme-muted">No conversion needed</span>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {/* CSV preview */}
       <div className="mb-4">
@@ -750,11 +808,14 @@ export default function ImportCSV() {
   }
 
   // Step 2 → 3: normalize + categorize
-  const handleMappingConfirm = ({ mapping: m, signConvention }) => {
+  const handleMappingConfirm = ({ mapping: m, signConvention, csvCurrency, targetCurrency, fxRate }) => {
     setMapping(m)
     const batchId = uid()
     const { normalized, skipped } = normalizeRows(csvData.rows, m, { signConvention, importBatchId: batchId })
-    const categorized = categorizeAll(normalized, customRules)
+    const converted = fxRate && fxRate !== 1
+      ? normalized.map(r => ({ ...r, amount: Math.round(r.amount * fxRate * 100) / 100, currency: targetCurrency }))
+      : normalized.map(r => ({ ...r, currency: targetCurrency }))
+    const categorized = categorizeAll(converted, customRules)
     setImportedRows(categorized)
     setSkippedRows(skipped)
     setStep(3)
