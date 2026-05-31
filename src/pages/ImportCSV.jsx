@@ -193,28 +193,25 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
   const [fxRate,         setFxRate]         = useState(1)
   const [fxLoading,      setFxLoading]      = useState(false)
   const [fxError,        setFxError]        = useState(null)
-  const fetchRate = async (from, to) => {
-    setFxLoading(true)
-    setFxError(null)
-    try {
-      // Free, no-key, CORS-enabled CDN-backed currency API
-      const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${from.toLowerCase()}.json`
-      const resp = await fetch(url)
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
-      const data = await resp.json()
-      const rate = data[from.toLowerCase()]?.[to.toLowerCase()]
-      if (!rate) throw new Error(`No rate found for ${from}→${to}`)
-      setFxRate(rate)
-    } catch (e) {
-      setFxError(`Could not fetch rate: ${e.message}`)
-    } finally {
-      setFxLoading(false)
-    }
-  }
+
 
   useEffect(() => {
-    if (csvCurrency === targetCurrency) { setFxRate(1); setFxError(null) }
-    else { setFxRate(null); setFxError(null) }
+    if (csvCurrency === targetCurrency) { setFxRate(1); setFxError(null); return }
+    let cancelled = false
+    setFxLoading(true)
+    setFxError(null)
+    const url = `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${csvCurrency.toLowerCase()}.json`
+    fetch(url)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then(data => {
+        if (cancelled) return
+        const rate = data[csvCurrency.toLowerCase()]?.[targetCurrency.toLowerCase()]
+        if (!rate) throw new Error(`No rate for ${csvCurrency}→${targetCurrency}`)
+        setFxRate(rate)
+      })
+      .catch(e => { if (!cancelled) setFxError(`Could not fetch rate: ${e.message}`) })
+      .finally(() => { if (!cancelled) setFxLoading(false) })
+    return () => { cancelled = true }
   }, [csvCurrency, targetCurrency])
 
   const headerOptions = [{ value: '', label: '— not mapped —' }, ...headers.map(h => ({ value: h, label: h }))]
@@ -315,16 +312,10 @@ function MappingStep({ headers, rows, filename, onConfirm, onBack }) {
             </select>
           </div>
           {csvCurrency !== targetCurrency && (
-            <div className="mt-4 flex items-center gap-2">
-              <button
-                onClick={() => fetchRate(csvCurrency, targetCurrency)}
-                disabled={fxLoading}
-                className="text-sm px-3 py-1.5 rounded-lg bg-brand-500 text-white disabled:opacity-40 hover:bg-brand-600"
-              >
-                {fxLoading ? 'Fetching…' : 'Get live rate'}
-              </button>
-              {fxRate && fxRate !== 1 && !fxLoading && (
-                <span className="text-sm text-green-600 font-medium">
+            <div className="mt-4 flex items-center gap-2 text-sm">
+              {fxLoading && <span className="text-theme-muted">Fetching rate…</span>}
+              {!fxLoading && fxRate && fxRate !== 1 && (
+                <span className="text-green-600 font-medium">
                   1 {csvCurrency} = {fxRate.toFixed(4)} {targetCurrency}
                 </span>
               )}
