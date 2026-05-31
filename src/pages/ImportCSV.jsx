@@ -93,6 +93,17 @@ function UploadStep({ onParsed }) {
   const [error, setError]       = useState(null)
   const fileRef = useRef()
 
+  // Prevent browser from navigating to the file if dropped outside the zone
+  useEffect(() => {
+    const stop = (e) => e.preventDefault()
+    document.addEventListener('dragover', stop)
+    document.addEventListener('drop', stop)
+    return () => {
+      document.removeEventListener('dragover', stop)
+      document.removeEventListener('drop', stop)
+    }
+  }, [])
+
   const handleFile = (file) => {
     if (!file) return
     if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
