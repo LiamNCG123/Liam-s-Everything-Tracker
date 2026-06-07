@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { ModulesProvider } from './hooks/useModules'
 import { load, save } from './utils/storage'
 import { supabase } from './lib/supabase/client'
+import { useLocalMigration } from './hooks/useLocalMigration'
 import Today from './pages/Today'
 import Habits from './pages/Habits'
 import Goals from './pages/Goals'
@@ -26,6 +27,7 @@ import Onboarding from './components/Onboarding'
 // The main app shell: handles the onboarding gate then renders the full Layout
 function MainShell() {
   const { user, profile, loading, profileLoading } = useAuth()
+  useLocalMigration()
   const [onboarded, setOnboarded] = useState(() => !!load('onboardingDone'))
 
   // When profile loads on a new device, sync onboarding state from Supabase
