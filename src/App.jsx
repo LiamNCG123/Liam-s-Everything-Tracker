@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Analytics } from '@vercel/analytics/react'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { ModulesProvider } from './hooks/useModules'
-import { load } from './utils/storage'
+import { load, save } from './utils/storage'
+import { supabase } from './lib/supabase/client'
 import Today from './pages/Today'
 import Habits from './pages/Habits'
 import Goals from './pages/Goals'
@@ -24,10 +25,31 @@ import Onboarding from './components/Onboarding'
 
 // The main app shell: handles the onboarding gate then renders the full Layout
 function MainShell() {
+  const { user, profile, loading, profileLoading } = useAuth()
   const [onboarded, setOnboarded] = useState(() => !!load('onboardingDone'))
 
+  // When profile loads on a new device, sync onboarding state from Supabase
+  useEffect(() => {
+    if (!profileLoading && profile?.onboarding_done && !onboarded) {
+      save('onboardingDone', true)
+      setOnboarded(true)
+    }
+  }, [profileLoading, profile?.onboarding_done, onboarded])
+
+  const handleOnboardingComplete = useCallback(async () => {
+    setOnboarded(true)
+    if (user) {
+      await supabase.from('profiles').update({ onboarding_done: true }).eq('id', user.id)
+    }
+  }, [user])
+
+  // Wait for profile to load before deciding whether to show onboarding
+  if (!onboarded && (loading || profileLoading)) {
+    return null
+  }
+
   if (!onboarded) {
-    return <Onboarding onComplete={() => setOnboarded(true)} />
+    return <Onboarding onComplete={handleOnboardingComplete} />
   }
 
   return (

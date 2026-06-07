@@ -7,15 +7,18 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId) => {
-    if (!userId) { setProfile(null); return }
+    if (!userId) { setProfile(null); setProfileLoading(false); return }
+    setProfileLoading(true)
     const { data } = await supabase
       .from('profiles')
-      .select('display_name, avatar_url')
+      .select('display_name, avatar_url, onboarding_done')
       .eq('id', userId)
       .single()
     setProfile(data ?? null)
+    setProfileLoading(false)
   }, [])
 
   useEffect(() => {
@@ -38,7 +41,7 @@ export function AuthProvider({ children }) {
   }, [user, fetchProfile])
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, profileLoading, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
