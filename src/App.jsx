@@ -30,13 +30,18 @@ function MainShell() {
   useLocalMigration()
   const [onboarded, setOnboarded] = useState(() => !!load('onboardingDone'))
 
-  // When profile loads on a new device, sync onboarding state from Supabase
+  // Bidirectional onboarding sync once profile has loaded
   useEffect(() => {
-    if (!profileLoading && profile?.onboarding_done && !onboarded) {
+    if (profileLoading || !profile || !user) return
+    if (profile.onboarding_done && !onboarded) {
+      // Supabase says done → mark this device
       save('onboardingDone', true)
       setOnboarded(true)
+    } else if (onboarded && !profile.onboarding_done) {
+      // This device says done → tell Supabase (covers existing users who never triggered the callback)
+      supabase.from('profiles').update({ onboarding_done: true }).eq('id', user.id)
     }
-  }, [profileLoading, profile?.onboarding_done, onboarded])
+  }, [profileLoading, profile, onboarded, user])
 
   const handleOnboardingComplete = useCallback(async () => {
     setOnboarded(true)
